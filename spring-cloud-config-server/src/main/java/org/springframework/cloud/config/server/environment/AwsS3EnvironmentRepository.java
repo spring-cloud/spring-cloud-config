@@ -168,19 +168,37 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 			}
 		}
 
-		for (String label : labels) {
-			// Files that are not profile specific can contain profile specific YAML
-			// documents, including documents with negated profile expressions (e.g.
-			// on-profile: "!my-profile"). These take precedence over the content that
-			// applies to every profile, so add them first.
-			for (String profile : profilesByPrecedence) {
+		// If we have no profiles just add property sources for all apps
+		if (profiles.length == 0) {
+			for (String label : labels) {
 				addPropertySourcesForApps(apps,
-						app -> addProfileDocumentsOfNonProfileSpecificFile(environment, app, profile, label));
+						app -> addNonProfileSpecificPropertySource(environment, app, null, label));
+				// Even with no profiles, negated profile documents (e.g. on-profile:
+				// "!my-profile") should be included because no profile is active,
+				// so all negations are satisfied
+				addPropertySourcesForApps(apps,
+						app -> addNegatedProfilePropertySource(environment, app, profiles, label));
 			}
-			// Negated profile documents are added once per label rather than once per
-			// profile to avoid duplicates. With no profile, all negations are satisfied.
-			addPropertySourcesForApps(apps, app -> addNegatedProfilePropertySource(environment, app, profiles, label));
-			addPropertySourcesForApps(apps, app -> addNonProfileSpecificPropertySource(environment, app, null, label));
+		}
+		else {
+			for (String label : labels) {
+				// If we have profiles, we still need to add property sources from files
+				// that
+				// are not profile specific but we pass
+				// along the profiles as well so we can check if any non-profile specific
+				// YAML
+				// files have profile specific documents
+				// within them
+				for (String profile : profiles) {
+					addPropertySourcesForApps(apps,
+							app -> addNonProfileSpecificPropertySource(environment, app, profile, label));
+				}
+				// Handle documents with negated profile expressions (e.g. on-profile:
+				// "!my-profile")
+				// once per label rather than once per profile to avoid duplicates
+				addPropertySourcesForApps(apps,
+						app -> addNegatedProfilePropertySource(environment, app, profiles, label));
+			}
 		}
 	}
 
@@ -235,13 +253,6 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 				: getS3ConfigFileWithSearchPaths(app, profile, label,
 						key -> wrapKeyWithConfigFiles(key, app, profile, label));
 		addPropertySource(environment, s3ConfigFiles);
-	}
-
-	private void addProfileDocumentsOfNonProfileSpecificFile(Environment environment, String app, String profile,
-			String label) {
-		if (searchPaths.isEmpty()) {
-			addPropertySource(environment, getProfileSpecificYamlDocuments(app, profile, label));
-		}
 	}
 
 	private void addNonProfileSpecificPropertySource(Environment environment, String app, String profile,
@@ -497,25 +508,23 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 		return Optional.empty();
 	}
 
-	private List<S3ConfigFile> getProfileSpecificYamlDocuments(String application, String profile, String label) {
-		try {
-			YamlS3ConfigFile configFileDocument = new ProfileSpecificYamlDocumentS3ConfigFile(application, profile,
-					label, bucketName, useApplicationAsDirectory, s3Client);
-			configFileDocument.setShouldIncludeWithEmptyProperties(false);
-			return List.of(configFileDocument);
-		}
-		catch (Exception e) {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("Did not find specific yaml document in non-profile specific file using application <"
-						+ application + "> profile <" + profile + "> label <" + label + ">.");
-			}
-			return Collections.emptyList();
-		}
-	}
-
 	private List<YamlS3ConfigFile> getNonProfileSpecificS3ConfigFileYaml(String application, String profile,
 			String label) {
 		List<YamlS3ConfigFile> configFiles = new ArrayList<>();
+		if (profile != null) {
+			try {
+				YamlS3ConfigFile configFileDocument = new ProfileSpecificYamlDocumentS3ConfigFile(application, profile,
+						label, bucketName, useApplicationAsDirectory, s3Client);
+				configFileDocument.setShouldIncludeWithEmptyProperties(false);
+				configFiles.add(configFileDocument);
+			}
+			catch (Exception e) {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Did not find specific yaml document in non-profile specific file using application <"
+							+ application + "> profile <" + profile + "> label <" + label + ">.");
+				}
+			}
+		}
 		try {
 			YamlS3ConfigFile configFile = new NonProfileSpecificYamlDocumentS3ConfigFile(application, null, label,
 					bucketName, useApplicationAsDirectory, s3Client);

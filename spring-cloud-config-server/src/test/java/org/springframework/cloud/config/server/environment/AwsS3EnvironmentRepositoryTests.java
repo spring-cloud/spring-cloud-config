@@ -567,25 +567,15 @@ public class AwsS3EnvironmentRepositoryTests {
 	}
 
 	@Test
-	public void lastProfileTakesPrecedenceForProfileDocuments() {
-		putFiles("foo.yml", "greeting: default\n---\nspring.config.activate.on-profile: profile1\ngreeting: profile1\n"
-				+ "---\nspring.config.activate.on-profile: profile2\ngreeting: profile2\n");
-
-		final Environment env = envRepo.findOne("foo", "profile1,profile2", null);
-
-		assertThat(env.getPropertySources()).extracting(source -> (Object) source.getSource().get("greeting"))
-			.containsExactly("profile2", "profile1", "default");
-	}
-
-	@Test
-	public void negatedProfileDocumentTakesPrecedenceOverDefaultDocument() {
-		putFiles("foo.yml",
-				"greeting: default\n---\nspring.config.activate.on-profile: \"!other\"\n" + "greeting: not-other\n");
+	public void applicationSpecificFileTakesPrecedenceOverProfileDocumentOfSharedFile() {
+		putFiles("foo.yml", "greeting: foo\n");
+		putFiles("application.yml",
+				"greeting: application\n---\nspring.config.activate.on-profile: profile1\ngreeting: shared\n");
 
 		final Environment env = envRepo.findOne("foo", "profile1", null);
 
 		assertThat(env.getPropertySources()).extracting(source -> (Object) source.getSource().get("greeting"))
-			.containsExactly("not-other", "default");
+			.containsExactly("foo", "shared", "application");
 	}
 
 	@Test
