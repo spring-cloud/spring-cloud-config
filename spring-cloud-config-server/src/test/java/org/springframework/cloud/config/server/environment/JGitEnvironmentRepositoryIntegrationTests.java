@@ -497,6 +497,37 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 	}
 
 	@Test
+	public void expireRefreshRateFetchesNewCommitWithinRefreshRate() throws Exception {
+		JGitConfigServerTestData testData = JGitConfigServerTestData
+			.prepareClonedGitRepository(TestConfiguration.class);
+		JGitEnvironmentRepository repository = testData.getRepository();
+		repository.setRefreshRate(60);
+
+		// the first request fetches and starts the refresh rate window
+		Environment environment = repository.findOne("bar", "staging", "master");
+		String startingRemoteVersion = getCommitID(testData.getServerGit().getGit(), "master");
+		assertThat(environment.getVersion()).isEqualTo(startingRemoteVersion);
+
+		// update the remote repo
+		FileOutputStream out = new FileOutputStream(
+				new File(testData.getServerGit().getGitWorkingDirectory(), "bar.properties"));
+		StreamUtils.copy("foo: barNewCommit", Charset.defaultCharset(), out);
+		testData.getServerGit().getGit().add().addFilepattern("bar.properties").call();
+		testData.getServerGit().getGit().commit().setMessage("Updated for pull").call();
+		String updatedRemoteVersion = getCommitID(testData.getServerGit().getGit(), "master");
+
+		// within the refresh rate window the new commit is not fetched
+		environment = repository.findOne("bar", "staging", "master");
+		assertThat(environment.getVersion()).isEqualTo(startingRemoteVersion);
+
+		repository.expireRefreshRate();
+
+		environment = repository.findOne("bar", "staging", "master");
+		assertThat(environment.getVersion()).isEqualTo(updatedRemoteVersion);
+		assertThat(ConfigServerTestUtils.getProperty(environment, "bar.properties", "foo")).isEqualTo("barNewCommit");
+	}
+
+	@Test
 	/**
 	 * In this scenario there is set the refresh rate so the remote repository is not
 	 * fetched for every configuration read.

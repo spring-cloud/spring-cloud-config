@@ -120,6 +120,13 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 	}
 
 	@Override
+	public void expireRefreshRate() {
+		super.expireRefreshRate();
+		this.repos.values().forEach(JGitEnvironmentRepository::expireRefreshRate);
+		new ArrayList<>(this.placeholders.values()).forEach(JGitEnvironmentRepository::expireRefreshRate);
+	}
+
+	@Override
 	public Locations getLocations(String application, String profile, String label) {
 		for (PatternMatchingJGitEnvironmentRepository repository : this.repos.values()) {
 			if (repository.matches(application, profile, label)) {

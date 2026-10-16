@@ -22,8 +22,12 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import io.micrometer.observation.ObservationRegistry;
 import org.junit.jupiter.api.Test;
 
+import org.springframework.cloud.config.server.environment.JGitEnvironmentProperties;
+import org.springframework.cloud.config.server.environment.JGitEnvironmentRepository;
+import org.springframework.core.env.StandardEnvironment;
 import org.springframework.http.HttpHeaders;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -61,6 +65,37 @@ public class PropertyPathEndpointTests {
 		endpoint.notifyByPath(new HttpHeaders(), Collections.singletonMap("path", "foo.yml"));
 
 		assertThat(notifiedServices).containsExactly("foo");
+	}
+
+	@Test
+	public void testExpiresGitRefreshRateBeforeNotifyingServices() {
+		JGitEnvironmentRepository repository = gitRepository();
+		repository.setLastRefresh(System.currentTimeMillis());
+		List<Long> lastRefreshWhenNotified = new ArrayList<>();
+		PropertyPathNotifier notifier = services -> lastRefreshWhenNotified.add(repository.getLastRefresh());
+		PropertyPathEndpoint endpoint = new PropertyPathEndpoint(
+				new CompositePropertyPathNotificationExtractor(Collections.emptyList()), List.of(notifier),
+				MonitorConfigurationProperties.DEFAULT_MAX_DASHES, MonitorConfigurationProperties.DEFAULT_MAX_PATHS,
+				Collections.emptyList(), List.of(repository));
+
+		endpoint.notifyByPath(new HttpHeaders(), Collections.singletonMap("path", "foo.yml"));
+
+		assertThat(lastRefreshWhenNotified).containsExactly(0L);
+	}
+
+	@Test
+	public void testDoesNotExpireGitRefreshRateWhenNoServiceIsAffected() {
+		JGitEnvironmentRepository repository = gitRepository();
+		long lastRefresh = System.currentTimeMillis();
+		repository.setLastRefresh(lastRefresh);
+		PropertyPathEndpoint endpoint = new PropertyPathEndpoint(
+				new CompositePropertyPathNotificationExtractor(Collections.emptyList()), List.of(services -> {
+				}), MonitorConfigurationProperties.DEFAULT_MAX_DASHES, MonitorConfigurationProperties.DEFAULT_MAX_PATHS,
+				List.of("foo\\.yml"), List.of(repository));
+
+		endpoint.notifyByPath(new HttpHeaders(), Collections.singletonMap("path", "foo.yml"));
+
+		assertThat(repository.getLastRefresh()).isEqualTo(lastRefresh);
 	}
 
 	@Test
@@ -143,6 +178,12 @@ public class PropertyPathEndpointTests {
 		request.add("baz.yml");
 
 		assertThat(limitedEndpoint.notifyByForm(new HttpHeaders(), request).toString()).isEqualTo("[foo, bar]");
+	}
+
+	private static JGitEnvironmentRepository gitRepository() {
+		JGitEnvironmentProperties properties = new JGitEnvironmentProperties();
+		properties.setRefreshRate(60);
+		return new JGitEnvironmentRepository(new StandardEnvironment(), properties, ObservationRegistry.NOOP);
 	}
 
 }

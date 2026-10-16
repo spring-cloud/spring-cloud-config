@@ -908,6 +908,15 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	}
 
 	/**
+	 * Makes the next request fetch from the remote repository, even if the
+	 * {@link #getRefreshRate() refresh rate} has not elapsed since the last fetch. Has no
+	 * effect if the refresh rate is negative, in which case the remote is never fetched.
+	 */
+	public void expireRefreshRate() {
+		this.lastRefresh = 0;
+	}
+
+	/**
 	 * Wraps the static method calls to {@link org.eclipse.jgit.api.Git} and
 	 * {@link org.eclipse.jgit.api.CloneCommand} allowing for easier unit testing.
 	 */

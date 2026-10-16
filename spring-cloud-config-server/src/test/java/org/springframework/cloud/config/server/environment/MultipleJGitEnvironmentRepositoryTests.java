@@ -89,6 +89,19 @@ public class MultipleJGitEnvironmentRepositoryTests {
 	}
 
 	@Test
+	public void expireRefreshRateExpiresAllRepositories() {
+		long now = System.currentTimeMillis();
+		this.repository.setLastRefresh(now);
+		this.repository.getRepos().values().forEach(repo -> repo.setLastRefresh(now));
+
+		this.repository.expireRefreshRate();
+
+		assertThat(this.repository.getLastRefresh()).isZero();
+		assertThat(this.repository.getRepos()).isNotEmpty();
+		assertThat(this.repository.getRepos().values()).allSatisfy(repo -> assertThat(repo.getLastRefresh()).isZero());
+	}
+
+	@Test
 	public void defaultRepo() {
 		Environment environment = this.repository.findOne("bar", "staging", "master");
 		assertThat(environment.getPropertySources()).hasSize(2);
