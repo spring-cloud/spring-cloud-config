@@ -184,6 +184,26 @@ class EnvironmentControllerTests {
 	}
 
 	@Test
+	public void emptyArrayInJson() throws Exception {
+		Map<String, Object> map = new LinkedHashMap<>();
+		map.put("network.urls", "");
+		this.environment.add(new PropertySource("one", map));
+		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
+		String json = this.controller.jsonProperties("foo", "bar", false).getBody();
+		JSONAssert.assertEquals("{\"network\":{\"urls\":[]}}", json, JSONCompareMode.STRICT);
+	}
+
+	@Test
+	public void emptyArrayInYaml() throws Exception {
+		Map<String, Object> map = new LinkedHashMap<>();
+		map.put("network.urls", "");
+		this.environment.add(new PropertySource("one", map));
+		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
+		String yaml = this.controller.yaml("foo", "bar", false).getBody();
+		assertThat(yaml).isEqualTo("network:\n  urls: []\n");
+	}
+
+	@Test
 	public void yamlWithBrackets() throws Exception {
 		Map<String, Object> map = new LinkedHashMap<String, Object>();
 		map.put("a.test", "e");
