@@ -93,6 +93,22 @@ IMPORTANT: Vault 0.10.0 introduced a versioned key-value backend (k/v backend ve
 
 Optionally, there is support for the Vault Enterprise `X-Vault-Namespace` header. To have it sent to Vault set the `namespace` property.
 
+To limit the TLS protocols or cipher suites that the Config Server uses when it connects to Vault, set `ssl.enabled-protocols` and `ssl.enabled-cipher-suites`, as shown in the following example:
+
+[source,yaml]
+----
+spring:
+  cloud:
+    config:
+      server:
+        vault:
+          ssl:
+            enabled-protocols: TLSv1.3
+            enabled-cipher-suites: TLS_AES_256_GCM_SHA384,TLS_AES_128_GCM_SHA256
+----
+
+When these properties are not set, the defaults of the HTTP client are used.
+
 With your config server running, you can make HTTP requests to the server to retrieve
 values from the Vault backend.
 To do so, you need a token for your Vault server.
