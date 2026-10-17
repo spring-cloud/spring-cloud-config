@@ -137,7 +137,7 @@ public class HttpClientConfigurableHttpConnectionFactory implements Configurable
 	private String getUrlWithPlaceholders(URL url, String key) {
 		String spec = url.toString();
 		String[] tokens = key.split(PLACEHOLDER_PATTERN_STRING);
-		// if token[0] equals url then there was no placeholder in the the url, so
+		// if token[0] equals url then there was no placeholder in the url, so
 		// matching needed
 		if (tokens.length >= 1 && !tokens[0].equals(url.toString())) {
 			List<Placeholder> placeholders = getPlaceholders(key);

@@ -148,7 +148,7 @@ public class ResourceController {
 	}
 
 	/**
-	 * This method is synchronized because the underlying EnvironmentRespositorys may not
+	 * This method is synchronized because the underlying {@link EnvironmentRepository} may not
 	 * be threadsafe (JGit for example). Calling this method could result in an update to
 	 * the files on disk.
 	 */

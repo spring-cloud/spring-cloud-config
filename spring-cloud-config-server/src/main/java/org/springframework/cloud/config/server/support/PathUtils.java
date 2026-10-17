@@ -267,9 +267,9 @@ public abstract class PathUtils {
 
 	/**
 	 * Perform additional checks on a resolved resource beyond checking whether the
-	 * resources exists and is readable. The default implementation also verifies the
+	 * resources exist and is readable. The default implementation also verifies the
 	 * resource is either under the location relative to which it was found or is under
-	 * one of the {@link #setAllowedLocations allowed locations}.
+	 * one of the allowed locations.
 	 * @param resource the resource to check
 	 * @param location the location relative to which the resource was found
 	 * @param allowedLocations set of allowed locations

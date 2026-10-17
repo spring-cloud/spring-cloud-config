@@ -40,7 +40,7 @@ import org.springframework.util.StringUtils;
  */
 public class MongoDbEnvironmentRepository implements EnvironmentRepository, Ordered {
 
-	private static final Log logger = LogFactory.getLog(JdbcEnvironmentRepository.class);
+	private static final Log logger = LogFactory.getLog(MongoDbEnvironmentRepository.class);
 
 	private final MongoTemplate mongoTemplate;
 
