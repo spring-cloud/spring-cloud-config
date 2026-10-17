@@ -104,6 +104,12 @@ public class ConfigServerProperties {
 	private boolean reverseLocationOrder = false;
 
 	/**
+	 * Flag indicating that unresolvable nested placeholders should be ignored when
+	 * resolving placeholders for YAML and JSON responses.
+	 */
+	private boolean ignoreUnresolvableNestedPlaceholders = false;
+
+	/**
 	 * Decryption configuration for when server handles encrypted properties before
 	 * sending them to clients.
 	 */
@@ -201,6 +207,14 @@ public class ConfigServerProperties {
 		this.reverseLocationOrder = reverseLocationOrder;
 	}
 
+	public boolean isIgnoreUnresolvableNestedPlaceholders() {
+		return this.ignoreUnresolvableNestedPlaceholders;
+	}
+
+	public void setIgnoreUnresolvableNestedPlaceholders(boolean ignoreUnresolvableNestedPlaceholders) {
+		this.ignoreUnresolvableNestedPlaceholders = ignoreUnresolvableNestedPlaceholders;
+	}
+
 	@Override
 	public String toString() {
 		return new ToStringCreator(this).append("enabled", enabled)
@@ -215,6 +229,7 @@ public class ConfigServerProperties {
 			.append("failOnCompositeError", failOnCompositeError)
 			.append("encrypt", encrypt)
 			.append("reverseLocationOrder", reverseLocationOrder)
+			.append("ignoreUnresolvableNestedPlaceholders", ignoreUnresolvableNestedPlaceholders)
 			.toString();
 
 	}
