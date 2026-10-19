@@ -591,9 +591,11 @@ public class AwsS3EnvironmentRepositoryTests {
 		putFiles("foo.yml", "greeting: default\n---\nspring.config.activate.on-profile: profile2\ngreeting: profile2\n"
 				+ "---\nspring.config.activate.on-profile: profile1\ngreeting: profile1\n");
 
-		final Environment env = envRepo.findOne("foo", "profile1,profile2", null);
-
-		assertThat(env.getPropertySources()).extracting(source -> (Object) source.getSource().get("greeting"))
+		assertThat(envRepo.findOne("foo", "profile1,profile2", null).getPropertySources())
+			.extracting(source -> (Object) source.getSource().get("greeting"))
+			.containsExactly("profile1", "profile2", "default");
+		assertThat(envRepo.findOne("foo", "profile2,profile1", null).getPropertySources())
+			.extracting(source -> (Object) source.getSource().get("greeting"))
 			.containsExactly("profile1", "profile2", "default");
 	}
 
