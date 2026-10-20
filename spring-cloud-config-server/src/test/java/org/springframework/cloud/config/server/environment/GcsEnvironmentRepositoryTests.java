@@ -31,6 +31,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 class GcsEnvironmentRepositoryTests {
@@ -217,6 +218,75 @@ class GcsEnvironmentRepositoryTests {
 		assertThat(environment.getPropertySources().get(0).getSource().get("message")).isEqualTo("custom-path");
 
 		verify(storage).get(BlobId.of("test-bucket", "my-app/config-default.properties"));
+	}
+
+	@Test
+	void rejectsApplicationContainingWildcard() {
+		GcsEnvironmentRepository repository = new GcsEnvironmentRepository(storage, properties, serverProperties);
+
+		assertThatThrownBy(() -> repository.findOne("*", "default", null)).isInstanceOf(IllegalArgumentException.class)
+			.hasMessageContaining("application");
+
+		verifyNoInteractions(storage);
+	}
+
+	@Test
+	void rejectsProfileContainingPathTraversal() {
+		GcsEnvironmentRepository repository = new GcsEnvironmentRepository(storage, properties, serverProperties);
+
+		assertThatThrownBy(() -> repository.findOne("my-app", "../secret", null))
+			.isInstanceOf(IllegalArgumentException.class)
+			.hasMessageContaining("profile");
+
+		verifyNoInteractions(storage);
+	}
+
+	@Test
+	void rejectsLabelContainingPathSeparator() {
+		GcsEnvironmentRepository repository = new GcsEnvironmentRepository(storage, properties, serverProperties);
+
+		assertThatThrownBy(() -> repository.findOne("my-app", "default", "../secret"))
+			.isInstanceOf(IllegalArgumentException.class)
+			.hasMessageContaining("label");
+
+		verifyNoInteractions(storage);
+	}
+
+	@Test
+	void rejectsUnsafeDefaultApplicationName() {
+		serverProperties.setDefaultApplicationName("*");
+
+		GcsEnvironmentRepository repository = new GcsEnvironmentRepository(storage, properties, serverProperties);
+
+		assertThatThrownBy(() -> repository.findOne(null, "default", null)).isInstanceOf(IllegalArgumentException.class)
+			.hasMessageContaining("application");
+
+		verifyNoInteractions(storage);
+	}
+
+	@Test
+	void rejectsUnsafeDefaultProfile() {
+		serverProperties.setDefaultProfile("../secret");
+
+		GcsEnvironmentRepository repository = new GcsEnvironmentRepository(storage, properties, serverProperties);
+
+		assertThatThrownBy(() -> repository.findOne("my-app", null, null)).isInstanceOf(IllegalArgumentException.class)
+			.hasMessageContaining("profile");
+
+		verifyNoInteractions(storage);
+	}
+
+	@Test
+	void rejectsUnsafeDefaultLabel() {
+		serverProperties.setDefaultLabel("../secret");
+
+		GcsEnvironmentRepository repository = new GcsEnvironmentRepository(storage, properties, serverProperties);
+
+		assertThatThrownBy(() -> repository.findOne("my-app", "default", null))
+			.isInstanceOf(IllegalArgumentException.class)
+			.hasMessageContaining("label");
+
+		verifyNoInteractions(storage);
 	}
 
 }

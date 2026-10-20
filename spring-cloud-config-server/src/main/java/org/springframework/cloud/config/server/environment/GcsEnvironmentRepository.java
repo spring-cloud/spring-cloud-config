@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import com.google.api.gax.paging.Page;
 import com.google.cloud.storage.Blob;
@@ -87,6 +88,10 @@ public class GcsEnvironmentRepository implements EnvironmentRepository, Ordered 
 		String resolvedProfile = StringUtils.hasText(profile) ? profile : this.serverProperties.getDefaultProfile();
 		String resolvedLabel = StringUtils.hasText(label) ? label : this.serverProperties.getDefaultLabel();
 
+		validatePathValue("application", resolvedApplication);
+		validatePathValue("profile", resolvedProfile);
+		validatePathValue("label", resolvedLabel);
+
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(resolvedProfile);
 		Environment environment = new Environment(resolvedApplication, profiles);
 		environment.setLabel(resolvedLabel);
@@ -110,6 +115,20 @@ public class GcsEnvironmentRepository implements EnvironmentRepository, Ordered 
 		}
 
 		return environment;
+	}
+
+	private void validatePathValue(String name, String value) {
+		if (value == null) {
+			return;
+		}
+
+		for (String part : value.split(",", -1)) {
+			if (part.contains("..") || part.contains("/") || part.contains("\\") || part.contains("*")
+					|| part.contains("?")) {
+				throw new IllegalArgumentException("Invalid " + name
+						+ " value: path separators, traversal sequences, and wildcards are not allowed");
+			}
+		}
 	}
 
 	private void addPropertySources(Environment environment, String application, String profile, String label) {
@@ -242,27 +261,26 @@ public class GcsEnvironmentRepository implements EnvironmentRepository, Ordered 
 	private void scanDirectoryPattern(String pattern, Set<String> seenKeys, List<String> keys) {
 		String prefix = pattern.endsWith("/") ? pattern : pattern + "/";
 
-		Page<Blob> page = this.storage.list(this.properties.getBucket(), Storage.BlobListOption.prefix(prefix));
-
-		if (page == null) {
-			return;
-		}
-
-		for (Blob blob : page.iterateAll()) {
-			if (blob == null || blob.getName() == null) {
-				continue;
-			}
-
+		scanBlobs(prefix, blob -> {
 			String key = blob.getName();
 			if (hasSupportedExtension(key) && seenKeys.add(key)) {
 				keys.add(key);
 			}
-		}
+		});
 	}
 
 	private void scanWildcardPattern(String pattern, Set<String> seenKeys, List<String> keys) {
 		String prefix = extractPrefix(pattern);
 
+		scanBlobs(prefix, blob -> {
+			String key = blob.getName();
+			if (this.pathMatcher.match(pattern, key) && hasSupportedExtension(key) && seenKeys.add(key)) {
+				keys.add(key);
+			}
+		});
+	}
+
+	private void scanBlobs(String prefix, Consumer<Blob> blobConsumer) {
 		Page<Blob> page = this.storage.list(this.properties.getBucket(), Storage.BlobListOption.prefix(prefix));
 
 		if (page == null) {
@@ -270,13 +288,8 @@ public class GcsEnvironmentRepository implements EnvironmentRepository, Ordered 
 		}
 
 		for (Blob blob : page.iterateAll()) {
-			if (blob == null || blob.getName() == null) {
-				continue;
-			}
-
-			String key = blob.getName();
-			if (this.pathMatcher.match(pattern, key) && hasSupportedExtension(key) && seenKeys.add(key)) {
-				keys.add(key);
+			if (blob != null && blob.getName() != null) {
+				blobConsumer.accept(blob);
 			}
 		}
 	}

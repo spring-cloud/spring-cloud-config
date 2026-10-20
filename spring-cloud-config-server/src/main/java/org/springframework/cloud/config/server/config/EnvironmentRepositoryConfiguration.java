@@ -61,7 +61,6 @@ import org.springframework.cloud.config.server.environment.CredhubEnvironmentRep
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
 import org.springframework.cloud.config.server.environment.EnvironmentWatch;
 import org.springframework.cloud.config.server.environment.GcsEnvironmentProperties;
-import org.springframework.cloud.config.server.environment.GcsEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.GcsEnvironmentRepositoryFactory;
 import org.springframework.cloud.config.server.environment.GoogleParameterManagerEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.GoogleParameterManagerEnvironmentRepository;
@@ -130,16 +129,16 @@ import org.springframework.vault.core.VaultTemplate;
 		JdbcEnvironmentProperties.class, NativeEnvironmentProperties.class, VaultEnvironmentProperties.class,
 		RedisEnvironmentProperties.class, AwsS3EnvironmentProperties.class,
 		AwsSecretsManagerEnvironmentProperties.class, AwsParameterStoreEnvironmentProperties.class,
-		GoogleSecretManagerEnvironmentProperties.class, GoogleParameterManagerEnvironmentProperties.class,
-		MongoDbEnvironmentProperties.class })
+		GcsEnvironmentProperties.class, GoogleSecretManagerEnvironmentProperties.class,
+		GoogleParameterManagerEnvironmentProperties.class, MongoDbEnvironmentProperties.class })
 @Import({ CompositeRepositoryConfiguration.class, JdbcRepositoryConfiguration.class, VaultConfiguration.class,
 		SpringVaultRepositoryConfiguration.class, CredhubConfiguration.class, CredhubRepositoryConfiguration.class,
 		SvnRepositoryConfiguration.class, NativeRepositoryConfiguration.class, GitRepositoryConfiguration.class,
 		RedisRepositoryConfiguration.class, GoogleCloudSourceConfiguration.class,
 		AzureDevOpsWorkloadIdentityConfiguration.class, AwsS3RepositoryConfiguration.class,
 		AwsSecretsManagerRepositoryConfiguration.class, AwsParameterStoreRepositoryConfiguration.class,
-		GoogleSecretManagerRepositoryConfiguration.class, GoogleParameterManagerRepositoryConfiguration.class,
-		MongoRepositoryConfiguration.class,
+		GcsRepositoryConfiguration.class, GoogleSecretManagerRepositoryConfiguration.class,
+		GoogleParameterManagerRepositoryConfiguration.class, MongoRepositoryConfiguration.class,
 		// DefaultRepositoryConfiguration must be last
 		DefaultRepositoryConfiguration.class })
 public class EnvironmentRepositoryConfiguration {
@@ -244,8 +243,9 @@ public class EnvironmentRepositoryConfiguration {
 	static class GcsFactoryConfig {
 
 		@Bean
-		public GcsEnvironmentRepositoryFactory gcsEnvironmentRepositoryFactory(ConfigServerProperties server) {
-			return new GcsEnvironmentRepositoryFactory(server);
+		public GcsEnvironmentRepositoryFactory gcsEnvironmentRepositoryFactory(ConfigServerProperties server,
+				ObjectProvider<Storage> storageProvider) {
+			return new GcsEnvironmentRepositoryFactory(server, storageProvider.getIfAvailable());
 		}
 
 	}
@@ -449,20 +449,6 @@ class AwsS3RepositoryConfiguration {
 	@ConditionalOnMissingBean(AwsS3EnvironmentRepository.class)
 	public AwsS3EnvironmentRepository awsS3EnvironmentRepository(AwsS3EnvironmentRepositoryFactory factory,
 			AwsS3EnvironmentProperties environmentProperties) {
-		return factory.build(environmentProperties);
-	}
-
-}
-
-@Configuration(proxyBeanMethods = false)
-@Profile("gcs")
-@ConditionalOnClass(Storage.class)
-class GcsRepositoryConfiguration {
-
-	@Bean
-	@ConditionalOnMissingBean(GcsEnvironmentRepository.class)
-	public GcsEnvironmentRepository gcsEnvironmentRepository(GcsEnvironmentRepositoryFactory factory,
-			GcsEnvironmentProperties environmentProperties) {
 		return factory.build(environmentProperties);
 	}
 

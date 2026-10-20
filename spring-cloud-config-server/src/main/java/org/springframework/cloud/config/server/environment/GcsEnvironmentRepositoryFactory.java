@@ -29,21 +29,32 @@ public class GcsEnvironmentRepositoryFactory
 
 	private final ConfigServerProperties server;
 
+	private final Storage storage;
+
 	public GcsEnvironmentRepositoryFactory(ConfigServerProperties server) {
+		this(server, null);
+	}
+
+	public GcsEnvironmentRepositoryFactory(ConfigServerProperties server, Storage storage) {
 		this.server = server;
+		this.storage = storage;
 	}
 
 	@Override
 	public GcsEnvironmentRepository build(GcsEnvironmentProperties properties) {
-		StorageOptions.Builder builder = StorageOptions.newBuilder();
+		Storage resolvedStorage = this.storage;
 
-		if (properties.getProjectId() != null && !properties.getProjectId().isBlank()) {
-			builder.setProjectId(properties.getProjectId());
+		if (resolvedStorage == null) {
+			StorageOptions.Builder builder = StorageOptions.newBuilder();
+
+			if (properties.getProjectId() != null && !properties.getProjectId().isBlank()) {
+				builder.setProjectId(properties.getProjectId());
+			}
+
+			resolvedStorage = builder.build().getService();
 		}
 
-		Storage storage = builder.build().getService();
-
-		return new GcsEnvironmentRepository(storage, properties, server);
+		return new GcsEnvironmentRepository(resolvedStorage, properties, this.server);
 	}
 
 }
