@@ -50,6 +50,7 @@ import org.springframework.web.context.WebApplicationContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
@@ -194,6 +195,16 @@ public class ResourceControllerIntegrationTests {
 			.andExpect(MockMvcResultMatchers.status().isOk());
 		verify(this.repository).findOne("foo", "default", null);
 		verify(this.resources).findOne("foo", "default", null, "bar/foo.txt");
+	}
+
+	@Test
+	public void noLabelWithoutPathIsNotAResource() throws Exception {
+		this.mvc
+			.perform(MockMvcRequestBuilders.get("/foo/default")
+				.param("useDefaultLabel", "")
+				.header(HttpHeaders.ACCEPT, MimeTypeUtils.APPLICATION_OCTET_STREAM_VALUE))
+			.andExpect(MockMvcResultMatchers.status().isNotAcceptable());
+		verifyNoInteractions(this.resources);
 	}
 
 	@Test

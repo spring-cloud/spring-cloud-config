@@ -115,6 +115,8 @@ public class ResourceController {
 		this.validateProfiles = validateProfiles;
 	}
 
+	// Spring MVC ranks patterns before request parameters, so this mapping has to opt out
+	// of useDefaultLabel requests for retrieveDefault to handle paths with directories.
 	@GetMapping(value = "/{name}/{profile}/{label}/**", params = "!useDefaultLabel")
 	public String retrieve(@PathVariable String name, @PathVariable String profile, @PathVariable String label,
 			ServletWebRequest request, @RequestParam(defaultValue = "true") boolean resolvePlaceholders,
@@ -125,7 +127,7 @@ public class ResourceController {
 		return retrieve(request, name, profile, label, path, resolvePlaceholders, acceptedCharset);
 	}
 
-	@GetMapping(value = { "/{name}/{profile}/{path:.*}", "/{name}/{profile}/**" }, params = "useDefaultLabel")
+	@GetMapping(value = { "/{name}/{profile}/{path:.*}", "/{name}/{profile}/*/**" }, params = "useDefaultLabel")
 	public String retrieveDefault(@PathVariable String name, @PathVariable String profile, ServletWebRequest request,
 			@RequestParam(defaultValue = "true") boolean resolvePlaceholders,
 			@RequestHeader(value = HttpHeaders.ACCEPT_CHARSET, required = false,
@@ -214,6 +216,7 @@ public class ResourceController {
 		return retrieve(null, name, profile, label, path, resolvePlaceholders, acceptedCharset);
 	}
 
+	// See retrieve() for why this mapping opts out of useDefaultLabel requests.
 	@GetMapping(value = "/{name}/{profile}/{label}/**", params = "!useDefaultLabel",
 			produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
 	public byte[] binary(@PathVariable String name, @PathVariable String profile, @PathVariable String label,
@@ -222,7 +225,7 @@ public class ResourceController {
 		return binary(request, name, profile, label, path);
 	}
 
-	@GetMapping(value = { "/{name}/{profile}/{path:.*}", "/{name}/{profile}/**" }, params = "useDefaultLabel",
+	@GetMapping(value = { "/{name}/{profile}/{path:.*}", "/{name}/{profile}/*/**" }, params = "useDefaultLabel",
 			produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
 	public byte[] binaryDefault(@PathVariable String name, @PathVariable String profile, ServletWebRequest request)
 			throws IOException {
