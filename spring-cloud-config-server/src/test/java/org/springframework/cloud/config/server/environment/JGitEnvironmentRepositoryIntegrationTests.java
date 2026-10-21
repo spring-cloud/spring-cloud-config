@@ -509,9 +509,10 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		assertThat(environment.getVersion()).isEqualTo(startingRemoteVersion);
 
 		// update the remote repo
-		FileOutputStream out = new FileOutputStream(
-				new File(testData.getServerGit().getGitWorkingDirectory(), "bar.properties"));
-		StreamUtils.copy("foo: barNewCommit", Charset.defaultCharset(), out);
+		try (FileOutputStream out = new FileOutputStream(
+				new File(testData.getServerGit().getGitWorkingDirectory(), "bar.properties"))) {
+			StreamUtils.copy("foo: barNewCommit", Charset.defaultCharset(), out);
+		}
 		testData.getServerGit().getGit().add().addFilepattern("bar.properties").call();
 		testData.getServerGit().getGit().commit().setMessage("Updated for pull").call();
 		String updatedRemoteVersion = getCommitID(testData.getServerGit().getGit(), "master");
@@ -520,7 +521,11 @@ public class JGitEnvironmentRepositoryIntegrationTests {
 		environment = repository.findOne("bar", "staging", "master");
 		assertThat(environment.getVersion()).isEqualTo(startingRemoteVersion);
 
-		repository.expireRefreshRate();
+		repository.expireRefreshRate(repository.getUri() + "-other");
+		environment = repository.findOne("bar", "staging", "master");
+		assertThat(environment.getVersion()).isEqualTo(startingRemoteVersion);
+
+		repository.expireRefreshRate(repository.getUri());
 
 		environment = repository.findOne("bar", "staging", "master");
 		assertThat(environment.getVersion()).isEqualTo(updatedRemoteVersion);

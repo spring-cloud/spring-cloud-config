@@ -18,6 +18,7 @@ package org.springframework.cloud.config.server.environment;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
@@ -26,6 +27,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import io.micrometer.observation.ObservationRegistry;
@@ -57,6 +59,7 @@ import org.eclipse.jgit.transport.FetchResult;
 import org.eclipse.jgit.transport.ReceiveCommand;
 import org.eclipse.jgit.transport.TagOpt;
 import org.eclipse.jgit.transport.TrackingRefUpdate;
+import org.eclipse.jgit.transport.URIish;
 
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.cloud.config.environment.Environment;
@@ -112,7 +115,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	/**
 	 * Time of the last refresh of the git repository.
 	 */
-	private long lastRefresh;
+	private volatile long lastRefresh;
 
 	/**
 	 * Flag to indicate that the repository should be cloned on startup (not on demand).
@@ -908,12 +911,52 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	}
 
 	/**
-	 * Makes the next request fetch from the remote repository, even if the
+	 * Makes the next request fetch from the matching remote repository, even if the
 	 * {@link #getRefreshRate() refresh rate} has not elapsed since the last fetch. Has no
 	 * effect if the refresh rate is negative, in which case the remote is never fetched.
+	 * @param repositoryUri a repository URL supplied by the webhook
 	 */
-	public void expireRefreshRate() {
-		this.lastRefresh = 0;
+	public void expireRefreshRate(String repositoryUri) {
+		if (!StringUtils.hasText(repositoryUri) || !StringUtils.hasText(getUri())) {
+			return;
+		}
+		try {
+			if (normalizeRepositoryUri(getUri()).equals(normalizeRepositoryUri(repositoryUri))) {
+				this.lastRefresh = 0;
+			}
+		}
+		catch (URISyntaxException ex) {
+			// An unidentified repository must not invalidate unrelated repositories.
+		}
+	}
+
+	private URIish normalizeRepositoryUri(String uri) throws URISyntaxException {
+		URIish parsed = new URIish(uri).setPass(null);
+		if (parsed.getHost() == null) {
+			return parsed;
+		}
+		String scheme = parsed.getScheme() == null ? "ssh" : parsed.getScheme().toLowerCase(Locale.ROOT);
+		if (!"ssh".equals(scheme)) {
+			parsed = parsed.setUser(null);
+		}
+		String path = parsed.getPath();
+		if (path.endsWith("/")) {
+			path = path.substring(0, path.length() - 1);
+		}
+		if (("http".equals(scheme) || "https".equals(scheme)) && path.endsWith(".git")) {
+			path = path.substring(0, path.length() - 4);
+		}
+		int defaultPort = switch (scheme) {
+			case "http" -> 80;
+			case "https" -> 443;
+			case "ssh" -> 22;
+			case "git" -> 9418;
+			default -> -1;
+		};
+		return parsed.setScheme(scheme)
+			.setHost(parsed.getHost().toLowerCase(Locale.ROOT))
+			.setPath(path)
+			.setPort(parsed.getPort() == defaultPort ? -1 : parsed.getPort());
 	}
 
 	/**

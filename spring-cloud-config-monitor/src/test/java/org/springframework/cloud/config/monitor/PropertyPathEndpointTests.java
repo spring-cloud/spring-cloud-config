@@ -20,10 +20,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import io.micrometer.observation.ObservationRegistry;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import org.springframework.cloud.config.server.environment.JGitEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.JGitEnvironmentRepository;
@@ -70,22 +75,182 @@ public class PropertyPathEndpointTests {
 	@Test
 	public void testExpiresGitRefreshRateBeforeNotifyingServices() {
 		JGitEnvironmentRepository repository = gitRepository();
+		repository.setUri("https://github.com/example/config.git");
 		repository.setLastRefresh(System.currentTimeMillis());
+		JGitEnvironmentRepository unrelated = gitRepository();
+		unrelated.setUri("https://github.com/example/other-config.git");
+		long unrelatedLastRefresh = System.currentTimeMillis();
+		unrelated.setLastRefresh(unrelatedLastRefresh);
 		List<Long> lastRefreshWhenNotified = new ArrayList<>();
 		PropertyPathNotifier notifier = services -> lastRefreshWhenNotified.add(repository.getLastRefresh());
+		PropertyPathEndpoint endpoint = new PropertyPathEndpoint(new GithubPropertyPathNotificationExtractor(),
+				List.of(notifier), MonitorConfigurationProperties.DEFAULT_MAX_DASHES,
+				MonitorConfigurationProperties.DEFAULT_MAX_PATHS, Collections.emptyList(),
+				List.of(repository, unrelated));
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.set("X-Github-Event", "push");
+		endpoint.notifyByPath(headers, Map.of("repository", Map.of("clone_url", repository.getUri()), "commits",
+				List.of(Map.of("modified", List.of("foo.yml")))));
+
+		assertThat(lastRefreshWhenNotified).containsExactly(0L);
+		assertThat(unrelated.getLastRefresh()).isEqualTo(unrelatedLastRefresh);
+	}
+
+	@ParameterizedTest
+	@MethodSource("requestsWithoutRepositoryIdentity")
+	public void testMissingRepositoryIdentityDoesNotExpireRefreshRate(Map<String, Object> request) {
+		JGitEnvironmentRepository repository = gitRepository();
+		repository.setUri("https://github.com/example/config.git");
+		long lastRefresh = System.currentTimeMillis();
+		repository.setLastRefresh(lastRefresh);
+		Set<String> notifiedServices = new LinkedHashSet<>();
 		PropertyPathEndpoint endpoint = new PropertyPathEndpoint(
-				new CompositePropertyPathNotificationExtractor(Collections.emptyList()), List.of(notifier),
+				new CompositePropertyPathNotificationExtractor(Collections.emptyList()),
+				List.of(services -> notifiedServices.addAll(services)),
 				MonitorConfigurationProperties.DEFAULT_MAX_DASHES, MonitorConfigurationProperties.DEFAULT_MAX_PATHS,
 				Collections.emptyList(), List.of(repository));
 
-		endpoint.notifyByPath(new HttpHeaders(), Collections.singletonMap("path", "foo.yml"));
+		assertThat(endpoint.notifyByPath(new HttpHeaders(), request)).containsExactly("foo");
 
-		assertThat(lastRefreshWhenNotified).containsExactly(0L);
+		assertThat(repository.getLastRefresh()).isEqualTo(lastRefresh);
+		assertThat(notifiedServices).containsExactly("foo");
+	}
+
+	static Stream<Map<String, Object>> requestsWithoutRepositoryIdentity() {
+		return Stream.of(Map.of("path", "foo.yml"), Map.of("path", "foo.yml", "repository", "not a map"),
+				Map.of("path", "foo.yml", "repository", Map.of("clone_url", 42, "ssh_url", " ")),
+				Map.of("path", "foo.yml", "repository", Map.of("links", Map.of("clone", "not a list"))),
+				Map.of("path", "foo.yml", "repository",
+						Map.of("links", Map.of("clone", List.of("not a map", Map.of("href", 42))))),
+				Map.of("path", "foo.yml", "repository", Map.of("url", "https://github.com/example/config.git")));
+	}
+
+	@ParameterizedTest
+	@MethodSource("repositoryNotifications")
+	public void testExpiresOnlyTheRepositoryIdentifiedByProviderPayload(HttpHeaders headers,
+			Map<String, Object> request, String repositoryUri) {
+		JGitEnvironmentRepository repository = gitRepository();
+		repository.setUri(repositoryUri);
+		repository.setLastRefresh(System.currentTimeMillis());
+		JGitEnvironmentRepository unrelated = gitRepository();
+		unrelated.setUri("https://example.com/unrelated/config.git");
+		long unrelatedLastRefresh = System.currentTimeMillis();
+		unrelated.setLastRefresh(unrelatedLastRefresh);
+		Set<String> notifiedServices = new LinkedHashSet<>();
+		PropertyPathEndpoint endpoint = new PropertyPathEndpoint(
+				new CompositePropertyPathNotificationExtractor(List.of(new GithubPropertyPathNotificationExtractor(),
+						new GitlabPropertyPathNotificationExtractor(),
+						new BitbucketPropertyPathNotificationExtractor())),
+				List.of(services -> notifiedServices.addAll(services)),
+				MonitorConfigurationProperties.DEFAULT_MAX_DASHES, MonitorConfigurationProperties.DEFAULT_MAX_PATHS,
+				Collections.emptyList(), List.of(repository, unrelated));
+
+		assertThat(endpoint.notifyByPath(headers, request)).isNotEmpty();
+
+		assertThat(repository.getLastRefresh()).isZero();
+		assertThat(unrelated.getLastRefresh()).isEqualTo(unrelatedLastRefresh);
+		assertThat(notifiedServices).isNotEmpty();
+	}
+
+	static Stream<Arguments> repositoryNotifications() {
+		HttpHeaders githubHeaders = new HttpHeaders();
+		githubHeaders.set("X-Github-Event", "push");
+		HttpHeaders gitlabHeaders = new HttpHeaders();
+		gitlabHeaders.set("X-Gitlab-Event", "Push Hook");
+		HttpHeaders bitbucketCloudHeaders = new HttpHeaders();
+		bitbucketCloudHeaders.set("X-Hook-UUID", "hook-id");
+		bitbucketCloudHeaders.set("X-Event-Key", "repo:push");
+		HttpHeaders bitbucketServerHeaders = new HttpHeaders();
+		bitbucketServerHeaders.set("X-Request-Id", "request-id");
+		bitbucketServerHeaders.set("X-Event-Key", "repo:refs_changed");
+		HttpHeaders bitbucketMergedHeaders = new HttpHeaders();
+		bitbucketMergedHeaders.set("X-Request-Id", "request-id");
+		bitbucketMergedHeaders.set("X-Event-Key", "pr:merged");
+		List<Map<String, Object>> commits = List.of(Map.of("modified", List.of("foo.yml")));
+		return Stream.of(
+				Arguments.of(githubHeaders,
+						Map.of("repository", Map.of("ssh_url", "git@github.com:example/config.git"), "commits",
+								commits),
+						"git@github.com:example/config.git"),
+				Arguments.of(githubHeaders,
+						Map.of("repository", Map.of("git_url", "git://github.com/example/config.git"), "commits",
+								commits),
+						"git://github.com/example/config.git"),
+				Arguments.of(gitlabHeaders,
+						Map.of("project", Map.of("git_http_url", "https://gitlab.com/example/config.git"), "commits",
+								commits),
+						"https://gitlab.com/example/config.git"),
+				Arguments.of(gitlabHeaders,
+						Map.of("project", Map.of("git_ssh_url", "git@gitlab.com:example/config.git"), "commits",
+								commits),
+						"git@gitlab.com:example/config.git"),
+				Arguments.of(gitlabHeaders,
+						Map.of("repository", Map.of("url", "git@gitlab.com:example/config.git"), "commits", commits),
+						"git@gitlab.com:example/config.git"),
+				Arguments.of(bitbucketCloudHeaders,
+						Map.of("repository", Map.of("links", Map.of("html",
+								Map.of("href", "https://bitbucket.org/example/config"))), "push", Map.of("changes",
+										List.of())),
+						"https://bitbucket.org/example/config.git"),
+				Arguments.of(bitbucketServerHeaders, Map.of("repository", Map.of("links", Map.of("clone",
+						List.of(Map.of("name", "ssh", "href", "ssh://git@example.com:7999/example/config.git")))),
+						"changes", List.of()), "ssh://git@example.com:7999/example/config.git"),
+				Arguments.of(bitbucketMergedHeaders, Map.of("pullRequest",
+						Map.of("toRef",
+								Map.of("repository", Map.of("links", Map.of("clone",
+										List.of(Map.of("href", "https://example.com/scm/example/config.git"))))),
+								"fromRef",
+								Map.of("repository", Map.of("clone_url", "https://example.com/unrelated/config.git")))),
+						"https://example.com/scm/example/config.git"));
+	}
+
+	@Test
+	public void testBitbucketWithoutCloneUrlsStillNotifiesApplications() {
+		JGitEnvironmentRepository repository = gitRepository();
+		repository.setUri("https://example.com/scm/example/config.git");
+		long lastRefresh = System.currentTimeMillis();
+		repository.setLastRefresh(lastRefresh);
+		Set<String> notifiedServices = new LinkedHashSet<>();
+		PropertyPathEndpoint endpoint = new PropertyPathEndpoint(new BitbucketPropertyPathNotificationExtractor(),
+				List.of(services -> notifiedServices.addAll(services)),
+				MonitorConfigurationProperties.DEFAULT_MAX_DASHES, MonitorConfigurationProperties.DEFAULT_MAX_PATHS,
+				Collections.emptyList(), List.of(repository));
+		HttpHeaders headers = new HttpHeaders();
+		headers.set("X-Request-Id", "request-id");
+		headers.set("X-Event-Key", "repo:refs_changed");
+
+		assertThat(endpoint.notifyByPath(headers, Map.of("repository",
+				Map.of("slug", "config", "project", Map.of("key", "EXAMPLE")), "changes", List.of())))
+			.containsExactly("*");
+
+		assertThat(repository.getLastRefresh()).isEqualTo(lastRefresh);
+		assertThat(notifiedServices).containsExactly("*");
+	}
+
+	@Test
+	public void testUnrecognizedWebhookDoesNotExpireGitRefreshRate() {
+		JGitEnvironmentRepository repository = gitRepository();
+		repository.setUri("https://github.com/example/config.git");
+		long lastRefresh = System.currentTimeMillis();
+		repository.setLastRefresh(lastRefresh);
+		PropertyPathEndpoint endpoint = new PropertyPathEndpoint(new GithubPropertyPathNotificationExtractor(),
+				List.of(services -> {
+					throw new AssertionError("Unrecognized webhook must not notify applications");
+				}), MonitorConfigurationProperties.DEFAULT_MAX_DASHES, MonitorConfigurationProperties.DEFAULT_MAX_PATHS,
+				Collections.emptyList(), List.of(repository));
+
+		assertThat(endpoint.notifyByPath(new HttpHeaders(), Map.of("repository",
+				Map.of("clone_url", repository.getUri()), "commits", List.of(Map.of("modified", List.of("foo.yml"))))))
+			.isEmpty();
+
+		assertThat(repository.getLastRefresh()).isEqualTo(lastRefresh);
 	}
 
 	@Test
 	public void testDoesNotExpireGitRefreshRateWhenNoServiceIsAffected() {
 		JGitEnvironmentRepository repository = gitRepository();
+		repository.setUri("https://github.com/example/config.git");
 		long lastRefresh = System.currentTimeMillis();
 		repository.setLastRefresh(lastRefresh);
 		PropertyPathEndpoint endpoint = new PropertyPathEndpoint(
@@ -93,7 +258,8 @@ public class PropertyPathEndpointTests {
 				}), MonitorConfigurationProperties.DEFAULT_MAX_DASHES, MonitorConfigurationProperties.DEFAULT_MAX_PATHS,
 				List.of("foo\\.yml"), List.of(repository));
 
-		endpoint.notifyByPath(new HttpHeaders(), Collections.singletonMap("path", "foo.yml"));
+		endpoint.notifyByPath(new HttpHeaders(),
+				Map.of("path", "foo.yml", "repository", Map.of("clone_url", repository.getUri())));
 
 		assertThat(repository.getLastRefresh()).isEqualTo(lastRefresh);
 	}

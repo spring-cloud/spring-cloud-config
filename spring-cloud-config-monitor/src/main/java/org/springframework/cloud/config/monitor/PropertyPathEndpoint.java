@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.config.monitor;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -73,9 +74,8 @@ public class PropertyPathEndpoint {
 	private final List<Pattern> ignoredPaths;
 
 	/**
-	 * Git repositories of this config server. Their refresh rate is expired before the
-	 * applications are notified, so that the configuration the applications fetch on
-	 * refresh includes the change that triggered the notification.
+	 * Git repositories of this config server. Only repositories identified by the
+	 * notification have their refresh rate expired before applications are notified.
 	 */
 	private final List<JGitEnvironmentRepository> gitRepositories;
 
@@ -135,8 +135,10 @@ public class PropertyPathEndpoint {
 				for (String service : services) {
 					log.info("Refresh for: " + service);
 				}
-				for (JGitEnvironmentRepository repository : this.gitRepositories) {
-					repository.expireRefreshRate();
+				for (String repositoryUri : getRepositoryUris(headers, request)) {
+					for (JGitEnvironmentRepository repository : this.gitRepositories) {
+						repository.expireRefreshRate(repositoryUri);
+					}
 				}
 				for (PropertyPathNotifier notifier : this.notifiers) {
 					notifier.notifyApplications(services);
@@ -154,6 +156,53 @@ public class PropertyPathEndpoint {
 		String key = "path";
 		map.put(key, request);
 		return notifyByPath(headers, map);
+	}
+
+	private Set<String> getRepositoryUris(HttpHeaders headers, Map<String, Object> request) {
+		Set<String> uris = new LinkedHashSet<>();
+		addRepositoryUris(uris, request.get("repository"));
+		addRepositoryUris(uris, request.get("project"));
+		if ("Push Hook".equals(headers.getFirst("X-Gitlab-Event"))
+				&& request.get("repository") instanceof Map<?, ?> repository) {
+			// Legacy GitLab payloads use url for the clone URL. GitHub uses it for an API
+			// URL.
+			addRepositoryUri(uris, repository.get("url"));
+		}
+		if (StringUtils.hasText(headers.getFirst("X-Hook-UUID"))
+				&& request.get("repository") instanceof Map<?, ?> repository
+				&& repository.get("links") instanceof Map<?, ?> links && links.get("html") instanceof Map<?, ?> html) {
+			// Bitbucket Cloud advertises the repository's HTTPS location in its HTML
+			// link.
+			addRepositoryUri(uris, html.get("href"));
+		}
+		if ("pr:merged".equals(headers.getFirst("X-Event-Key"))
+				&& request.get("pullRequest") instanceof Map<?, ?> pullRequest
+				&& pullRequest.get("toRef") instanceof Map<?, ?> toRef) {
+			addRepositoryUris(uris, toRef.get("repository"));
+		}
+		return uris;
+	}
+
+	private void addRepositoryUris(Set<String> uris, Object value) {
+		if (!(value instanceof Map<?, ?> repository)) {
+			return;
+		}
+		for (String field : List.of("clone_url", "ssh_url", "git_url", "git_http_url", "git_ssh_url")) {
+			addRepositoryUri(uris, repository.get(field));
+		}
+		if (repository.get("links") instanceof Map<?, ?> links && links.get("clone") instanceof Collection<?> clones) {
+			for (Object clone : clones) {
+				if (clone instanceof Map<?, ?> link) {
+					addRepositoryUri(uris, link.get("href"));
+				}
+			}
+		}
+	}
+
+	private void addRepositoryUri(Set<String> uris, Object value) {
+		if (value instanceof String uri && StringUtils.hasText(uri)) {
+			uris.add(uri);
+		}
 	}
 
 	private Set<String> guessServiceName(String path) {

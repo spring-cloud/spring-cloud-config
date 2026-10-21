@@ -74,6 +74,10 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 
 import org.springframework.cloud.config.environment.Environment;
@@ -128,6 +132,71 @@ public class JGitEnvironmentRepositoryTests {
 		if (this.basedir.exists()) {
 			FileUtils.delete(this.basedir, FileUtils.RECURSIVE | FileUtils.RETRY);
 		}
+	}
+
+	@Test
+	public void expireRefreshRateOnlyExpiresMatchingLocalRepository() {
+		long now = System.currentTimeMillis();
+		this.repository.setLastRefresh(now);
+
+		this.repository.expireRefreshRate(this.repository.getUri() + "-other");
+		assertThat(this.repository.getLastRefresh()).isEqualTo(now);
+
+		this.repository.expireRefreshRate(this.repository.getUri());
+		assertThat(this.repository.getLastRefresh()).isZero();
+	}
+
+	@ParameterizedTest
+	@CsvSource({ "https://github.com/team/config.git, https://github.com/team/config.git, true",
+			"https://user:password@github.com/team/config.git, https://github.com/team/config.git, true",
+			"https://github.com/team/config.git, https://github.com/team/config, true",
+			"https://github.com/team/config.git/, https://github.com/team/config.git, true",
+			"https://GITHUB.COM:443/team/config.git, https://github.com/team/config.git, true",
+			"http://git.example.com:80/team/config.git, http://git.example.com/team/config.git, true",
+			"ssh://git@github.com:22/team/config.git, ssh://git@github.com/team/config.git, true",
+			"git@git.example.com:/team/config.git, ssh://git@git.example.com/team/config.git, true",
+			"git@git.example.com:team/config.git, ssh://git@git.example.com/team/config.git, false",
+			"alice@git.example.com:team/config.git, bob@git.example.com:team/config.git, false",
+			"git@git.example.com:/srv/config.git, git@git.example.com:/srv/config, false",
+			"https://github.com/team/config.git, https://github.com/team/other.git, false",
+			"https://github.com/team/config.git, https://github.com/other/config.git, false",
+			"https://github.com/team/config.git, https://gitlab.com/team/config.git, false",
+			"https://github.com/team/config.git, https://github.com/team/Config.git, false",
+			"https://git.example.com:8443/team/config.git, https://git.example.com/team/config.git, false",
+			"https://github.com/team/config.git, http://github.com/team/config.git, false",
+			"ssh://git@git.example.com:2222/team/config.git, git@git.example.com:team/config.git, false",
+			"file:/config/team.git, file:/config/team, false" })
+	public void expireRefreshRateMatchesRepositoryUri(String configuredUri, String notificationUri, boolean matches) {
+		long now = System.currentTimeMillis();
+		this.repository.setUri(configuredUri);
+		this.repository.setLastRefresh(now);
+
+		this.repository.expireRefreshRate(notificationUri);
+
+		assertThat(this.repository.getLastRefresh()).isEqualTo(matches ? 0 : now);
+	}
+
+	@ParameterizedTest
+	@NullAndEmptySource
+	@ValueSource(strings = { " ", "https://", "://invalid" })
+	public void expireRefreshRateIgnoresMissingOrInvalidRepositoryUri(String notificationUri) {
+		long now = System.currentTimeMillis();
+		this.repository.setLastRefresh(now);
+
+		this.repository.expireRefreshRate(notificationUri);
+
+		assertThat(this.repository.getLastRefresh()).isEqualTo(now);
+	}
+
+	@Test
+	public void expireRefreshRatePreservesNegativeRefreshRate() throws Exception {
+		this.repository.setRefreshRate(-1);
+		this.repository.setLastRefresh(System.currentTimeMillis());
+
+		this.repository.expireRefreshRate(this.repository.getUri());
+
+		assertThat(this.repository.getRefreshRate()).isEqualTo(-1);
+		assertThat(this.repository.shouldPull(mock(Git.class))).isFalse();
 	}
 
 	@Test
