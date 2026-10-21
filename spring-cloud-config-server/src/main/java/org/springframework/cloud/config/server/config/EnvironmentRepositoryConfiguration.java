@@ -245,7 +245,7 @@ public class EnvironmentRepositoryConfiguration {
 		@Bean
 		public GcsEnvironmentRepositoryFactory gcsEnvironmentRepositoryFactory(ConfigServerProperties server,
 				ObjectProvider<Storage> storageProvider) {
-			return new GcsEnvironmentRepositoryFactory(server, storageProvider.getIfAvailable());
+			return new GcsEnvironmentRepositoryFactory(server, storageProvider.getIfUnique());
 		}
 
 	}

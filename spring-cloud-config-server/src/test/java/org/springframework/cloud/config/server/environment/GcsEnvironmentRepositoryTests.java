@@ -17,6 +17,7 @@
 package org.springframework.cloud.config.server.environment;
 
 import java.util.List;
+import java.util.Map;
 
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.BlobId;
@@ -29,6 +30,7 @@ import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -204,10 +206,12 @@ class GcsEnvironmentRepositoryTests {
 		properties.setSearchPaths(List.of("{application}/config"));
 
 		Blob blob = mock(Blob.class);
+
 		when(storage.get(any(BlobId.class))).thenAnswer(invocation -> {
 			BlobId blobId = invocation.getArgument(0);
-			return blobId.getName().equals("my-app/config-default.properties") ? blob : null;
+			return blobId.getName().equals("my-app/config.properties") ? blob : null;
 		});
+
 		when(blob.getContent()).thenReturn("message=custom-path".getBytes());
 
 		GcsEnvironmentRepository repository = new GcsEnvironmentRepository(storage, properties, serverProperties);
@@ -215,9 +219,10 @@ class GcsEnvironmentRepositoryTests {
 		Environment environment = repository.findOne("my-app", "default", null);
 
 		assertThat(environment.getPropertySources()).isNotEmpty();
+		assertThat(environment.getPropertySources().get(0).getName()).isEqualTo("gcs:my-app/config.properties");
 		assertThat(environment.getPropertySources().get(0).getSource().get("message")).isEqualTo("custom-path");
 
-		verify(storage).get(BlobId.of("test-bucket", "my-app/config-default.properties"));
+		verify(storage).get(BlobId.of("test-bucket", "my-app/config.properties"));
 	}
 
 	@Test
@@ -287,6 +292,227 @@ class GcsEnvironmentRepositoryTests {
 			.hasMessageContaining("label");
 
 		verifyNoInteractions(storage);
+	}
+
+	@Test
+	void loadsOnlyYamlDocumentMatchingActiveProfile() {
+		Blob blob = mock(Blob.class);
+		when(storage.get(any(BlobId.class))).thenAnswer(invocation -> {
+			BlobId blobId = invocation.getArgument(0);
+			return blobId.getName().equals("my-app-dev.yml") ? blob : null;
+		});
+
+		String yamlContent = "common: shared\n" + "---\n" + "spring:\n" + "  config:\n" + "    activate:\n"
+				+ "      on-profile: dev\n" + "feature: development\n" + "---\n" + "spring:\n" + "  config:\n"
+				+ "    activate:\n" + "      on-profile: production\n" + "feature: production\n";
+
+		when(blob.getContent()).thenReturn(yamlContent.getBytes());
+
+		GcsEnvironmentRepository repository = new GcsEnvironmentRepository(storage, properties, serverProperties);
+
+		Environment environment = repository.findOne("my-app", "dev", null);
+
+		assertThat(environment.getPropertySources()).isNotEmpty();
+
+		Map<?, ?> source = (Map<?, ?>) environment.getPropertySources().get(0).getSource();
+
+		assertThat("shared".equals(source.get("common"))).isTrue();
+		assertThat("development".equals(source.get("feature"))).isTrue();
+		assertThat(source.containsKey("feature.production")).isFalse();
+	}
+
+	@Test
+	void excludesProfileSpecificYamlDocumentsWhenNoProfileIsActive() {
+		Blob blob = mock(Blob.class);
+
+		when(storage.get(any(BlobId.class))).thenAnswer(invocation -> {
+			BlobId blobId = invocation.getArgument(0);
+			return blobId.getName().equals("my-app.yml") ? blob : null;
+		});
+
+		String yamlContent = String.join("\n", "common: shared", "---", "spring:", "  config:", "    activate:",
+				"      on-profile: dev", "feature: development", "---", "spring:", "  config:", "    activate:",
+				"      on-profile: production", "feature: production");
+
+		when(blob.getContent()).thenReturn(yamlContent.getBytes());
+
+		GcsEnvironmentRepository repository = new GcsEnvironmentRepository(storage, properties, serverProperties);
+
+		Environment environment = repository.findOne("my-app", null, null);
+
+		assertThat(environment.getPropertySources().get(0).getSource().toString()).contains("common=shared")
+			.doesNotContain("feature=");
+	}
+
+	@Test
+	void propagatesStorageListingFailures() {
+		properties.setSearchPaths(List.of("config/*"));
+
+		when(storage.list(anyString(), any(Storage.BlobListOption.class)))
+			.thenThrow(new IllegalStateException("GCS listing failed"));
+
+		GcsEnvironmentRepository repository = new GcsEnvironmentRepository(storage, properties, serverProperties);
+
+		assertThatThrownBy(() -> repository.findOne("my-app", "default", null))
+			.isInstanceOf(IllegalStateException.class)
+			.hasMessage("GCS listing failed");
+	}
+
+	@Test
+	void propagatesStorageReadFailures() {
+		when(storage.get(any(BlobId.class))).thenThrow(new IllegalStateException("GCS read failed"));
+
+		GcsEnvironmentRepository repository = new GcsEnvironmentRepository(storage, properties, serverProperties);
+
+		assertThatThrownBy(() -> repository.findOne("my-app", "default", null))
+			.isInstanceOf(IllegalStateException.class)
+			.hasMessage("Cannot load environment")
+			.hasCauseInstanceOf(IllegalStateException.class);
+	}
+
+	@Test
+	void resolvesUnprofiledSearchPathWithoutTrailingHyphen() {
+		serverProperties.setDefaultProfile(null);
+		properties.setSearchPaths(List.of("{application}-{profile}.yml"));
+
+		Blob blob = mock(Blob.class);
+		when(storage.get(any(BlobId.class))).thenAnswer(invocation -> {
+			BlobId blobId = invocation.getArgument(0);
+			return blobId.getName().equals("my-app.yml") ? blob : null;
+		});
+		when(blob.getContent()).thenReturn("message=unprofiled".getBytes());
+
+		GcsEnvironmentRepository repository = new GcsEnvironmentRepository(storage, properties, serverProperties);
+
+		Environment environment = repository.findOne("my-app", null, null);
+
+		assertThat(environment.getPropertySources()).isNotEmpty();
+		assertThat(environment.getPropertySources().get(0).getName()).isEqualTo("gcs:my-app.yml");
+
+		verify(storage).get(BlobId.of("test-bucket", "my-app.yml"));
+		verify(storage, org.mockito.Mockito.never()).get(BlobId.of("test-bucket", "my-app-.yml"));
+	}
+
+	@Test
+	void fallsBackToUnlabelledKeyWhenLabelledObjectDoesNotExist() {
+		Blob blob = mock(Blob.class);
+		when(storage.get(any(BlobId.class))).thenAnswer(invocation -> {
+			BlobId blobId = invocation.getArgument(0);
+			return blobId.getName().equals("my-app-default.properties") ? blob : null;
+		});
+		when(blob.getContent()).thenReturn("message=unlabelled".getBytes());
+
+		GcsEnvironmentRepository repository = new GcsEnvironmentRepository(storage, properties, serverProperties);
+
+		Environment environment = repository.findOne("my-app", "default", "release-1");
+
+		assertThat(environment.getPropertySources()).isNotEmpty();
+		assertThat(environment.getPropertySources().get(0).getSource().get("message")).isEqualTo("unlabelled");
+
+		verify(storage).get(BlobId.of("test-bucket", "release-1/my-app-default.properties"));
+		verify(storage).get(BlobId.of("test-bucket", "my-app-default.properties"));
+	}
+
+	@Test
+	void supportsNegatedProfilesInYamlDocuments() {
+		Blob blob = mock(Blob.class);
+		when(storage.get(any(BlobId.class))).thenAnswer(invocation -> {
+			BlobId blobId = invocation.getArgument(0);
+			return blobId.getName().equals("my-app-dev.yml") ? blob : null;
+		});
+
+		String yamlContent = String.join("\n", "common: shared", "---", "spring:", "  config:", "    activate:",
+				"      on-profile: \"!foo\"", "feature: enabled", "---", "spring:", "  config:", "    activate:",
+				"      on-profile: foo", "feature: disabled");
+
+		when(blob.getContent()).thenReturn(yamlContent.getBytes());
+
+		GcsEnvironmentRepository repository = new GcsEnvironmentRepository(storage, properties, serverProperties);
+
+		Environment environment = repository.findOne("my-app", "dev", null);
+
+		Map<?, ?> source = (Map<?, ?>) environment.getPropertySources().get(0).getSource();
+
+		assertThat(source.get("common")).isEqualTo("shared");
+		assertThat(source.get("feature")).isEqualTo("enabled");
+	}
+
+	@Test
+	void loadsYamlDocumentsForEachActiveProfile() {
+		Blob blob = mock(Blob.class);
+		when(storage.get(any(BlobId.class))).thenAnswer(invocation -> {
+			BlobId blobId = invocation.getArgument(0);
+			return blobId.getName().equals("my-app.yml") ? blob : null;
+		});
+
+		String yamlContent = String.join("\n", "common: shared", "---", "spring:", "  config:", "    activate:",
+				"      on-profile: dev", "feature.dev: enabled", "---", "spring:", "  config:", "    activate:",
+				"      on-profile: production", "feature.production: enabled");
+
+		when(blob.getContent()).thenReturn(yamlContent.getBytes());
+
+		GcsEnvironmentRepository repository = new GcsEnvironmentRepository(storage, properties, serverProperties);
+
+		Environment environment = repository.findOne("my-app", "dev,production", null);
+
+		assertThat(environment.getProfiles()).containsExactly("dev", "production");
+		assertThat(environment.getPropertySources()).isNotEmpty();
+
+		Map<?, ?> source = (Map<?, ?>) environment.getPropertySources().get(0).getSource();
+		assertThat(source.get("common")).isEqualTo("shared");
+		assertThat(source.get("feature.dev")).isEqualTo("enabled");
+		assertThat(source.get("feature.production")).isEqualTo("enabled");
+	}
+
+	@Test
+	void resolvesMultipleLabelsInReverseOrder() {
+		Blob mainBlob = mock(Blob.class);
+		Blob developBlob = mock(Blob.class);
+
+		when(storage.get(any(BlobId.class))).thenAnswer(invocation -> {
+			BlobId blobId = invocation.getArgument(0);
+			return switch (blobId.getName()) {
+				case "main/my-app-default.properties" -> mainBlob;
+				case "develop/my-app-default.properties" -> developBlob;
+				default -> null;
+			};
+		});
+
+		when(mainBlob.getContent()).thenReturn("message=main".getBytes());
+		when(developBlob.getContent()).thenReturn("message=develop".getBytes());
+
+		GcsEnvironmentRepository repository = new GcsEnvironmentRepository(storage, properties, serverProperties);
+
+		Environment environment = repository.findOne("my-app", "default", "main,develop");
+
+		assertThat(environment.getPropertySources()).hasSize(2);
+		assertThat(environment.getPropertySources().get(0).getSource().get("message")).isEqualTo("develop");
+		assertThat(environment.getPropertySources().get(1).getSource().get("message")).isEqualTo("main");
+	}
+
+	@Test
+	void resolvesLiteralSearchPathWithoutAddingProfileSuffix() {
+		properties.setSearchPaths(List.of("config/application"));
+
+		Blob baseBlob = mock(Blob.class);
+
+		when(storage.get(any(BlobId.class))).thenAnswer(invocation -> {
+			BlobId blobId = invocation.getArgument(0);
+			return blobId.getName().equals("config/application.properties") ? baseBlob : null;
+		});
+
+		when(baseBlob.getContent()).thenReturn("message=base".getBytes());
+
+		GcsEnvironmentRepository repository = new GcsEnvironmentRepository(storage, properties, serverProperties);
+
+		Environment environment = repository.findOne("my-app", "dev", null);
+
+		assertThat(environment.getPropertySources()).isNotEmpty();
+		assertThat(environment.getPropertySources().get(0).getName()).isEqualTo("gcs:config/application.properties");
+		assertThat(environment.getPropertySources().get(0).getSource().get("message")).isEqualTo("base");
+
+		verify(storage).get(BlobId.of("test-bucket", "config/application.properties"));
+		verify(storage, org.mockito.Mockito.never()).get(BlobId.of("test-bucket", "config/application-dev.properties"));
 	}
 
 }

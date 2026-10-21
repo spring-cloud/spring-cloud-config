@@ -36,11 +36,14 @@ import com.google.cloud.storage.Storage;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.springframework.beans.factory.config.YamlProcessor;
 import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
+import org.springframework.cloud.config.server.support.PathUtils;
 import org.springframework.core.Ordered;
+import org.springframework.core.env.Profiles;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.util.PathMatcher;
@@ -88,51 +91,92 @@ public class GcsEnvironmentRepository implements EnvironmentRepository, Ordered 
 		String resolvedProfile = StringUtils.hasText(profile) ? profile : this.serverProperties.getDefaultProfile();
 		String resolvedLabel = StringUtils.hasText(label) ? label : this.serverProperties.getDefaultLabel();
 
-		validatePathValue("application", resolvedApplication);
-		validatePathValue("profile", resolvedProfile);
-		validatePathValue("label", resolvedLabel);
+		validateApplication(resolvedApplication);
+		validateProfiles(resolvedProfile);
+		validateLabel(resolvedLabel);
 
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(resolvedProfile);
 		Environment environment = new Environment(resolvedApplication, profiles);
 		environment.setLabel(resolvedLabel);
 
+		List<String> labels;
+		if (StringUtils.hasText(resolvedLabel) && resolvedLabel.contains(",")) {
+			labels = new ArrayList<>(Arrays.asList(StringUtils.commaDelimitedListToStringArray(resolvedLabel)));
+			Collections.reverse(labels);
+		}
+		else {
+			labels = Collections.singletonList(resolvedLabel);
+		}
+
 		List<String> applications = new ArrayList<>(
-				Arrays.asList(StringUtils.commaDelimitedListToStringArray(resolvedApplication)));
+				Arrays.stream(StringUtils.commaDelimitedListToStringArray(resolvedApplication))
+					.map(app -> app.replace(" ", ""))
+					.toList());
 		Collections.reverse(applications);
 
 		if (!applications.contains(this.serverProperties.getDefaultApplicationName())) {
 			applications.add(this.serverProperties.getDefaultApplicationName());
 		}
 
-		for (String currentProfile : profiles) {
-			for (String currentApplication : applications) {
-				addPropertySources(environment, currentApplication, currentProfile, resolvedLabel);
-			}
-		}
+		for (String currentLabel : labels) {
+			Set<String> loadedKeys = new LinkedHashSet<>();
 
-		for (String currentApplication : applications) {
-			addPropertySources(environment, currentApplication, null, resolvedLabel);
+			/*
+			 * Load profile-specific files first. Pass the complete active profile list
+			 * separately so YAML documents in base files can match any active profile.
+			 */
+			for (String currentProfile : profiles) {
+				for (String currentApplication : applications) {
+					addPropertySources(environment, currentApplication, currentProfile, currentLabel, resolvedProfile,
+							loadedKeys);
+				}
+			}
+
+			/*
+			 * Match S3 search-path behavior: when custom search paths are configured,
+			 * don't perform a separate unprofiled lookup for an active profile. When
+			 * there are no active profiles, unprofiled configuration can still load.
+			 */
+			if (profiles.length == 0 || this.properties.getSearchPaths().isEmpty()) {
+				for (String currentApplication : applications) {
+					addPropertySources(environment, currentApplication, null, currentLabel, resolvedProfile,
+							loadedKeys);
+				}
+			}
 		}
 
 		return environment;
 	}
 
-	private void validatePathValue(String name, String value) {
-		if (value == null) {
-			return;
-		}
-
-		for (String part : value.split(",", -1)) {
-			if (part.contains("..") || part.contains("/") || part.contains("\\") || part.contains("*")
-					|| part.contains("?")) {
-				throw new IllegalArgumentException("Invalid " + name
-						+ " value: path separators, traversal sequences, and wildcards are not allowed");
-			}
+	private void validateApplication(String application) {
+		if (!StringUtils.hasText(application) || application.contains("*") || application.contains("?")
+				|| application.contains("/") || application.contains("\\") || application.contains("..")
+				|| application.contains("#") || application.contains("%")) {
+			throw new IllegalArgumentException("Invalid application name");
 		}
 	}
 
-	private void addPropertySources(Environment environment, String application, String profile, String label) {
+	private void validateProfiles(String profile) {
+		if (profile != null && !profile.isEmpty() && PathUtils.isInvalidProfiles(profile)) {
+			throw new IllegalArgumentException("Invalid profile");
+		}
+	}
+
+	private void validateLabel(String label) {
+		if (label != null
+				&& (!StringUtils.hasText(label) || label.contains("/") || label.contains("\\") || label.contains("..")
+						|| label.contains("*") || label.contains("?") || label.contains("#") || label.contains("%"))) {
+			throw new IllegalArgumentException("Invalid label");
+		}
+	}
+
+	private void addPropertySources(Environment environment, String application, String profile, String label,
+			String activeProfiles, Set<String> loadedKeys) {
 		for (String key : resolveKeys(application, profile, label)) {
+			if (!loadedKeys.add(key)) {
+				continue;
+			}
+
 			try {
 				Blob blob = this.storage.get(BlobId.of(this.properties.getBucket(), key));
 				if (blob == null) {
@@ -144,7 +188,7 @@ public class GcsEnvironmentRepository implements EnvironmentRepository, Ordered 
 					continue;
 				}
 
-				Properties config = readProperties(key, content);
+				Properties config = readProperties(key, content, activeProfiles);
 				if (config.isEmpty()) {
 					continue;
 				}
@@ -153,11 +197,22 @@ public class GcsEnvironmentRepository implements EnvironmentRepository, Ordered 
 				overrides.putAll(config);
 				overrides.putAll(this.serverProperties.getOverrides());
 
+				String sourceName = "gcs:" + key;
+
+				boolean exists = environment.getPropertySources()
+					.stream()
+					.anyMatch(source -> source.getName().equals(sourceName) && source.getSource().equals(overrides));
+
+				if (exists) {
+					continue;
+				}
+
 				environment.setVersion(blob.getGeneration() == null ? null : blob.getGeneration().toString());
-				environment.add(new PropertySource("gcs:" + key, overrides));
+				environment.add(new PropertySource(sourceName, overrides));
 			}
 			catch (Exception ex) {
 				LOG.warn("Could not read configuration from Google Cloud Storage object " + key, ex);
+				throw new IllegalStateException("Cannot load environment", ex);
 			}
 		}
 	}
@@ -167,10 +222,29 @@ public class GcsEnvironmentRepository implements EnvironmentRepository, Ordered 
 		Set<String> seenKeys = new LinkedHashSet<>();
 
 		if (this.properties.getSearchPaths().isEmpty()) {
-			String prefix = StringUtils.hasText(label) ? label + "/" : "";
-			prefix += this.properties.isUseDirectoryLayout() ? application + "/application" : application;
+			String applicationPrefix = this.properties.isUseDirectoryLayout() ? application + "/application"
+					: application;
+			String prefix = StringUtils.hasText(label) ? label + "/" + applicationPrefix : applicationPrefix;
 
 			addKeys(keys, seenKeys, prefix, profile);
+
+			/*
+			 * Also resolve the base application file during profile passes. Its YAML
+			 * documents are filtered using the complete active profile list in
+			 * readProperties().
+			 */
+			if (StringUtils.hasText(profile)) {
+				addKeys(keys, seenKeys, prefix, null);
+			}
+
+			if (StringUtils.hasText(label)) {
+				addKeys(keys, seenKeys, applicationPrefix, profile);
+
+				if (StringUtils.hasText(profile)) {
+					addKeys(keys, seenKeys, applicationPrefix, null);
+				}
+			}
+
 			return keys;
 		}
 
@@ -178,23 +252,8 @@ public class GcsEnvironmentRepository implements EnvironmentRepository, Ordered 
 			String pattern = resolvePattern(template, application, profile, label);
 
 			if (!this.pathMatcher.isPattern(pattern)) {
-				/*
-				 * When the template explicitly contains {profile}, it already identifies
-				 * the profile-specific path. Otherwise, try the conventional profile
-				 * suffix before the unprofiled path.
-				 */
-				String profilePattern = template.contains("{profile}") ? pattern : addProfileSuffix(pattern, profile);
+				addCandidateKeys(pattern, seenKeys, keys);
 
-				addCandidateKeys(profilePattern, seenKeys, keys);
-
-				if (!profilePattern.equals(pattern)) {
-					addCandidateKeys(pattern, seenKeys, keys);
-				}
-
-				/*
-				 * A search path can also represent a directory. Scan it after adding the
-				 * conventional file candidates.
-				 */
 				if (!hasSupportedExtension(pattern)) {
 					scanDirectoryPattern(pattern, seenKeys, keys);
 				}
@@ -211,25 +270,16 @@ public class GcsEnvironmentRepository implements EnvironmentRepository, Ordered 
 	}
 
 	private String resolvePattern(String template, String application, String profile, String label) {
-		String pattern = template.replace("{application}", application)
-			.replace("{profile}", profile == null ? "" : profile)
-			.replace("{label}", label == null ? "" : label);
+		String pattern = template.replace("{application}", application).replace("{label}", label == null ? "" : label);
+
+		if (profile == null) {
+			pattern = pattern.replace("-{profile}", "").replace("{profile}", "");
+		}
+		else {
+			pattern = pattern.replace("{profile}", profile);
+		}
 
 		return StringUtils.trimLeadingCharacter(pattern.replaceAll("/{2,}", "/"), '/');
-	}
-
-	private String addProfileSuffix(String pattern, String profile) {
-		if (!StringUtils.hasText(profile) || pattern.contains("{profile}")) {
-			return pattern;
-		}
-
-		for (String extension : SUPPORTED_EXTENSIONS) {
-			if (pattern.endsWith(extension)) {
-				return pattern.substring(0, pattern.length() - extension.length()) + "-" + profile + extension;
-			}
-		}
-
-		return pattern + "-" + profile;
 	}
 
 	private void addKeys(List<String> keys, Set<String> seenKeys, String base, String profile) {
@@ -318,7 +368,7 @@ public class GcsEnvironmentRepository implements EnvironmentRepository, Ordered 
 		return SUPPORTED_EXTENSIONS.stream().anyMatch(key::endsWith);
 	}
 
-	private Properties readProperties(String key, byte[] content) throws IOException {
+	private Properties readProperties(String key, byte[] content, String profile) throws IOException {
 		String extension = key.substring(key.lastIndexOf('.') + 1).toLowerCase(Locale.ROOT);
 
 		if ("properties".equals(extension)) {
@@ -332,6 +382,27 @@ public class GcsEnvironmentRepository implements EnvironmentRepository, Ordered 
 		YamlPropertiesFactoryBean yaml = new YamlPropertiesFactoryBean();
 		try (InputStream input = new ByteArrayInputStream(content)) {
 			yaml.setResources(new InputStreamResource(input));
+			yaml.setDocumentMatchers(properties -> {
+				Object value = properties.get("spring.config.activate.on-profile");
+				if (value == null) {
+					value = properties.get("spring.config.activate.onProfile");
+				}
+
+				if (value == null) {
+					return YamlProcessor.MatchStatus.FOUND;
+				}
+
+				if (!StringUtils.hasText(profile)) {
+					return YamlProcessor.MatchStatus.NOT_FOUND;
+				}
+
+				String expression = value.toString().trim();
+				List<String> activeProfiles = Arrays.asList(StringUtils.commaDelimitedListToStringArray(profile));
+				boolean matches = Profiles.of(expression).matches(activeProfiles::contains);
+
+				return matches ? YamlProcessor.MatchStatus.FOUND : YamlProcessor.MatchStatus.NOT_FOUND;
+			});
+
 			Properties result = yaml.getObject();
 			return result == null ? new Properties() : result;
 		}

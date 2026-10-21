@@ -195,6 +195,14 @@ class EnvironmentControllerIntegrationTests {
 				.andExpect(MockMvcResultMatchers.content().string(Matchers.containsString("\"propertySources\":")));
 		}
 
+		@Test
+		public void profileContainingWildcardIsRejected() throws Exception {
+			this.mvc.perform(MockMvcRequestBuilders.get("/foo/dev*"))
+				.andExpect(MockMvcResultMatchers.status().isBadRequest());
+
+			verifyNoInteractions(this.repository);
+		}
+
 	}
 
 	@SpringBootTest(classes = ControllerConfiguration.class)

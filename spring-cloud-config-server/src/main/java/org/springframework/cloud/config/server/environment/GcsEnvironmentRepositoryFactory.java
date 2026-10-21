@@ -19,17 +19,20 @@ package org.springframework.cloud.config.server.environment;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
 
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
 
 /**
  * Factory for creating Google Cloud Storage environment repositories.
  */
 public class GcsEnvironmentRepositoryFactory
-		implements EnvironmentRepositoryFactory<GcsEnvironmentRepository, GcsEnvironmentProperties> {
+		implements EnvironmentRepositoryFactory<GcsEnvironmentRepository, GcsEnvironmentProperties>, DisposableBean {
 
 	private final ConfigServerProperties server;
 
 	private final Storage storage;
+
+	private Storage createdStorage;
 
 	public GcsEnvironmentRepositoryFactory(ConfigServerProperties server) {
 		this(server, null);
@@ -45,16 +48,28 @@ public class GcsEnvironmentRepositoryFactory
 		Storage resolvedStorage = this.storage;
 
 		if (resolvedStorage == null) {
-			StorageOptions.Builder builder = StorageOptions.newBuilder();
-
-			if (properties.getProjectId() != null && !properties.getProjectId().isBlank()) {
-				builder.setProjectId(properties.getProjectId());
-			}
-
-			resolvedStorage = builder.build().getService();
+			resolvedStorage = createStorage(properties);
+			this.createdStorage = resolvedStorage;
 		}
 
 		return new GcsEnvironmentRepository(resolvedStorage, properties, this.server);
+	}
+
+	Storage createStorage(GcsEnvironmentProperties properties) {
+		StorageOptions.Builder builder = StorageOptions.newBuilder();
+
+		if (properties.getProjectId() != null && !properties.getProjectId().isBlank()) {
+			builder.setProjectId(properties.getProjectId());
+		}
+
+		return builder.build().getService();
+	}
+
+	@Override
+	public void destroy() throws Exception {
+		if (this.createdStorage != null) {
+			this.createdStorage.close();
+		}
 	}
 
 }
