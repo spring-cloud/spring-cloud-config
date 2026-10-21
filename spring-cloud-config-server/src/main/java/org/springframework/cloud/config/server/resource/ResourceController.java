@@ -115,7 +115,7 @@ public class ResourceController {
 		this.validateProfiles = validateProfiles;
 	}
 
-	@GetMapping("/{name}/{profile}/{label}/**")
+	@GetMapping(value = "/{name}/{profile}/{label}/**", params = "!useDefaultLabel")
 	public String retrieve(@PathVariable String name, @PathVariable String profile, @PathVariable String label,
 			ServletWebRequest request, @RequestParam(defaultValue = "true") boolean resolvePlaceholders,
 			@RequestHeader(value = HttpHeaders.ACCEPT_CHARSET, required = false,
@@ -125,12 +125,13 @@ public class ResourceController {
 		return retrieve(request, name, profile, label, path, resolvePlaceholders, acceptedCharset);
 	}
 
-	@GetMapping(value = "/{name}/{profile}/{path:.*}", params = "useDefaultLabel")
-	public String retrieveDefault(@PathVariable String name, @PathVariable String profile, @PathVariable String path,
-			ServletWebRequest request, @RequestParam(defaultValue = "true") boolean resolvePlaceholders,
+	@GetMapping(value = { "/{name}/{profile}/{path:.*}", "/{name}/{profile}/**" }, params = "useDefaultLabel")
+	public String retrieveDefault(@PathVariable String name, @PathVariable String profile, ServletWebRequest request,
+			@RequestParam(defaultValue = "true") boolean resolvePlaceholders,
 			@RequestHeader(value = HttpHeaders.ACCEPT_CHARSET, required = false,
 					defaultValue = "UTF-8") String acceptedCharset)
 			throws IOException {
+		String path = getFilePath(request, name, profile, null);
 		return retrieve(request, name, profile, null, path, resolvePlaceholders, acceptedCharset);
 	}
 
@@ -213,17 +214,19 @@ public class ResourceController {
 		return retrieve(null, name, profile, label, path, resolvePlaceholders, acceptedCharset);
 	}
 
-	@GetMapping(value = "/{name}/{profile}/{label}/**", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+	@GetMapping(value = "/{name}/{profile}/{label}/**", params = "!useDefaultLabel",
+			produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
 	public byte[] binary(@PathVariable String name, @PathVariable String profile, @PathVariable String label,
 			ServletWebRequest request) throws IOException {
 		String path = getFilePath(request, name, profile, label);
 		return binary(request, name, profile, label, path);
 	}
 
-	@GetMapping(value = "/{name}/{profile}/{path:.*}", params = "useDefaultLabel",
+	@GetMapping(value = { "/{name}/{profile}/{path:.*}", "/{name}/{profile}/**" }, params = "useDefaultLabel",
 			produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-	public byte[] binaryDefault(@PathVariable String name, @PathVariable String profile, @PathVariable String path,
-			ServletWebRequest request) throws IOException {
+	public byte[] binaryDefault(@PathVariable String name, @PathVariable String profile, ServletWebRequest request)
+			throws IOException {
+		String path = getFilePath(request, name, profile, null);
 		return binary(request, name, profile, null, path);
 	}
 

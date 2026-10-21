@@ -157,6 +157,18 @@ public class ResourceControllerIntegrationTests {
 	}
 
 	@Test
+	public void resourceNoLabelInSubdirectory() throws Exception {
+		when(this.repository.findOne("foo", "default", null, false))
+			.thenReturn(new Environment("foo", "default", "master"));
+		when(this.resources.findOne("foo", "default", null, "bar/foo.txt"))
+			.thenReturn(new ClassPathResource("resource-controller/foo.txt"));
+		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/bar/foo.txt").param("useDefaultLabel", ""))
+			.andExpect(MockMvcResultMatchers.status().isOk());
+		verify(this.repository).findOne("foo", "default", null, false);
+		verify(this.resources).findOne("foo", "default", null, "bar/foo.txt");
+	}
+
+	@Test
 	public void binaryResourceNoLabel() throws Exception {
 		when(this.repository.findOne("foo", "default", null)).thenReturn(new Environment("foo", "default", "master"));
 		when(this.resources.findOne("foo", "default", null, "foo.txt"))
@@ -168,6 +180,20 @@ public class ResourceControllerIntegrationTests {
 			.andExpect(MockMvcResultMatchers.status().isOk());
 		verify(this.repository).findOne("foo", "default", null);
 		verify(this.resources).findOne("foo", "default", null, "foo.txt");
+	}
+
+	@Test
+	public void binaryResourceNoLabelInSubdirectory() throws Exception {
+		when(this.repository.findOne("foo", "default", null)).thenReturn(new Environment("foo", "default", "master"));
+		when(this.resources.findOne("foo", "default", null, "bar/foo.txt"))
+			.thenReturn(new ClassPathResource("resource-controller/foo.txt"));
+		this.mvc
+			.perform(MockMvcRequestBuilders.get("/foo/default/bar/foo.txt")
+				.param("useDefaultLabel", "")
+				.header(HttpHeaders.ACCEPT, MimeTypeUtils.APPLICATION_OCTET_STREAM_VALUE))
+			.andExpect(MockMvcResultMatchers.status().isOk());
+		verify(this.repository).findOne("foo", "default", null);
+		verify(this.resources).findOne("foo", "default", null, "bar/foo.txt");
 	}
 
 	@Test
