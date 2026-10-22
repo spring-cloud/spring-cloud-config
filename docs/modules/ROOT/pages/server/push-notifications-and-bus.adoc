@@ -26,7 +26,8 @@ A payload URL matches a configured repository when both point to the same host a
 The comparison ignores the protocol, credentials, SSH username, and port, is case-insensitive, and ignores a leading or trailing `/` and a trailing `.git`, so the HTTPS, `ssh://`, and `git@host:org/repo.git` forms of a repository all match.
 Matching is deliberately lenient: a false match only causes one extra fetch, while a missed match would leave the configuration stale until the refresh interval elapses.
 Notifications without a matching repository URL still notify applications, but do not expire any repository's refresh interval.
-This includes form-encoded path notifications and provider payloads without repository URLs, such as native Bitbucket Server push payloads.
+This includes form-encoded path notifications and provider payloads without repository URLs.
+Bitbucket Server payloads identify the repository by the clone links (`links.clone`) of their repository object; a payload whose repository object has no clone links does not expire a refresh interval.
 Bitbucket Cloud's native payload only advertises the repository's HTML link, which is enough to identify the repository whether it is configured over HTTPS or SSH.
 
 [[ignored-monitor-paths]]

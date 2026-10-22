@@ -920,12 +920,15 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	 * false match only costs one extra fetch, while a missed match leaves the repository
 	 * stale until the refresh rate elapses.
 	 * @param repositoryUri a repository URL supplied by the webhook
+	 * @return {@code true} if the URL identifies this repository
 	 */
-	public void expireRefreshRate(String repositoryUri) {
+	public boolean expireRefreshRate(String repositoryUri) {
 		String configured = repositoryKey(getUri());
-		if (configured != null && configured.equals(repositoryKey(repositoryUri))) {
-			this.lastRefresh = 0;
+		if (configured == null || !configured.equals(repositoryKey(repositoryUri))) {
+			return false;
 		}
+		this.lastRefresh = 0;
+		return true;
 	}
 
 	/**

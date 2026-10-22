@@ -121,10 +121,15 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 	}
 
 	@Override
-	public void expireRefreshRate(String repositoryUri) {
-		super.expireRefreshRate(repositoryUri);
-		this.repos.values().forEach(repository -> repository.expireRefreshRate(repositoryUri));
-		this.placeholders.values().forEach(repository -> repository.expireRefreshRate(repositoryUri));
+	public boolean expireRefreshRate(String repositoryUri) {
+		boolean expired = super.expireRefreshRate(repositoryUri);
+		for (JGitEnvironmentRepository repository : this.repos.values()) {
+			expired |= repository.expireRefreshRate(repositoryUri);
+		}
+		for (JGitEnvironmentRepository repository : this.placeholders.values()) {
+			expired |= repository.expireRefreshRate(repositoryUri);
+		}
+		return expired;
 	}
 
 	@Override

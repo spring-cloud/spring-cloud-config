@@ -139,10 +139,10 @@ public class JGitEnvironmentRepositoryTests {
 		long now = System.currentTimeMillis();
 		this.repository.setLastRefresh(now);
 
-		this.repository.expireRefreshRate(this.repository.getUri() + "-other");
+		assertThat(this.repository.expireRefreshRate(this.repository.getUri() + "-other")).isFalse();
 		assertThat(this.repository.getLastRefresh()).isEqualTo(now);
 
-		this.repository.expireRefreshRate(this.repository.getUri());
+		assertThat(this.repository.expireRefreshRate(this.repository.getUri())).isTrue();
 		assertThat(this.repository.getLastRefresh()).isZero();
 	}
 
@@ -172,7 +172,7 @@ public class JGitEnvironmentRepositoryTests {
 		this.repository.setUri(configuredUri);
 		this.repository.setLastRefresh(now);
 
-		this.repository.expireRefreshRate(notificationUri);
+		assertThat(this.repository.expireRefreshRate(notificationUri)).isEqualTo(matches);
 
 		assertThat(this.repository.getLastRefresh()).isEqualTo(matches ? 0 : now);
 	}
@@ -184,7 +184,7 @@ public class JGitEnvironmentRepositoryTests {
 		long now = System.currentTimeMillis();
 		this.repository.setLastRefresh(now);
 
-		this.repository.expireRefreshRate(notificationUri);
+		assertThat(this.repository.expireRefreshRate(notificationUri)).isFalse();
 
 		assertThat(this.repository.getLastRefresh()).isEqualTo(now);
 	}

@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.config.monitor;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -169,15 +170,22 @@ public class PropertyPathEndpoint {
 			log.debug("Notification does not identify a Git repository; refresh rate not expired");
 			return;
 		}
+		boolean expired = false;
+		boolean failed = false;
 		for (String repositoryUri : repositoryUris) {
 			for (JGitEnvironmentRepository repository : this.gitRepositories) {
 				try {
-					repository.expireRefreshRate(repositoryUri);
+					expired |= repository.expireRefreshRate(repositoryUri);
 				}
 				catch (RuntimeException ex) {
+					failed = true;
 					log.warn("Could not expire the refresh rate for " + repositoryUri, ex);
 				}
 			}
+		}
+		if (!expired && !failed) {
+			log.debug("Notification repository URIs " + Arrays.toString(repositoryUris)
+					+ " do not match a configured Git repository; refresh rate not expired");
 		}
 	}
 

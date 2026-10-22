@@ -72,8 +72,8 @@ public abstract class BasePropertyPathNotificationExtractor implements PropertyP
 	 * @param request the webhook payload
 	 */
 	protected void addRepositoryUris(Set<String> uris, Map<String, Object> request) {
-		WebhookRepositoryUris.addRepository(uris, request.get("repository"));
-		WebhookRepositoryUris.addRepository(uris, request.get("project"));
+		PropertyPathNotificationExtractor.addCloneUris(uris, request.get("repository"));
+		PropertyPathNotificationExtractor.addCloneUris(uris, request.get("project"));
 	}
 
 	protected abstract boolean requestBelongsToGitRepoManager(HttpHeaders headers);

@@ -104,7 +104,7 @@ public class PropertyPathEndpointTests {
 		JGitEnvironmentRepository failing = new JGitEnvironmentRepository(new StandardEnvironment(), properties,
 				ObservationRegistry.NOOP) {
 			@Override
-			public void expireRefreshRate(String repositoryUri) {
+			public boolean expireRefreshRate(String repositoryUri) {
 				throw new IllegalStateException("expected");
 			}
 		};

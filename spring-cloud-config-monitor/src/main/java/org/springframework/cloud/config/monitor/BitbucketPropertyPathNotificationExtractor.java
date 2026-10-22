@@ -65,9 +65,9 @@ public class BitbucketPropertyPathNotificationExtractor implements PropertyPathN
 						&& links.get("html") instanceof Map<?, ?> html) {
 					// Bitbucket Cloud advertises the repository's HTTPS location in its
 					// HTML link.
-					WebhookRepositoryUris.add(uris, html.get("href"));
+					PropertyPathNotificationExtractor.addUri(uris, html.get("href"));
 				}
-				WebhookRepositoryUris.addRepository(uris, request.get("repository"));
+				PropertyPathNotificationExtractor.addCloneUris(uris, request.get("repository"));
 				return notification(uris);
 			}
 		}
@@ -78,7 +78,9 @@ public class BitbucketPropertyPathNotificationExtractor implements PropertyPathN
 				// Bitbucket doesn't tell us the files that changed so this is a
 				// broadcast to all apps
 				Set<String> uris = new LinkedHashSet<>();
-				WebhookRepositoryUris.addRepository(uris, request.get("repository"));
+				// Bitbucket Server identifies the repository by its clone links, which
+				// a payload may omit.
+				PropertyPathNotificationExtractor.addCloneUris(uris, request.get("repository"));
 				return notification(uris);
 			}
 		}
@@ -90,7 +92,8 @@ public class BitbucketPropertyPathNotificationExtractor implements PropertyPathN
 			Set<String> uris = new LinkedHashSet<>();
 			if (request.get("pullRequest") instanceof Map<?, ?> pullRequest
 					&& pullRequest.get("toRef") instanceof Map<?, ?> toRef) {
-				WebhookRepositoryUris.addRepository(uris, toRef.get("repository"));
+				// As for repo:refs_changed, only found if the payload has clone links.
+				PropertyPathNotificationExtractor.addCloneUris(uris, toRef.get("repository"));
 			}
 			return notification(uris);
 		}

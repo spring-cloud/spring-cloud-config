@@ -95,10 +95,23 @@ public class MultipleJGitEnvironmentRepositoryTests {
 		this.repository.getRepos().values().forEach(repo -> repo.setLastRefresh(now));
 		JGitEnvironmentRepository matching = this.repository.getRepos().get("test1");
 
-		this.repository.expireRefreshRate(matching.getUri());
+		assertThat(this.repository.expireRefreshRate(matching.getUri())).isTrue();
 
 		assertThat(this.repository.getLastRefresh()).isEqualTo(now);
 		assertThat(matching.getLastRefresh()).isZero();
+	}
+
+	@Test
+	public void expireRefreshRateReportsWhenNoRepositoryMatches() {
+		long now = System.currentTimeMillis();
+		this.repository.setLastRefresh(now);
+		this.repository.getRepos().values().forEach(repo -> repo.setLastRefresh(now));
+
+		assertThat(this.repository.expireRefreshRate("https://github.com/unrelated/config.git")).isFalse();
+
+		assertThat(this.repository.getLastRefresh()).isEqualTo(now);
+		assertThat(this.repository.getRepos().values())
+			.allSatisfy(repo -> assertThat(repo.getLastRefresh()).isEqualTo(now));
 	}
 
 	@Test
@@ -129,7 +142,7 @@ public class MultipleJGitEnvironmentRepositoryTests {
 		otherLabel.setLastRefresh(now);
 		this.repository.getRepos().values().forEach(repo -> repo.setLastRefresh(now));
 
-		this.repository.expireRefreshRate("https://github.com/config/foo-prod-main.git");
+		assertThat(this.repository.expireRefreshRate("https://github.com/config/foo-prod-main.git")).isTrue();
 
 		assertThat(matching.getLastRefresh()).isZero();
 		assertThat(unrelated.getLastRefresh()).isEqualTo(now);
