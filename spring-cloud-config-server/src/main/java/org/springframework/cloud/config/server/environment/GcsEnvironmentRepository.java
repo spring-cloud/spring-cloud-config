@@ -153,14 +153,6 @@ public class GcsEnvironmentRepository implements EnvironmentRepository, Ordered 
 		return environment;
 	}
 
-	private void validateApplication(String application) {
-		if (!StringUtils.hasText(application) || application.contains("*") || application.contains("?")
-				|| application.contains("/") || application.contains("\\") || application.contains("..")
-				|| application.contains("#") || application.contains("%")) {
-			throw new IllegalArgumentException("Invalid application name");
-		}
-	}
-
 	private void validateProfiles(String profile) {
 		if (profile != null && !profile.isEmpty() && PathUtils.isInvalidProfiles(profile)) {
 			throw new IllegalArgumentException("Invalid profile");
