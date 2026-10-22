@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.config.client;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -45,8 +46,12 @@ public class ConfigResourceClientAutoConfiguration {
 	@ConditionalOnBean(name = ConfigServerConfigDataLocationResolver.REST_CLIENT_BEAN_NAME)
 	public ConfigResourceClient configResourceClient(
 			@Qualifier(ConfigServerConfigDataLocationResolver.REST_CLIENT_BEAN_NAME) RestClient restClient,
-			ConfigClientProperties properties) {
-		return new DefaultConfigResourceClient(restClient, properties);
+			@Qualifier(ConfigServerConfigDataLocationResolver.PROPERTIES_BEAN_NAME) ObjectProvider<ConfigClientProperties> importedProperties,
+			ObjectProvider<ConfigClientProperties> properties) {
+		// The properties resolved by the config server import describe the server the
+		// RestClient talks to; a context may also hold the ones bound by
+		// ConfigClientAutoConfiguration.
+		return new DefaultConfigResourceClient(restClient, importedProperties.getIfAvailable(properties::getObject));
 	}
 
 }

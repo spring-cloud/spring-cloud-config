@@ -67,6 +67,12 @@ public class ConfigServerConfigDataLocationResolver
 	public static final String PREFIX = "configserver:";
 
 	/**
+	 * Name of the {@link ConfigClientProperties} bean resolved by the config server
+	 * import.
+	 */
+	public static final String PROPERTIES_BEAN_NAME = "configDataConfigClientProperties";
+
+	/**
 	 * Name of the {@link RestTemplate} bean that loaded the configuration from the config
 	 * server.
 	 */
@@ -256,8 +262,7 @@ public class ConfigServerConfigDataLocationResolver
 				InstanceSupplier.of(properties).withScope(BootstrapRegistry.Scope.PROTOTYPE));
 		bootstrapContext.addCloseListener(event -> event.getApplicationContext()
 			.getBeanFactory()
-			.registerSingleton("configDataConfigClientProperties",
-					event.getBootstrapContext().get(ConfigClientProperties.class)));
+			.registerSingleton(PROPERTIES_BEAN_NAME, event.getBootstrapContext().get(ConfigClientProperties.class)));
 
 		bootstrapContext.registerIfAbsent(ConfigClientRequestTemplateFactory.class, context -> {
 			ConfigClientRequestTemplateFactory factory = new ConfigClientRequestTemplateFactory(log,

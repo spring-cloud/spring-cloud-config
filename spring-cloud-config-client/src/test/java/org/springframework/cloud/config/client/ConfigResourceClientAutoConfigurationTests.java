@@ -20,9 +20,15 @@ import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.http.MediaType;
+import org.springframework.mock.env.MockEnvironment;
+import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestTemplate;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 /**
  * Tests for {@link ConfigResourceClientAutoConfiguration}.
@@ -52,12 +58,37 @@ public class ConfigResourceClientAutoConfigurationTests {
 	@Test
 	void userDefinedClientIsKept() {
 		ConfigResourceClient custom = new DefaultConfigResourceClient(RestClient.create(),
-				new ConfigClientProperties(new org.springframework.mock.env.MockEnvironment()));
+				new ConfigClientProperties(new MockEnvironment()));
 		this.contextRunner
 			.withBean(ConfigServerConfigDataLocationResolver.REST_CLIENT_BEAN_NAME, RestClient.class,
 					RestClient::create)
 			.withBean(ConfigResourceClient.class, () -> custom)
 			.run(context -> assertThat(context).getBean(ConfigResourceClient.class).isSameAs(custom));
+	}
+
+	@Test
+	void propertiesOfTheConfigServerImportTakePrecedence() {
+		RestTemplate restTemplate = new RestTemplate();
+		MockRestServiceServer server = MockRestServiceServer.bindTo(restTemplate).build();
+		server.expect(requestTo("http://imported:8888/application/default/nginx.conf?useDefaultLabel"))
+			.andRespond(withSuccess("server { }", MediaType.TEXT_PLAIN));
+		this.contextRunner
+			.withBean(ConfigServerConfigDataLocationResolver.REST_CLIENT_BEAN_NAME, RestClient.class,
+					() -> RestClient.create(restTemplate))
+			.withBean(ConfigServerConfigDataLocationResolver.PROPERTIES_BEAN_NAME, ConfigClientProperties.class,
+					() -> properties("http://imported:8888"))
+			.withBean("configClientProperties", ConfigClientProperties.class, () -> properties("http://bound:8888"))
+			.run(context -> {
+				assertThat(context).getBeans(ConfigClientProperties.class).hasSize(2);
+				context.getBean(ConfigResourceClient.class).getPlainTextResource("nginx.conf");
+				server.verify();
+			});
+	}
+
+	private static ConfigClientProperties properties(String uri) {
+		ConfigClientProperties properties = new ConfigClientProperties(new MockEnvironment());
+		properties.setUri(new String[] { uri });
+		return properties;
 	}
 
 	@Test
