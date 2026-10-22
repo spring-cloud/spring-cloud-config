@@ -196,6 +196,40 @@ class EnvironmentControllerTests {
 		assertThat(yaml).isEqualTo("a:\n  test: e\n  b[hello]: c\n  b[world]: d\n  b[world]d: f\n");
 	}
 
+	@Test // gh-2423
+	public void propertyThatIsAlsoAPrefixInYaml() throws Exception {
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
+		map.put("hub.server", "my.favorite.server");
+		map.put("hub.server.timeout.millis", "30000");
+		this.environment.add(new PropertySource("one", map));
+		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
+		String yaml = this.controller.yaml("foo", "bar", false).getBody();
+		assertThat(yaml).isEqualTo("hub:\n  server: my.favorite.server\n  server.timeout.millis: '30000'\n");
+	}
+
+	@Test // gh-2423
+	public void propertyThatIsAlsoAPrefixInJson() throws Exception {
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
+		map.put("hub.server", "my.favorite.server");
+		map.put("hub.server.timeout.millis", "30000");
+		this.environment.add(new PropertySource("one", map));
+		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
+		String json = this.controller.jsonProperties("foo", "bar", false).getBody();
+		assertThat(json).as("Wrong output: " + json)
+			.isEqualTo("{\"hub\":{\"server\":\"my.favorite.server\",\"server.timeout.millis\":\"30000\"}}");
+	}
+
+	@Test // gh-2423
+	public void propertyThatIsAlsoAPrefixInYamlWhenTheLongerKeyComesFirst() throws Exception {
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
+		map.put("hub.server.timeout.millis", "30000");
+		map.put("hub.server", "my.favorite.server");
+		this.environment.add(new PropertySource("one", map));
+		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
+		String yaml = this.controller.yaml("foo", "bar", false).getBody();
+		assertThat(yaml).isEqualTo("hub:\n  server.timeout.millis: '30000'\n  server: my.favorite.server\n");
+	}
+
 	@Test
 	public void arrayOverridenInEnvironment() throws Exception {
 		// Add original values first source

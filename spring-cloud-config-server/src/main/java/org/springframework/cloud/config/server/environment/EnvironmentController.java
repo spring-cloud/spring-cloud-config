@@ -24,6 +24,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.logging.Log;
@@ -263,10 +264,25 @@ public class EnvironmentController {
 		for (Map.Entry<String, Object> entry : properties.entrySet()) {
 			String key = entry.getKey();
 			Object value = entry.getValue();
-			PropertyNavigator nav = new PropertyNavigator(key);
+			PropertyNavigator nav = new PropertyNavigator(key, dottedKeyStart(key, properties.keySet()));
 			nav.setMapValue(rootMap, value);
 		}
 		return rootMap;
+	}
+
+	/**
+	 * Returns the position in {@code key} from which the rest of the key is kept as a
+	 * dotted key, because a shorter key in {@code keys} is a prefix of it and holds a
+	 * value where the nested structure would start, like {@code org.x} next to
+	 * {@code org.x.y}; or {@code -1} when the whole key is navigated.
+	 */
+	private static int dottedKeyStart(String key, Set<String> keys) {
+		for (int dot = key.indexOf('.'); dot > 0; dot = key.indexOf('.', dot + 1)) {
+			if (keys.contains(key.substring(0, dot))) {
+				return key.lastIndexOf('.', dot - 1) + 1;
+			}
+		}
+		return -1;
 	}
 
 	@ExceptionHandler(RepositoryException.class)
@@ -362,15 +378,18 @@ public class EnvironmentController {
 
 		private final String propertyKey;
 
-		// Supports keys like org.x and org.x.y like in boot logging
-		private String prefix = "";
+		// Supports keys like org.x and org.x.y like in boot logging: from this position
+		// on
+		// the key stays dotted, next to the shorter key holding a value
+		private final int dottedKeyStart;
 
 		private int currentPos;
 
 		private NodeType valueType;
 
-		private PropertyNavigator(String propertyKey) {
+		private PropertyNavigator(String propertyKey, int dottedKeyStart) {
 			this.propertyKey = propertyKey;
+			this.dottedKeyStart = dottedKeyStart;
 			this.currentPos = -1;
 			this.valueType = NodeType.MAP;
 		}
@@ -384,9 +403,9 @@ public class EnvironmentController {
 					nestedMap = (Map<String, Object>) map.get(key);
 				}
 				else if (map.get(key) != null) {
-					// not an object, set prefix for later
-					prefix = key + ".";
-					nestedMap = map;
+					// not an object: keep the rest of the key dotted next to it
+					map.put(key + this.propertyKey.substring(this.currentPos), value);
+					return;
 				}
 				else {
 					// value of key is null
@@ -404,8 +423,7 @@ public class EnvironmentController {
 				setListValue(list, value);
 			}
 			else {
-				// use compound prefix
-				map.put(prefix + key, value);
+				map.put(key, value);
 			}
 		}
 
@@ -482,6 +500,11 @@ public class EnvironmentController {
 		private String getKey() {
 			// Consider initial value or previous char '.' or '['
 			int start = this.currentPos + 1;
+			if (start == this.dottedKeyStart) {
+				this.currentPos = this.propertyKey.length();
+				this.valueType = NodeType.LEAF;
+				return this.propertyKey.substring(start);
+			}
 			int openingBracketPosition = -1;
 			for (int i = start; i < this.propertyKey.length(); i++) {
 				char currentChar = this.propertyKey.charAt(i);
