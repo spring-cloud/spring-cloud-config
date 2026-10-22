@@ -47,6 +47,8 @@ public class GiteePropertyPathNotificationExtractorTests {
 		PropertyPathNotification extracted = this.extractor.extract(this.headers, value);
 		assertThat(extracted).isNotNull();
 		assertThat(extracted.getPaths()[0]).isEqualTo("d.txt");
+		assertThat(extracted.getRepositoryUris()).contains("https://gitee.com/oschina/webhook.git",
+				"git@gitee.com:oschina/webhook.git");
 	}
 
 	@Test

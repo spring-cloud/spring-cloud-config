@@ -16,7 +16,6 @@
 
 package org.springframework.cloud.config.monitor;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -31,6 +30,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.cloud.config.server.environment.JGitEnvironmentRepository;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -135,11 +135,7 @@ public class PropertyPathEndpoint {
 				for (String service : services) {
 					log.info("Refresh for: " + service);
 				}
-				for (String repositoryUri : getRepositoryUris(headers, request)) {
-					for (JGitEnvironmentRepository repository : this.gitRepositories) {
-						repository.expireRefreshRate(repositoryUri);
-					}
-				}
+				expireRefreshRates(notification);
 				for (PropertyPathNotifier notifier : this.notifiers) {
 					notifier.notifyApplications(services);
 				}
@@ -158,50 +154,30 @@ public class PropertyPathEndpoint {
 		return notifyByPath(headers, map);
 	}
 
-	private Set<String> getRepositoryUris(HttpHeaders headers, Map<String, Object> request) {
-		Set<String> uris = new LinkedHashSet<>();
-		addRepositoryUris(uris, request.get("repository"));
-		addRepositoryUris(uris, request.get("project"));
-		if ("Push Hook".equals(headers.getFirst("X-Gitlab-Event"))
-				&& request.get("repository") instanceof Map<?, ?> repository) {
-			// Legacy GitLab payloads use url for the clone URL. GitHub uses it for an API
-			// URL.
-			addRepositoryUri(uris, repository.get("url"));
-		}
-		if (StringUtils.hasText(headers.getFirst("X-Hook-UUID"))
-				&& request.get("repository") instanceof Map<?, ?> repository
-				&& repository.get("links") instanceof Map<?, ?> links && links.get("html") instanceof Map<?, ?> html) {
-			// Bitbucket Cloud advertises the repository's HTTPS location in its HTML
-			// link.
-			addRepositoryUri(uris, html.get("href"));
-		}
-		if ("pr:merged".equals(headers.getFirst("X-Event-Key"))
-				&& request.get("pullRequest") instanceof Map<?, ?> pullRequest
-				&& pullRequest.get("toRef") instanceof Map<?, ?> toRef) {
-			addRepositoryUris(uris, toRef.get("repository"));
-		}
-		return uris;
-	}
-
-	private void addRepositoryUris(Set<String> uris, Object value) {
-		if (!(value instanceof Map<?, ?> repository)) {
+	/**
+	 * Expires the refresh rate of the Git repositories that the notification identifies,
+	 * so the next request fetches the change that triggered the webhook. Expiry is best
+	 * effort: a failure is logged and does not stop applications from being notified.
+	 * @param notification the notification extracted from the webhook
+	 */
+	private void expireRefreshRates(PropertyPathNotification notification) {
+		if (this.gitRepositories.isEmpty()) {
 			return;
 		}
-		for (String field : List.of("clone_url", "ssh_url", "git_url", "git_http_url", "git_ssh_url")) {
-			addRepositoryUri(uris, repository.get(field));
+		String[] repositoryUris = notification.getRepositoryUris();
+		if (ObjectUtils.isEmpty(repositoryUris)) {
+			log.debug("Notification does not identify a Git repository; refresh rate not expired");
+			return;
 		}
-		if (repository.get("links") instanceof Map<?, ?> links && links.get("clone") instanceof Collection<?> clones) {
-			for (Object clone : clones) {
-				if (clone instanceof Map<?, ?> link) {
-					addRepositoryUri(uris, link.get("href"));
+		for (String repositoryUri : repositoryUris) {
+			for (JGitEnvironmentRepository repository : this.gitRepositories) {
+				try {
+					repository.expireRefreshRate(repositoryUri);
+				}
+				catch (RuntimeException ex) {
+					log.warn("Could not expire the refresh rate for " + repositoryUri, ex);
 				}
 			}
-		}
-	}
-
-	private void addRepositoryUri(Set<String> uris, Object value) {
-		if (value instanceof String uri && StringUtils.hasText(uri)) {
-			uris.add(uri);
 		}
 	}
 

@@ -54,6 +54,7 @@ public class BitbucketPropertyPathNotificationExtractorTests {
 		PropertyPathNotification extracted = this.extractor.extract(this.headers, value);
 		assertThat(extracted).isNotNull();
 		assertThat(extracted.getPaths()[0]).isEqualTo("application.yml");
+		assertThat(extracted.getRepositoryUris()).containsExactly("https://api.bitbucket.org/bitbucket/bitbucket");
 	}
 
 	@Test
@@ -119,6 +120,8 @@ public class BitbucketPropertyPathNotificationExtractorTests {
 		PropertyPathNotification extracted = this.extractor.extract(this.headers, value);
 		assertThat(extracted).isNotNull();
 		assertThat(extracted.getPaths()[0]).isEqualTo("application.yml");
+		// This sample does not include clone links.
+		assertThat(extracted.getRepositoryUris()).isEmpty();
 	}
 
 	@Test

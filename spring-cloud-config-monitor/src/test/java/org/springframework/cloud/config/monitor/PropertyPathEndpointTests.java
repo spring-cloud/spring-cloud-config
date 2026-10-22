@@ -97,6 +97,36 @@ public class PropertyPathEndpointTests {
 		assertThat(unrelated.getLastRefresh()).isEqualTo(unrelatedLastRefresh);
 	}
 
+	@Test
+	public void testExpiryFailureStillNotifiesApplications() {
+		JGitEnvironmentProperties properties = new JGitEnvironmentProperties();
+		properties.setUri("https://github.com/example/config.git");
+		JGitEnvironmentRepository failing = new JGitEnvironmentRepository(new StandardEnvironment(), properties,
+				ObservationRegistry.NOOP) {
+			@Override
+			public void expireRefreshRate(String repositoryUri) {
+				throw new IllegalStateException("expected");
+			}
+		};
+		JGitEnvironmentRepository repository = gitRepository();
+		repository.setUri("https://github.com/example/config.git");
+		repository.setLastRefresh(System.currentTimeMillis());
+		Set<String> notifiedServices = new LinkedHashSet<>();
+		PropertyPathEndpoint endpoint = new PropertyPathEndpoint(new GithubPropertyPathNotificationExtractor(),
+				List.of(services -> notifiedServices.addAll(services)),
+				MonitorConfigurationProperties.DEFAULT_MAX_DASHES, MonitorConfigurationProperties.DEFAULT_MAX_PATHS,
+				Collections.emptyList(), List.of(failing, repository));
+		HttpHeaders headers = new HttpHeaders();
+		headers.set("X-Github-Event", "push");
+
+		assertThat(endpoint.notifyByPath(headers, Map.of("repository", Map.of("clone_url", repository.getUri()),
+				"commits", List.of(Map.of("modified", List.of("foo.yml"))))))
+			.containsExactly("foo");
+
+		assertThat(notifiedServices).containsExactly("foo");
+		assertThat(repository.getLastRefresh()).isZero();
+	}
+
 	@ParameterizedTest
 	@MethodSource("requestsWithoutRepositoryIdentity")
 	public void testMissingRepositoryIdentityDoesNotExpireRefreshRate(Map<String, Object> request) {

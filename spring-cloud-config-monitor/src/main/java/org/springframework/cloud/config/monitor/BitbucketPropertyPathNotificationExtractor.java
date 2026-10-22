@@ -17,7 +17,9 @@
 package org.springframework.cloud.config.monitor;
 
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -57,7 +59,16 @@ public class BitbucketPropertyPathNotificationExtractor implements PropertyPathN
 			if (push instanceof Map<?, ?> map && map.get("changes") instanceof Collection) {
 				// Bitbucket doesn't tell us the files that changed so this is a
 				// broadcast to all apps
-				return new PropertyPathNotification("application.yml");
+				Set<String> uris = new LinkedHashSet<>();
+				if (request.get("repository") instanceof Map<?, ?> repository
+						&& repository.get("links") instanceof Map<?, ?> links
+						&& links.get("html") instanceof Map<?, ?> html) {
+					// Bitbucket Cloud advertises the repository's HTTPS location in its
+					// HTML link.
+					WebhookRepositoryUris.add(uris, html.get("href"));
+				}
+				WebhookRepositoryUris.addRepository(uris, request.get("repository"));
+				return notification(uris);
 			}
 		}
 		else if ("repo:refs_changed".equals(headers.getFirst("X-Event-Key"))
@@ -66,7 +77,9 @@ public class BitbucketPropertyPathNotificationExtractor implements PropertyPathN
 			if (request.get("changes") instanceof Collection) {
 				// Bitbucket doesn't tell us the files that changed so this is a
 				// broadcast to all apps
-				return new PropertyPathNotification("application.yml");
+				Set<String> uris = new LinkedHashSet<>();
+				WebhookRepositoryUris.addRepository(uris, request.get("repository"));
+				return notification(uris);
 			}
 		}
 		else if ("pr:merged".equals(headers.getFirst("X-Event-Key"))
@@ -74,10 +87,21 @@ public class BitbucketPropertyPathNotificationExtractor implements PropertyPathN
 			// Bitbucket server
 			// Bitbucket doesn't tell us the files that changed so this is a
 			// broadcast to all apps
-			return new PropertyPathNotification("application.yml");
+			Set<String> uris = new LinkedHashSet<>();
+			if (request.get("pullRequest") instanceof Map<?, ?> pullRequest
+					&& pullRequest.get("toRef") instanceof Map<?, ?> toRef) {
+				WebhookRepositoryUris.addRepository(uris, toRef.get("repository"));
+			}
+			return notification(uris);
 		}
 
 		return null;
+	}
+
+	private static PropertyPathNotification notification(Set<String> repositoryUris) {
+		PropertyPathNotification notification = new PropertyPathNotification("application.yml");
+		notification.setRepositoryUris(repositoryUris.toArray(new String[0]));
+		return notification;
 	}
 
 }

@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.config.monitor;
 
+import java.util.Map;
+import java.util.Set;
+
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
@@ -26,6 +29,16 @@ import org.springframework.http.HttpHeaders;
  */
 @Order(Ordered.LOWEST_PRECEDENCE - 100)
 public class GitlabPropertyPathNotificationExtractor extends BasePropertyPathNotificationExtractor {
+
+	@Override
+	protected void addRepositoryUris(Set<String> uris, Map<String, Object> request) {
+		super.addRepositoryUris(uris, request);
+		if (request.get("repository") instanceof Map<?, ?> repository) {
+			// Legacy GitLab payloads use url for the clone URL (GitHub uses it for an API
+			// URL, which is why only GitLab reads it).
+			WebhookRepositoryUris.add(uris, repository.get("url"));
+		}
+	}
 
 	@Override
 	protected boolean requestBelongsToGitRepoManager(HttpHeaders headers) {

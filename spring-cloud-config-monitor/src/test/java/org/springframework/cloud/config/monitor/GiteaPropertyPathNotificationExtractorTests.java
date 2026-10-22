@@ -48,6 +48,8 @@ public class GiteaPropertyPathNotificationExtractorTests {
 		PropertyPathNotification extracted = this.extractor.extract(this.headers, value);
 		assertThat(extracted).isNotNull();
 		assertThat(extracted.getPaths()[0]).isEqualTo("application.yml");
+		assertThat(extracted.getRepositoryUris()).containsExactly("https://gitea.lawyers.corp/internal/lawsuits.git",
+				"git@localhost:internal/lawsuits.git");
 	}
 
 	@Test

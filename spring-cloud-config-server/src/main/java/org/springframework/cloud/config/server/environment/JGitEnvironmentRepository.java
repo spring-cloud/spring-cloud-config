@@ -914,49 +914,53 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	 * Makes the next request fetch from the matching remote repository, even if the
 	 * {@link #getRefreshRate() refresh rate} has not elapsed since the last fetch. Has no
 	 * effect if the refresh rate is negative, in which case the remote is never fetched.
+	 * <p>
+	 * Matching compares the host and repository path only, ignoring the protocol,
+	 * credentials, port, case, and a trailing {@code .git}. It is deliberately lenient: a
+	 * false match only costs one extra fetch, while a missed match leaves the repository
+	 * stale until the refresh rate elapses.
 	 * @param repositoryUri a repository URL supplied by the webhook
 	 */
 	public void expireRefreshRate(String repositoryUri) {
-		if (!StringUtils.hasText(repositoryUri) || !StringUtils.hasText(getUri())) {
-			return;
-		}
-		try {
-			if (normalizeRepositoryUri(getUri()).equals(normalizeRepositoryUri(repositoryUri))) {
-				this.lastRefresh = 0;
-			}
-		}
-		catch (URISyntaxException ex) {
-			// An unidentified repository must not invalidate unrelated repositories.
+		String configured = repositoryKey(getUri());
+		if (configured != null && configured.equals(repositoryKey(repositoryUri))) {
+			this.lastRefresh = 0;
 		}
 	}
 
-	private URIish normalizeRepositoryUri(String uri) throws URISyntaxException {
-		URIish parsed = new URIish(uri).setPass(null);
-		if (parsed.getHost() == null) {
-			return parsed;
+	/**
+	 * Reduces a repository URI to the host and path that identify the repository on a Git
+	 * hosting service. The scheme, credentials and port are ignored, the host and path
+	 * are compared case-insensitively, and a leading or trailing {@code /} and a trailing
+	 * {@code .git} are removed. The HTTPS, {@code ssh://} and scp-like
+	 * ({@code git@host:org/repo.git}) forms of the same repository therefore match.
+	 * @param uri the repository URI, may be {@code null}
+	 * @return the key, or {@code null} if the URI does not identify a repository
+	 */
+	static String repositoryKey(String uri) {
+		if (!StringUtils.hasText(uri)) {
+			return null;
 		}
-		String scheme = parsed.getScheme() == null ? "ssh" : parsed.getScheme().toLowerCase(Locale.ROOT);
-		if (!"ssh".equals(scheme)) {
-			parsed = parsed.setUser(null);
+		URIish parsed;
+		try {
+			parsed = new URIish(uri.trim());
+		}
+		catch (URISyntaxException ex) {
+			return null;
 		}
 		String path = parsed.getPath();
-		if (path.endsWith("/")) {
-			path = path.substring(0, path.length() - 1);
+		if (path == null) {
+			return null;
 		}
-		if (("http".equals(scheme) || "https".equals(scheme)) && path.endsWith(".git")) {
-			path = path.substring(0, path.length() - 4);
+		path = StringUtils.trimTrailingCharacter(StringUtils.trimLeadingCharacter(path, '/'), '/');
+		if (path.endsWith(".git")) {
+			path = StringUtils.trimTrailingCharacter(path.substring(0, path.length() - 4), '/');
 		}
-		int defaultPort = switch (scheme) {
-			case "http" -> 80;
-			case "https" -> 443;
-			case "ssh" -> 22;
-			case "git" -> 9418;
-			default -> -1;
-		};
-		return parsed.setScheme(scheme)
-			.setHost(parsed.getHost().toLowerCase(Locale.ROOT))
-			.setPath(path)
-			.setPort(parsed.getPort() == defaultPort ? -1 : parsed.getPort());
+		if (path.isEmpty()) {
+			return null;
+		}
+		String host = (parsed.getHost() != null) ? parsed.getHost().toLowerCase(Locale.ROOT) : "";
+		return host + "/" + path.toLowerCase(Locale.ROOT);
 	}
 
 	/**

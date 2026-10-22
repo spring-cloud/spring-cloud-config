@@ -38,7 +38,11 @@ public abstract class BasePropertyPathNotificationExtractor implements PropertyP
 				Collection<Map<String, Object>> commits = (Collection<Map<String, Object>>) request.get("commits");
 				addPaths(paths, commits);
 				if (!paths.isEmpty()) {
-					return new PropertyPathNotification(paths.toArray(new String[0]));
+					PropertyPathNotification notification = new PropertyPathNotification(paths.toArray(new String[0]));
+					Set<String> repositoryUris = new LinkedHashSet<>();
+					addRepositoryUris(repositoryUris, request);
+					notification.setRepositoryUris(repositoryUris.toArray(new String[0]));
+					return notification;
 				}
 			}
 		}
@@ -59,6 +63,17 @@ public abstract class BasePropertyPathNotificationExtractor implements PropertyP
 		if (files != null) {
 			paths.addAll(files);
 		}
+	}
+
+	/**
+	 * Adds the URIs of the Git repository that sent the push. By default these are the
+	 * clone URLs of the {@code repository} and {@code project} objects in the payload.
+	 * @param uris the URIs collected so far
+	 * @param request the webhook payload
+	 */
+	protected void addRepositoryUris(Set<String> uris, Map<String, Object> request) {
+		WebhookRepositoryUris.addRepository(uris, request.get("repository"));
+		WebhookRepositoryUris.addRepository(uris, request.get("project"));
 	}
 
 	protected abstract boolean requestBelongsToGitRepoManager(HttpHeaders headers);
