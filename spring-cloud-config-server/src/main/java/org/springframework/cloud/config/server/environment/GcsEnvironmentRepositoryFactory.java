@@ -16,8 +16,8 @@
 
 package org.springframework.cloud.config.server.environment;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
@@ -35,7 +35,7 @@ public class GcsEnvironmentRepositoryFactory
 
 	private final Storage storage;
 
-	private final Map<String, Storage> createdStorages = new HashMap<>();
+	private final Map<String, Storage> createdStorages = new ConcurrentHashMap<>();
 
 	public GcsEnvironmentRepositoryFactory(ConfigServerProperties server) {
 		this(server, null);

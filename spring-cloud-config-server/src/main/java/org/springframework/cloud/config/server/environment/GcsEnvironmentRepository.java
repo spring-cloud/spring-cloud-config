@@ -95,7 +95,6 @@ public class GcsEnvironmentRepository implements EnvironmentRepository, Ordered 
 		String resolvedProfile = StringUtils.hasText(profile) ? profile : this.serverProperties.getDefaultProfile();
 		String resolvedLabel = StringUtils.hasText(label) ? label : this.serverProperties.getDefaultLabel();
 
-		validateApplication(resolvedApplication);
 		validateProfiles(resolvedProfile);
 		validateLabel(resolvedLabel);
 
@@ -130,7 +129,8 @@ public class GcsEnvironmentRepository implements EnvironmentRepository, Ordered 
 			 * Load profile-specific files first. Pass the complete active profile list
 			 * separately so YAML documents in base files can match any active profile.
 			 */
-			for (String currentProfile : profiles) {
+			for (int i = profiles.length - 1; i >= 0; i--) {
+				String currentProfile = profiles[i];
 				for (String currentApplication : applications) {
 					addPropertySources(environment, currentApplication, currentProfile, currentLabel, resolvedProfile,
 							loadedKeys, resolvedBlobs);
@@ -307,12 +307,17 @@ public class GcsEnvironmentRepository implements EnvironmentRepository, Ordered 
 			}
 			catch (StorageException ex) {
 				int status = ex.getCode();
-				if (status != 403 && status != 404) {
-					if (LOG.isInfoEnabled()) {
-						LOG.info("Error checking GCS object key: " + key, ex);
-					}
+
+				if (status == 403) {
+					LOG.warn("Access denied while checking GCS object key: " + key, ex);
 					throw ex;
 				}
+
+				if (status != 404) {
+					LOG.info("Error checking GCS object key: " + key, ex);
+					throw ex;
+				}
+
 				resolvedBlobs.put(key, Optional.empty());
 				continue;
 			}

@@ -642,12 +642,12 @@ class GcsEnvironmentRepositoryTests {
 		assertThat(environment.getProfiles()).containsExactly("dev", "prod");
 
 		assertThat(environment.getPropertySources()).extracting(source -> source.getName())
-			.containsExactly("gcs:myapp-dev.properties", "gcs:application-dev.properties", "gcs:myapp-prod.properties",
-					"gcs:application-prod.properties", "gcs:myapp.properties", "gcs:application.properties");
+			.containsExactly("gcs:myapp-prod.properties", "gcs:application-prod.properties", "gcs:myapp-dev.properties",
+					"gcs:application-dev.properties", "gcs:myapp.properties", "gcs:application.properties");
 
 		assertThat(environment.getPropertySources())
 			.extracting(source -> String.valueOf(source.getSource().get("source")))
-			.containsExactly("myapp-dev", "application-dev", "myapp-prod", "application-prod", "myapp", "application");
+			.containsExactly("myapp-prod", "application-prod", "myapp-dev", "application-dev", "myapp", "application");
 	}
 
 }
