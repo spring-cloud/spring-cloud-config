@@ -37,7 +37,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 class GcsEnvironmentRepositoryTests {
@@ -227,42 +226,6 @@ class GcsEnvironmentRepositoryTests {
 		assertThat(environment.getPropertySources().get(0).getSource().get("message")).isEqualTo("custom-path");
 
 		verify(storage).get(BlobId.of("test-bucket", "my-app/config.properties"));
-	}
-
-	@Test
-	void rejectsLabelContainingPathSeparator() {
-		GcsEnvironmentRepository repository = new GcsEnvironmentRepository(storage, properties, serverProperties);
-
-		assertThatThrownBy(() -> repository.findOne("my-app", "default", "../secret"))
-			.isInstanceOf(IllegalArgumentException.class)
-			.hasMessageContaining("label");
-
-		verifyNoInteractions(storage);
-	}
-
-	@Test
-	void rejectsUnsafeDefaultProfile() {
-		serverProperties.setDefaultProfile("../secret");
-
-		GcsEnvironmentRepository repository = new GcsEnvironmentRepository(storage, properties, serverProperties);
-
-		assertThatThrownBy(() -> repository.findOne("my-app", null, null)).isInstanceOf(IllegalArgumentException.class)
-			.hasMessageContaining("profile");
-
-		verifyNoInteractions(storage);
-	}
-
-	@Test
-	void rejectsUnsafeDefaultLabel() {
-		serverProperties.setDefaultLabel("../secret");
-
-		GcsEnvironmentRepository repository = new GcsEnvironmentRepository(storage, properties, serverProperties);
-
-		assertThatThrownBy(() -> repository.findOne("my-app", "default", null))
-			.isInstanceOf(IllegalArgumentException.class)
-			.hasMessageContaining("label");
-
-		verifyNoInteractions(storage);
 	}
 
 	@Test

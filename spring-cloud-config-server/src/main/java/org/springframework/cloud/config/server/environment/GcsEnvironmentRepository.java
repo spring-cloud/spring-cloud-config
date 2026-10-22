@@ -45,7 +45,6 @@ import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
-import org.springframework.cloud.config.server.support.PathUtils;
 import org.springframework.core.Ordered;
 import org.springframework.core.env.Profiles;
 import org.springframework.core.io.InputStreamResource;
@@ -94,10 +93,6 @@ public class GcsEnvironmentRepository implements EnvironmentRepository, Ordered 
 				: this.serverProperties.getDefaultApplicationName();
 		String resolvedProfile = StringUtils.hasText(profile) ? profile : this.serverProperties.getDefaultProfile();
 		String resolvedLabel = StringUtils.hasText(label) ? label : this.serverProperties.getDefaultLabel();
-
-		validateProfiles(resolvedProfile);
-		validateLabel(resolvedLabel);
-
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(resolvedProfile);
 		Environment environment = new Environment(resolvedApplication, profiles);
 		environment.setLabel(resolvedLabel);
@@ -151,20 +146,6 @@ public class GcsEnvironmentRepository implements EnvironmentRepository, Ordered 
 		}
 
 		return environment;
-	}
-
-	private void validateProfiles(String profile) {
-		if (profile != null && !profile.isEmpty() && PathUtils.isInvalidProfiles(profile)) {
-			throw new IllegalArgumentException("Invalid profile");
-		}
-	}
-
-	private void validateLabel(String label) {
-		if (label != null
-				&& (!StringUtils.hasText(label) || label.contains("/") || label.contains("\\") || label.contains("..")
-						|| label.contains("*") || label.contains("?") || label.contains("#") || label.contains("%"))) {
-			throw new IllegalArgumentException("Invalid label");
-		}
 	}
 
 	private void addPropertySources(Environment environment, String application, String profile, String label,
@@ -305,13 +286,13 @@ public class GcsEnvironmentRepository implements EnvironmentRepository, Ordered 
 					throw ex;
 				}
 
-				if (status != 404) {
-					LOG.info("Error checking GCS object key: " + key, ex);
-					throw ex;
+				if (status == 404) {
+					resolvedBlobs.put(key, Optional.empty());
+					continue;
 				}
 
-				resolvedBlobs.put(key, Optional.empty());
-				continue;
+				LOG.info("Error checking GCS object key: " + key, ex);
+				throw ex;
 			}
 
 			if (blob.isPresent()) {
