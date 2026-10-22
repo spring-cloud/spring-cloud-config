@@ -71,6 +71,7 @@ class GcsEnvironmentRepositoryFactoryTests {
 
 		GcsEnvironmentProperties properties = new GcsEnvironmentProperties();
 		properties.setBucket("test-bucket");
+		properties.setProjectId("project-a");
 
 		factory.build(properties);
 		factory.build(properties);
@@ -78,6 +79,35 @@ class GcsEnvironmentRepositoryFactoryTests {
 		factory.destroy();
 
 		verify(storage).close();
+	}
+
+	@Test
+	void createsSeparateStorageForDifferentProjectIds() throws Exception {
+		Storage projectAStorage = mock(Storage.class);
+		Storage projectBStorage = mock(Storage.class);
+
+		GcsEnvironmentRepositoryFactory factory = new GcsEnvironmentRepositoryFactory(new ConfigServerProperties()) {
+			@Override
+			Storage createStorage(GcsEnvironmentProperties properties) {
+				return "project-a".equals(properties.getProjectId()) ? projectAStorage : projectBStorage;
+			}
+		};
+
+		GcsEnvironmentProperties projectA = new GcsEnvironmentProperties();
+		projectA.setBucket("test-bucket");
+		projectA.setProjectId("project-a");
+
+		GcsEnvironmentProperties projectB = new GcsEnvironmentProperties();
+		projectB.setBucket("test-bucket");
+		projectB.setProjectId("project-b");
+
+		factory.build(projectA);
+		factory.build(projectB);
+
+		factory.destroy();
+
+		verify(projectAStorage).close();
+		verify(projectBStorage).close();
 	}
 
 }

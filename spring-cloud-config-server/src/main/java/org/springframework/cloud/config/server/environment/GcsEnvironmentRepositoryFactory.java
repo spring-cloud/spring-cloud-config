@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.config.server.environment;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
 
@@ -32,7 +35,7 @@ public class GcsEnvironmentRepositoryFactory
 
 	private final Storage storage;
 
-	private Storage createdStorage;
+	private final Map<String, Storage> createdStorages = new HashMap<>();
 
 	public GcsEnvironmentRepositoryFactory(ConfigServerProperties server) {
 		this(server, null);
@@ -48,10 +51,10 @@ public class GcsEnvironmentRepositoryFactory
 		Storage resolvedStorage = this.storage;
 
 		if (resolvedStorage == null) {
-			if (this.createdStorage == null) {
-				this.createdStorage = createStorage(properties);
-			}
-			resolvedStorage = this.createdStorage;
+			String projectId = properties.getProjectId();
+			String storageKey = projectId == null || projectId.isBlank() ? "" : projectId;
+
+			resolvedStorage = this.createdStorages.computeIfAbsent(storageKey, key -> createStorage(properties));
 		}
 
 		return new GcsEnvironmentRepository(resolvedStorage, properties, this.server);
@@ -69,8 +72,23 @@ public class GcsEnvironmentRepositoryFactory
 
 	@Override
 	public void destroy() throws Exception {
-		if (this.createdStorage != null) {
-			this.createdStorage.close();
+		Exception failure = null;
+		for (Storage storage : this.createdStorages.values()) {
+			try {
+				storage.close();
+			}
+			catch (Exception ex) {
+				if (failure == null) {
+					failure = ex;
+				}
+				else {
+					failure.addSuppressed(ex);
+				}
+			}
+		}
+
+		if (failure != null) {
+			throw failure;
 		}
 	}
 

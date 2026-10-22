@@ -36,6 +36,7 @@ import com.google.api.gax.paging.Page;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.StorageException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -299,8 +300,22 @@ public class GcsEnvironmentRepository implements EnvironmentRepository, Ordered 
 
 		boolean fileFound = false;
 		for (String key : candidates) {
-			Optional<Blob> blob = resolvedBlobs.computeIfAbsent(key,
-					k -> Optional.ofNullable(this.storage.get(BlobId.of(this.properties.getBucket(), k))));
+			Optional<Blob> blob;
+			try {
+				blob = resolvedBlobs.computeIfAbsent(key,
+						k -> Optional.ofNullable(this.storage.get(BlobId.of(this.properties.getBucket(), k))));
+			}
+			catch (StorageException ex) {
+				int status = ex.getCode();
+				if (status != 403 && status != 404) {
+					if (LOG.isInfoEnabled()) {
+						LOG.info("Error checking GCS object key: " + key, ex);
+					}
+					throw ex;
+				}
+				resolvedBlobs.put(key, Optional.empty());
+				continue;
+			}
 
 			if (blob.isPresent()) {
 				if (seenKeys.add(key)) {

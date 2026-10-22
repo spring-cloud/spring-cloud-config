@@ -24,6 +24,7 @@ import com.google.api.gax.paging.Page;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.StorageException;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.cloud.config.environment.Environment;
@@ -589,6 +590,64 @@ class GcsEnvironmentRepositoryTests {
 
 		assertThat(environment.getPropertySources()).extracting(source -> source.getName())
 			.contains("gcs:config/application/extra.properties");
+	}
+
+	@Test
+	void propagatesUnexpectedStorageFailuresWhenProbingLiteralSearchPath() {
+		properties.setSearchPaths(List.of("config/application"));
+
+		StorageException storageException = new StorageException(500, "GCS request failed");
+		when(storage.get(any(BlobId.class))).thenThrow(storageException);
+
+		GcsEnvironmentRepository repository = new GcsEnvironmentRepository(storage, properties, serverProperties);
+
+		assertThatThrownBy(() -> repository.findOne("my-app", "default", null)).isSameAs(storageException);
+
+		verify(storage, never()).list(anyString(), any(Storage.BlobListOption.class));
+	}
+
+	@Test
+	void loadsPropertySourcesInExpectedOrderForMultipleActiveProfiles() {
+		Blob myAppDevBlob = mock(Blob.class);
+		Blob applicationDevBlob = mock(Blob.class);
+		Blob myAppProdBlob = mock(Blob.class);
+		Blob applicationProdBlob = mock(Blob.class);
+		Blob myAppBlob = mock(Blob.class);
+		Blob applicationBlob = mock(Blob.class);
+
+		when(storage.get(any(BlobId.class))).thenAnswer(invocation -> {
+			BlobId blobId = invocation.getArgument(0);
+			return switch (blobId.getName()) {
+				case "myapp-dev.properties" -> myAppDevBlob;
+				case "application-dev.properties" -> applicationDevBlob;
+				case "myapp-prod.properties" -> myAppProdBlob;
+				case "application-prod.properties" -> applicationProdBlob;
+				case "myapp.properties" -> myAppBlob;
+				case "application.properties" -> applicationBlob;
+				default -> null;
+			};
+		});
+
+		when(myAppDevBlob.getContent()).thenReturn("source=myapp-dev".getBytes());
+		when(applicationDevBlob.getContent()).thenReturn("source=application-dev".getBytes());
+		when(myAppProdBlob.getContent()).thenReturn("source=myapp-prod".getBytes());
+		when(applicationProdBlob.getContent()).thenReturn("source=application-prod".getBytes());
+		when(myAppBlob.getContent()).thenReturn("source=myapp".getBytes());
+		when(applicationBlob.getContent()).thenReturn("source=application".getBytes());
+
+		GcsEnvironmentRepository repository = new GcsEnvironmentRepository(storage, properties, serverProperties);
+
+		Environment environment = repository.findOne("myapp", "dev,prod", null);
+
+		assertThat(environment.getProfiles()).containsExactly("dev", "prod");
+
+		assertThat(environment.getPropertySources()).extracting(source -> source.getName())
+			.containsExactly("gcs:myapp-dev.properties", "gcs:application-dev.properties", "gcs:myapp-prod.properties",
+					"gcs:application-prod.properties", "gcs:myapp.properties", "gcs:application.properties");
+
+		assertThat(environment.getPropertySources())
+			.extracting(source -> String.valueOf(source.getSource().get("source")))
+			.containsExactly("myapp-dev", "application-dev", "myapp-prod", "application-prod", "myapp", "application");
 	}
 
 }
