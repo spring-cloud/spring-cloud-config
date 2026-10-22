@@ -23,6 +23,8 @@ import java.util.function.Supplier;
 
 import org.apache.commons.logging.Log;
 
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.boot.bootstrap.BootstrapContextClosedEvent;
 import org.springframework.boot.bootstrap.BootstrapRegistry;
 import org.springframework.boot.bootstrap.BootstrapRegistry.InstanceSupplier;
 import org.springframework.boot.bootstrap.ConfigurableBootstrapContext;
@@ -51,6 +53,7 @@ import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestTemplate;
 
 import static org.springframework.cloud.config.client.ConfigClientProperties.CONFIG_DISCOVERY_ENABLED;
@@ -62,6 +65,18 @@ public class ConfigServerConfigDataLocationResolver
 	 * Prefix for Config Server imports.
 	 */
 	public static final String PREFIX = "configserver:";
+
+	/**
+	 * Name of the {@link RestTemplate} bean that loaded the configuration from the config
+	 * server.
+	 */
+	public static final String REST_TEMPLATE_BEAN_NAME = "configClientRestTemplate";
+
+	/**
+	 * Name of the {@link RestClient} bean built from the {@link RestTemplate} that loaded
+	 * the configuration from the config server.
+	 */
+	public static final String REST_CLIENT_BEAN_NAME = "configClientRestClient";
 	static final boolean RSA_IS_PRESENT = ClassUtils
 		.isPresent("org.springframework.security.crypto.encrypt.RsaSecretEncryptor", null);
 
@@ -256,6 +271,7 @@ public class ConfigServerConfigDataLocationResolver
 			ConfigClientRequestTemplateFactory factory = context.get(ConfigClientRequestTemplateFactory.class);
 			return factory.create();
 		});
+		bootstrapContext.addCloseListener(this::registerRestClient);
 
 		bootstrapContext.registerIfAbsent(PropertyResolver.class,
 				context -> new PropertyResolver(resolverContext.getBinder(), getBindHandler(resolverContext)));
@@ -320,8 +336,33 @@ public class ConfigServerConfigDataLocationResolver
 
 		List<ConfigServerConfigDataResource> locations = new ArrayList<>();
 		locations.add(resource);
-
 		return locations;
+	}
+
+	/**
+	 * Expose the {@link RestTemplate} that loaded the configuration, which carries the
+	 * URI, credentials, headers, TLS settings, timeouts and token of the client, and a
+	 * {@link RestClient} built from it, as beans for components that call the config
+	 * server at runtime, such as the {@link ConfigResourceClient}.
+	 */
+	private void registerRestClient(BootstrapContextClosedEvent event) {
+		ConfigurableListableBeanFactory beanFactory = event.getApplicationContext().getBeanFactory();
+		if (beanFactory.containsBean(REST_CLIENT_BEAN_NAME)
+				|| !event.getBootstrapContext().isRegistered(RestTemplate.class)) {
+			return;
+		}
+		RestTemplate restTemplate = event.getBootstrapContext().get(RestTemplate.class);
+		if (!beanFactory.containsBean(REST_TEMPLATE_BEAN_NAME)) {
+			beanFactory.registerSingleton(REST_TEMPLATE_BEAN_NAME, restTemplate);
+		}
+		try {
+			beanFactory.registerSingleton(REST_CLIENT_BEAN_NAME, RestClient.create(restTemplate));
+		}
+		catch (RuntimeException ex) {
+			// A RestTemplate that cannot back a RestClient, such as a test double
+			this.log.debug("Could not build a RestClient from the config client RestTemplate; "
+					+ "the ConfigResourceClient will not be available", ex);
+		}
 	}
 
 	public static class PropertyResolver {
