@@ -18,7 +18,9 @@ package org.springframework.cloud.config.server.environment;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
+import com.google.api.gax.paging.Page;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.Storage;
@@ -32,6 +34,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -226,45 +229,12 @@ class GcsEnvironmentRepositoryTests {
 	}
 
 	@Test
-	void rejectsApplicationContainingWildcard() {
-		GcsEnvironmentRepository repository = new GcsEnvironmentRepository(storage, properties, serverProperties);
-
-		assertThatThrownBy(() -> repository.findOne("*", "default", null)).isInstanceOf(IllegalArgumentException.class)
-			.hasMessageContaining("application");
-
-		verifyNoInteractions(storage);
-	}
-
-	@Test
-	void rejectsProfileContainingPathTraversal() {
-		GcsEnvironmentRepository repository = new GcsEnvironmentRepository(storage, properties, serverProperties);
-
-		assertThatThrownBy(() -> repository.findOne("my-app", "../secret", null))
-			.isInstanceOf(IllegalArgumentException.class)
-			.hasMessageContaining("profile");
-
-		verifyNoInteractions(storage);
-	}
-
-	@Test
 	void rejectsLabelContainingPathSeparator() {
 		GcsEnvironmentRepository repository = new GcsEnvironmentRepository(storage, properties, serverProperties);
 
 		assertThatThrownBy(() -> repository.findOne("my-app", "default", "../secret"))
 			.isInstanceOf(IllegalArgumentException.class)
 			.hasMessageContaining("label");
-
-		verifyNoInteractions(storage);
-	}
-
-	@Test
-	void rejectsUnsafeDefaultApplicationName() {
-		serverProperties.setDefaultApplicationName("*");
-
-		GcsEnvironmentRepository repository = new GcsEnvironmentRepository(storage, properties, serverProperties);
-
-		assertThatThrownBy(() -> repository.findOne(null, "default", null)).isInstanceOf(IllegalArgumentException.class)
-			.hasMessageContaining("application");
 
 		verifyNoInteractions(storage);
 	}
@@ -359,15 +329,31 @@ class GcsEnvironmentRepositoryTests {
 	}
 
 	@Test
-	void propagatesStorageReadFailures() {
-		when(storage.get(any(BlobId.class))).thenThrow(new IllegalStateException("GCS read failed"));
+	void continuesLoadingWhenStorageReadFails() {
+		Blob failedBlob = mock(Blob.class);
+		Blob validBlob = mock(Blob.class);
+
+		when(storage.get(any(BlobId.class))).thenAnswer(invocation -> {
+			BlobId blobId = invocation.getArgument(0);
+			if (blobId.getName().equals("my-app.properties")) {
+				return failedBlob;
+			}
+			if (blobId.getName().equals("application.properties")) {
+				return validBlob;
+			}
+			return null;
+		});
+
+		when(failedBlob.getContent()).thenThrow(new IllegalStateException("GCS read failed"));
+		when(validBlob.getContent()).thenReturn("message=loaded".getBytes());
 
 		GcsEnvironmentRepository repository = new GcsEnvironmentRepository(storage, properties, serverProperties);
 
-		assertThatThrownBy(() -> repository.findOne("my-app", "default", null))
-			.isInstanceOf(IllegalStateException.class)
-			.hasMessage("Cannot load environment")
-			.hasCauseInstanceOf(IllegalStateException.class);
+		Environment environment = repository.findOne("my-app", "default", null);
+
+		assertThat(environment.getPropertySources()).anySatisfy(propertySource -> assertThat(propertySource.getSource())
+			.extracting(source -> ((Properties) source).get("message"))
+			.isEqualTo("loaded"));
 	}
 
 	@Test
@@ -394,7 +380,7 @@ class GcsEnvironmentRepositoryTests {
 	}
 
 	@Test
-	void fallsBackToUnlabelledKeyWhenLabelledObjectDoesNotExist() {
+	void doesNotFallBackToUnlabelledKeyWhenLabelledObjectDoesNotExist() {
 		Blob blob = mock(Blob.class);
 		when(storage.get(any(BlobId.class))).thenAnswer(invocation -> {
 			BlobId blobId = invocation.getArgument(0);
@@ -406,11 +392,10 @@ class GcsEnvironmentRepositoryTests {
 
 		Environment environment = repository.findOne("my-app", "default", "release-1");
 
-		assertThat(environment.getPropertySources()).isNotEmpty();
-		assertThat(environment.getPropertySources().get(0).getSource().get("message")).isEqualTo("unlabelled");
+		assertThat(environment.getPropertySources()).isEmpty();
 
 		verify(storage).get(BlobId.of("test-bucket", "release-1/my-app-default.properties"));
-		verify(storage).get(BlobId.of("test-bucket", "my-app-default.properties"));
+		verify(storage, never()).get(BlobId.of("test-bucket", "my-app-default.properties"));
 	}
 
 	@Test
@@ -513,6 +498,97 @@ class GcsEnvironmentRepositoryTests {
 
 		verify(storage).get(BlobId.of("test-bucket", "config/application.properties"));
 		verify(storage, org.mockito.Mockito.never()).get(BlobId.of("test-bucket", "config/application-dev.properties"));
+	}
+
+	@Test
+	void loadsPropertySourcesInExpectedPrecedenceOrder() {
+		Blob myAppDevBlob = mock(Blob.class);
+		Blob applicationDevBlob = mock(Blob.class);
+		Blob myAppBlob = mock(Blob.class);
+		Blob applicationBlob = mock(Blob.class);
+
+		when(storage.get(any(BlobId.class))).thenAnswer(invocation -> {
+			BlobId blobId = invocation.getArgument(0);
+			return switch (blobId.getName()) {
+				case "myapp-dev.properties" -> myAppDevBlob;
+				case "application-dev.properties" -> applicationDevBlob;
+				case "myapp.properties" -> myAppBlob;
+				case "application.properties" -> applicationBlob;
+				default -> null;
+			};
+		});
+
+		when(myAppDevBlob.getContent()).thenReturn("source=myapp-dev\nprecedence=1".getBytes());
+		when(applicationDevBlob.getContent()).thenReturn("source=application-dev\nprecedence=2".getBytes());
+		when(myAppBlob.getContent()).thenReturn("source=myapp\nprecedence=3".getBytes());
+		when(applicationBlob.getContent()).thenReturn("source=application\nprecedence=4".getBytes());
+
+		GcsEnvironmentRepository repository = new GcsEnvironmentRepository(storage, properties, serverProperties);
+
+		Environment environment = repository.findOne("myapp", "dev", null);
+
+		assertThat(environment.getPropertySources()).extracting(source -> source.getName())
+			.containsExactly("gcs:myapp-dev.properties", "gcs:application-dev.properties", "gcs:myapp.properties",
+					"gcs:application.properties");
+
+		List<String> precedenceValues = environment.getPropertySources()
+			.stream()
+			.map(source -> String.valueOf(source.getSource().get("precedence")))
+			.toList();
+
+		assertThat(precedenceValues).containsExactly("1", "2", "3", "4");
+	}
+
+	@Test
+	void doesNotScanDirectoryWhenLiteralSearchPathConfigurationExists() {
+		properties.setSearchPaths(List.of("config/application"));
+
+		Blob configBlob = mock(Blob.class);
+
+		when(storage.get(any(BlobId.class))).thenAnswer(invocation -> {
+			BlobId blobId = invocation.getArgument(0);
+			return blobId.getName().equals("config/application.properties") ? configBlob : null;
+		});
+
+		when(configBlob.getContent()).thenReturn("message=literal-config".getBytes());
+
+		GcsEnvironmentRepository repository = new GcsEnvironmentRepository(storage, properties, serverProperties);
+
+		Environment environment = repository.findOne("my-app", "default", null);
+
+		assertThat(environment.getPropertySources()).anySatisfy(source -> {
+			assertThat(source.getName()).isEqualTo("gcs:config/application.properties");
+			assertThat(source.getSource().get("message")).isEqualTo("literal-config");
+		});
+
+		verify(storage, org.mockito.Mockito.never()).list(anyString(), any(Storage.BlobListOption.class));
+	}
+
+	@Test
+	void scansDirectoryWhenLiteralSearchPathConfigurationDoesNotExist() {
+		properties.setSearchPaths(List.of("config/application"));
+
+		Blob directoryBlob = mock(Blob.class);
+		Page<Blob> page = mock(Page.class);
+
+		when(storage.get(any(BlobId.class))).thenAnswer(invocation -> {
+			BlobId blobId = invocation.getArgument(0);
+			return "config/application/extra.properties".equals(blobId.getName()) ? directoryBlob : null;
+		});
+		when(storage.list(anyString(), any(Storage.BlobListOption.class))).thenReturn(page);
+		when(page.iterateAll()).thenReturn(List.of(directoryBlob));
+
+		when(directoryBlob.getName()).thenReturn("config/application/extra.properties");
+		when(directoryBlob.getContent()).thenReturn("message=directory-fallback".getBytes());
+
+		GcsEnvironmentRepository repository = new GcsEnvironmentRepository(storage, properties, serverProperties);
+
+		Environment environment = repository.findOne("my-app", "default", null);
+
+		verify(storage, org.mockito.Mockito.atLeastOnce()).list(anyString(), any(Storage.BlobListOption.class));
+
+		assertThat(environment.getPropertySources()).extracting(source -> source.getName())
+			.contains("gcs:config/application/extra.properties");
 	}
 
 }

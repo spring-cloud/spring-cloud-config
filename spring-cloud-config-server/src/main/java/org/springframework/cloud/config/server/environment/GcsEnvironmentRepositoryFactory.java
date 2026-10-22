@@ -48,8 +48,10 @@ public class GcsEnvironmentRepositoryFactory
 		Storage resolvedStorage = this.storage;
 
 		if (resolvedStorage == null) {
-			resolvedStorage = createStorage(properties);
-			this.createdStorage = resolvedStorage;
+			if (this.createdStorage == null) {
+				this.createdStorage = createStorage(properties);
+			}
+			resolvedStorage = this.createdStorage;
 		}
 
 		return new GcsEnvironmentRepository(resolvedStorage, properties, this.server);

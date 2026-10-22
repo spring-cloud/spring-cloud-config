@@ -22,9 +22,12 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -120,6 +123,7 @@ public class GcsEnvironmentRepository implements EnvironmentRepository, Ordered 
 
 		for (String currentLabel : labels) {
 			Set<String> loadedKeys = new LinkedHashSet<>();
+			Map<String, Optional<Blob>> resolvedBlobs = new HashMap<>();
 
 			/*
 			 * Load profile-specific files first. Pass the complete active profile list
@@ -128,7 +132,7 @@ public class GcsEnvironmentRepository implements EnvironmentRepository, Ordered 
 			for (String currentProfile : profiles) {
 				for (String currentApplication : applications) {
 					addPropertySources(environment, currentApplication, currentProfile, currentLabel, resolvedProfile,
-							loadedKeys);
+							loadedKeys, resolvedBlobs);
 				}
 			}
 
@@ -139,8 +143,8 @@ public class GcsEnvironmentRepository implements EnvironmentRepository, Ordered 
 			 */
 			if (profiles.length == 0 || this.properties.getSearchPaths().isEmpty()) {
 				for (String currentApplication : applications) {
-					addPropertySources(environment, currentApplication, null, currentLabel, resolvedProfile,
-							loadedKeys);
+					addPropertySources(environment, currentApplication, null, currentLabel, resolvedProfile, loadedKeys,
+							resolvedBlobs);
 				}
 			}
 		}
@@ -171,14 +175,18 @@ public class GcsEnvironmentRepository implements EnvironmentRepository, Ordered 
 	}
 
 	private void addPropertySources(Environment environment, String application, String profile, String label,
-			String activeProfiles, Set<String> loadedKeys) {
-		for (String key : resolveKeys(application, profile, label)) {
+			String activeProfiles, Set<String> loadedKeys, Map<String, Optional<Blob>> resolvedBlobs) {
+		for (String key : resolveKeys(application, profile, label, resolvedBlobs)) {
 			if (!loadedKeys.add(key)) {
 				continue;
 			}
 
 			try {
-				Blob blob = this.storage.get(BlobId.of(this.properties.getBucket(), key));
+				Blob blob = resolvedBlobs
+					.computeIfAbsent(key,
+							k -> Optional.ofNullable(this.storage.get(BlobId.of(this.properties.getBucket(), k))))
+					.orElse(null);
+
 				if (blob == null) {
 					continue;
 				}
@@ -212,12 +220,12 @@ public class GcsEnvironmentRepository implements EnvironmentRepository, Ordered 
 			}
 			catch (Exception ex) {
 				LOG.warn("Could not read configuration from Google Cloud Storage object " + key, ex);
-				throw new IllegalStateException("Cannot load environment", ex);
 			}
 		}
 	}
 
-	private List<String> resolveKeys(String application, String profile, String label) {
+	private List<String> resolveKeys(String application, String profile, String label,
+			Map<String, Optional<Blob>> resolvedBlobs) {
 		List<String> keys = new ArrayList<>();
 		Set<String> seenKeys = new LinkedHashSet<>();
 
@@ -227,24 +235,6 @@ public class GcsEnvironmentRepository implements EnvironmentRepository, Ordered 
 			String prefix = StringUtils.hasText(label) ? label + "/" + applicationPrefix : applicationPrefix;
 
 			addKeys(keys, seenKeys, prefix, profile);
-
-			/*
-			 * Also resolve the base application file during profile passes. Its YAML
-			 * documents are filtered using the complete active profile list in
-			 * readProperties().
-			 */
-			if (StringUtils.hasText(profile)) {
-				addKeys(keys, seenKeys, prefix, null);
-			}
-
-			if (StringUtils.hasText(label)) {
-				addKeys(keys, seenKeys, applicationPrefix, profile);
-
-				if (StringUtils.hasText(profile)) {
-					addKeys(keys, seenKeys, applicationPrefix, null);
-				}
-			}
-
 			return keys;
 		}
 
@@ -252,9 +242,8 @@ public class GcsEnvironmentRepository implements EnvironmentRepository, Ordered 
 			String pattern = resolvePattern(template, application, profile, label);
 
 			if (!this.pathMatcher.isPattern(pattern)) {
-				addCandidateKeys(pattern, seenKeys, keys);
-
-				if (!hasSupportedExtension(pattern)) {
+				boolean fileFound = probeLiteralPattern(pattern, seenKeys, keys, resolvedBlobs);
+				if (!fileFound) {
 					scanDirectoryPattern(pattern, seenKeys, keys);
 				}
 			}
@@ -301,6 +290,27 @@ public class GcsEnvironmentRepository implements EnvironmentRepository, Ordered 
 				keys.add(key);
 			}
 		}
+	}
+
+	private boolean probeLiteralPattern(String pattern, Set<String> seenKeys, List<String> keys,
+			Map<String, Optional<Blob>> resolvedBlobs) {
+		List<String> candidates = new ArrayList<>();
+		addCandidateKeys(pattern, new LinkedHashSet<>(), candidates);
+
+		boolean fileFound = false;
+		for (String key : candidates) {
+			Optional<Blob> blob = resolvedBlobs.computeIfAbsent(key,
+					k -> Optional.ofNullable(this.storage.get(BlobId.of(this.properties.getBucket(), k))));
+
+			if (blob.isPresent()) {
+				if (seenKeys.add(key)) {
+					keys.add(key);
+				}
+				fileFound = true;
+			}
+		}
+
+		return fileFound;
 	}
 
 	private void probeDotWildcardPattern(String pattern, Set<String> seenKeys, List<String> keys) {

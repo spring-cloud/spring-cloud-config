@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.config.server.config;
 
+import com.google.cloud.storage.Storage;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -27,9 +28,11 @@ import org.springframework.cloud.config.server.environment.AwsParameterStoreEnvi
 import org.springframework.cloud.config.server.environment.ConfigTokenProvider;
 import org.springframework.cloud.config.server.environment.EnvironmentConfigTokenProvider;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
+import org.springframework.cloud.config.server.environment.GcsEnvironmentRepositoryFactory;
 import org.springframework.cloud.config.server.support.AzureDevOpsWorkloadIdentitySupport;
 import org.springframework.cloud.config.server.support.GitCredentialsProviderFactory;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -80,6 +83,23 @@ public class EnvironmentRepositoryConfigurationTests {
 			.run((context) -> {
 				assertThat(context.getBean(GitCredentialsProviderFactory.class))
 					.isInstanceOf(GitTestBeans.CustomGitCredentialsProviderFactory.class);
+			});
+	}
+
+	@Test
+	public void customStorageBeanIsUsedByGcsEnvironmentRepositoryFactory() {
+		new ApplicationContextRunner()
+			.withConfiguration(AutoConfigurations.of(EnvironmentRepositoryConfiguration.class, TestBeans.class,
+					CustomStorageBeans.class))
+			.withPropertyValues("spring.profiles.active=gcs", "spring.cloud.config.server.gcs.bucket=test-bucket")
+			.run((context) -> {
+				assertThat(context).hasNotFailed();
+				assertThat(context).hasSingleBean(GcsEnvironmentRepositoryFactory.class);
+
+				Storage customStorage = context.getBean(Storage.class);
+				GcsEnvironmentRepositoryFactory factory = context.getBean(GcsEnvironmentRepositoryFactory.class);
+
+				assertThat(ReflectionTestUtils.getField(factory, "storage")).isSameAs(customStorage);
 			});
 	}
 
@@ -156,6 +176,17 @@ public class EnvironmentRepositoryConfigurationTests {
 		@Bean
 		public ConfigServerProperties configServerProperties() {
 			return new ConfigServerProperties();
+		}
+
+	}
+
+	@TestConfiguration
+	public static class CustomStorageBeans {
+
+		@Bean
+		@Primary
+		public Storage customStorage() {
+			return mock(Storage.class);
 		}
 
 	}

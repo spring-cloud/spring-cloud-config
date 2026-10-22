@@ -59,4 +59,25 @@ class GcsEnvironmentRepositoryFactoryTests {
 		verify(storage).close();
 	}
 
+	@Test
+	void reusesFactoryCreatedStorageAcrossBuildCalls() throws Exception {
+		Storage storage = mock(Storage.class);
+		GcsEnvironmentRepositoryFactory factory = new GcsEnvironmentRepositoryFactory(new ConfigServerProperties()) {
+			@Override
+			Storage createStorage(GcsEnvironmentProperties properties) {
+				return storage;
+			}
+		};
+
+		GcsEnvironmentProperties properties = new GcsEnvironmentProperties();
+		properties.setBucket("test-bucket");
+
+		factory.build(properties);
+		factory.build(properties);
+
+		factory.destroy();
+
+		verify(storage).close();
+	}
+
 }
