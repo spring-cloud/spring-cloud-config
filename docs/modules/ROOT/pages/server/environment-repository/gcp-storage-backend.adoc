@@ -62,7 +62,7 @@ The following properties are available under `spring.cloud.config.server.gcs`:
 
 | `search-paths`
 | Empty list
-| Custom search patterns used to locate configuration files. Patterns can contain `{application}`, `{profile}`, and `{label}` placeholders.
+| Custom search patterns used to locate configuration files. Patterns can contain `\{application}`, `\{profile}`, and `\{label}` placeholders.
 
 | `order`
 | Same as other environment repositories
@@ -74,9 +74,9 @@ The following properties are available under `spring.cloud.config.server.gcs`:
 
 The repository supports `.properties`, `.json`, `.yml`, and `.yaml` configuration files.
 
-By default, the repository constructs lookup paths using the requested label, application, and profile. When `search-paths` is configured, the repository uses those patterns to locate configuration files.
+By default, the repository constructs lookup paths using the requested label, application, and profile.When `search-paths` is configured, the repository uses those patterns to locate configuration files.
 
-The `{application}`, `{profile}`, and `{label}` placeholders are replaced with the corresponding values from the Config Server request. Search patterns can also be used to match multiple configuration files.
+The `\{application}`, `\{profile}`, and `\{label}` placeholders are replaced with the corresponding values from the Config Server request.Search patterns can also be used to match multiple configuration files.
 
 == Authentication
 
