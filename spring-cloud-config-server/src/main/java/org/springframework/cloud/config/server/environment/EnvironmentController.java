@@ -20,10 +20,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.logging.Log;
@@ -273,13 +275,55 @@ public class EnvironmentController {
 
 		// The root map which holds all the first level properties
 		Map<String, Object> rootMap = new LinkedHashMap<>();
+		Set<String> arrayContainers = arrayContainers(properties.keySet());
 		for (Map.Entry<String, Object> entry : properties.entrySet()) {
 			String key = entry.getKey();
 			Object value = entry.getValue();
-			PropertyNavigator nav = new PropertyNavigator(key);
+			PropertyNavigator nav = new PropertyNavigator(key,
+					dottedKeyStart(key, properties.keySet(), arrayContainers));
 			nav.setMapValue(rootMap, value);
 		}
 		return rootMap;
+	}
+
+	/**
+	 * Returns the position in {@code key} from which the rest of the key is kept as a
+	 * dotted key, because a shorter key in {@code keys} is a dot or bracket delimited
+	 * prefix of it and holds a value where the nested structure would start, like
+	 * {@code org.x} next to {@code org.x.y}, or because an array in
+	 * {@code arrayContainers} starts where the key continues with a dot, like
+	 * {@code a.b[0]} next to {@code a.b.c}; or {@code -1} when the whole key is
+	 * navigated.
+	 */
+	private static int dottedKeyStart(String key, Set<String> keys, Set<String> arrayContainers) {
+		for (int i = 1; i < key.length(); i++) {
+			char delimiter = key.charAt(i);
+			if (delimiter != '.' && delimiter != '[') {
+				continue;
+			}
+			String prefix = key.substring(0, i);
+			if (keys.contains(prefix) || (delimiter == '.' && arrayContainers.contains(prefix))) {
+				return key.lastIndexOf('.', i - 1) + 1;
+			}
+		}
+		return -1;
+	}
+
+	/**
+	 * Returns the prefixes of the given keys that are followed by an array index, like
+	 * {@code a.b} for {@code a.b[0].c}.
+	 */
+	private static Set<String> arrayContainers(Set<String> keys) {
+		Set<String> containers = new HashSet<>();
+		for (String key : keys) {
+			for (int open = key.indexOf('['); open >= 0; open = key.indexOf('[', open + 1)) {
+				int close = key.indexOf(']', open);
+				if (close > open + 1 && key.substring(open + 1, close).chars().allMatch(Character::isDigit)) {
+					containers.add(key.substring(0, open));
+				}
+			}
+		}
+		return containers;
 	}
 
 	@ExceptionHandler(RepositoryException.class)
@@ -375,15 +419,18 @@ public class EnvironmentController {
 
 		private final String propertyKey;
 
-		// Supports keys like org.x and org.x.y like in boot logging
-		private String prefix = "";
+		// Supports keys like org.x and org.x.y like in boot logging: from this position
+		// on
+		// the key stays dotted, next to the shorter key holding a value
+		private final int dottedKeyStart;
 
 		private int currentPos;
 
 		private NodeType valueType;
 
-		private PropertyNavigator(String propertyKey) {
+		private PropertyNavigator(String propertyKey, int dottedKeyStart) {
 			this.propertyKey = propertyKey;
+			this.dottedKeyStart = dottedKeyStart;
 			this.currentPos = -1;
 			this.valueType = NodeType.MAP;
 		}
@@ -397,9 +444,9 @@ public class EnvironmentController {
 					nestedMap = (Map<String, Object>) map.get(key);
 				}
 				else if (map.get(key) != null) {
-					// not an object, set prefix for later
-					prefix = key + ".";
-					nestedMap = map;
+					// not an object: keep the rest of the key dotted next to it
+					map.put(key + this.propertyKey.substring(this.currentPos), value);
+					return;
 				}
 				else {
 					// value of key is null
@@ -409,7 +456,13 @@ public class EnvironmentController {
 				setMapValue(nestedMap, value);
 			}
 			else if (NodeType.ARRAY.equals(this.valueType)) {
-				List<Object> list = (List<Object>) map.get(key);
+				Object existing = map.get(key);
+				if (existing != null && !(existing instanceof List)) {
+					// not an array: keep the rest of the key dotted next to it
+					map.put(key + this.propertyKey.substring(this.currentPos), value);
+					return;
+				}
+				List<Object> list = (List<Object>) existing;
 				if (list == null) {
 					list = new ArrayList<>();
 					map.put(key, list);
@@ -417,8 +470,7 @@ public class EnvironmentController {
 				setListValue(list, value);
 			}
 			else {
-				// use compound prefix
-				map.put(prefix + key, value);
+				map.put(key, value);
 			}
 		}
 
@@ -495,6 +547,11 @@ public class EnvironmentController {
 		private String getKey() {
 			// Consider initial value or previous char '.' or '['
 			int start = this.currentPos + 1;
+			if (start == this.dottedKeyStart) {
+				this.currentPos = this.propertyKey.length();
+				this.valueType = NodeType.LEAF;
+				return this.propertyKey.substring(start);
+			}
 			int openingBracketPosition = -1;
 			for (int i = start; i < this.propertyKey.length(); i++) {
 				char currentChar = this.propertyKey.charAt(i);
