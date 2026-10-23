@@ -63,8 +63,8 @@ public class CompositePropertyPathNotificationExtractor implements PropertyPathN
 		@Override
 		public PropertyPathNotification extract(HttpHeaders headers, Map<String, Object> request) {
 			Object object = request.get("path");
-			if (object instanceof String) {
-				return new PropertyPathNotification((String) object);
+			if (object instanceof String string) {
+				return new PropertyPathNotification(string);
 			}
 			if (object instanceof Collection) {
 				@SuppressWarnings("unchecked")

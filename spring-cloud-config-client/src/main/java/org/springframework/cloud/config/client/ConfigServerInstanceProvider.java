@@ -84,7 +84,7 @@ public class ConfigServerInstanceProvider {
 
 		default List<ServiceInstance> apply(String serviceId, Binder binder, BindHandler bindHandler, Log log) {
 			return apply(serviceId);
-		};
+		}
 
 	}
 
