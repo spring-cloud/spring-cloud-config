@@ -130,6 +130,20 @@ class EnvironmentControllerTests {
 	}
 
 	@Test
+	public void unresolvableNestedPlaceholdersCanBeIgnoredInYaml() throws Exception {
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
+		map.put("nested", "${MISSING}");
+		map.put("value", "${nested}");
+		this.environment.add(new PropertySource("one", map));
+		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
+		this.controller.setIgnoreUnresolvableNestedPlaceholders(true);
+
+		Map<String, Object> yaml = new Yaml().load(this.controller.yaml("foo", "bar", true).getBody());
+
+		assertThat(yaml).containsEntry("nested", "${MISSING}").containsEntry("value", "${MISSING}");
+	}
+
+	@Test
 	public void placeholdersNotResolvedInYaml() throws Exception {
 		whenPlaceholders();
 		String yaml = this.controller.yaml("foo", "bar", false).getBody();
