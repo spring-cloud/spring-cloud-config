@@ -41,15 +41,14 @@ public class ConfigResourceClientAutoConfigurationTests {
 			AutoConfigurations.of(ConfigClientAutoConfiguration.class, ConfigResourceClientAutoConfiguration.class));
 
 	@Test
-	void noClientWithoutTheConfigClientRestClient() {
+	void noClientWithoutTheConfigServerConnection() {
 		this.contextRunner.run(context -> assertThat(context).doesNotHaveBean(ConfigResourceClient.class));
 	}
 
 	@Test
-	void clientUsesTheConfigClientRestClient() {
+	void clientUsesTheConfigServerConnection() {
 		this.contextRunner
-			.withBean(ConfigServerConfigDataLocationResolver.REST_CLIENT_BEAN_NAME, RestClient.class,
-					RestClient::create)
+			.withBean(ConfigServerRestClientHolder.class, () -> new ConfigServerRestClientHolder(RestClient.create()))
 			.run(context -> assertThat(context).hasSingleBean(ConfigResourceClient.class)
 				.getBean(ConfigResourceClient.class)
 				.isInstanceOf(DefaultConfigResourceClient.class));
@@ -60,8 +59,7 @@ public class ConfigResourceClientAutoConfigurationTests {
 		ConfigResourceClient custom = new DefaultConfigResourceClient(RestClient.create(),
 				new ConfigClientProperties(new MockEnvironment()));
 		this.contextRunner
-			.withBean(ConfigServerConfigDataLocationResolver.REST_CLIENT_BEAN_NAME, RestClient.class,
-					RestClient::create)
+			.withBean(ConfigServerRestClientHolder.class, () -> new ConfigServerRestClientHolder(RestClient.create()))
 			.withBean(ConfigResourceClient.class, () -> custom)
 			.run(context -> assertThat(context).getBean(ConfigResourceClient.class).isSameAs(custom));
 	}
@@ -73,8 +71,8 @@ public class ConfigResourceClientAutoConfigurationTests {
 		server.expect(requestTo("http://imported:8888/application/default/nginx.conf?useDefaultLabel"))
 			.andRespond(withSuccess("server { }", MediaType.TEXT_PLAIN));
 		this.contextRunner
-			.withBean(ConfigServerConfigDataLocationResolver.REST_CLIENT_BEAN_NAME, RestClient.class,
-					() -> RestClient.create(restTemplate))
+			.withBean(ConfigServerRestClientHolder.class,
+					() -> new ConfigServerRestClientHolder(RestClient.create(restTemplate)))
 			.withBean(ConfigServerConfigDataLocationResolver.PROPERTIES_BEAN_NAME, ConfigClientProperties.class,
 					() -> properties("http://imported:8888"))
 			.withBean("configClientProperties", ConfigClientProperties.class, () -> properties("http://bound:8888"))
@@ -94,8 +92,7 @@ public class ConfigResourceClientAutoConfigurationTests {
 	@Test
 	void noClientWhenTheConfigClientIsDisabled() {
 		this.contextRunner
-			.withBean(ConfigServerConfigDataLocationResolver.REST_CLIENT_BEAN_NAME, RestClient.class,
-					RestClient::create)
+			.withBean(ConfigServerRestClientHolder.class, () -> new ConfigServerRestClientHolder(RestClient.create()))
 			.withPropertyValues("spring.cloud.config.enabled=false")
 			.run(context -> assertThat(context).doesNotHaveBean(ConfigResourceClient.class));
 	}

@@ -23,19 +23,17 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
-import org.springframework.web.client.RestClient;
 
 /**
  * Auto-configuration for a {@link ConfigResourceClient} that reads plain text and binary
- * files from the config server with the {@link RestClient} that the
- * {@code spring.config.import} of the config server registers as a bean.
+ * files from the config server with the connection that loaded the configuration, when it
+ * was imported with {@code spring.config.import}.
  *
  * @author Daniel Lavoie
  * @author Roy Clarkson
  * @author Dylan Roberts
  * @author Sharang Gupta
  * @since 5.1.0
- * @see ConfigServerConfigDataLocationResolver#REST_CLIENT_BEAN_NAME
  */
 @AutoConfiguration(after = ConfigClientAutoConfiguration.class)
 @ConditionalOnProperty(name = ConfigClientProperties.PREFIX + ".enabled", matchIfMissing = true)
@@ -43,15 +41,15 @@ public class ConfigResourceClientAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean(ConfigResourceClient.class)
-	@ConditionalOnBean(name = ConfigServerConfigDataLocationResolver.REST_CLIENT_BEAN_NAME)
-	public ConfigResourceClient configResourceClient(
-			@Qualifier(ConfigServerConfigDataLocationResolver.REST_CLIENT_BEAN_NAME) RestClient restClient,
+	@ConditionalOnBean(ConfigServerRestClientHolder.class)
+	public ConfigResourceClient configResourceClient(ConfigServerRestClientHolder restClientHolder,
 			@Qualifier(ConfigServerConfigDataLocationResolver.PROPERTIES_BEAN_NAME) ObjectProvider<ConfigClientProperties> importedProperties,
 			ObjectProvider<ConfigClientProperties> properties) {
 		// The properties resolved by the config server import describe the server the
 		// RestClient talks to; a context may also hold the ones bound by
 		// ConfigClientAutoConfiguration.
-		return new DefaultConfigResourceClient(restClient, importedProperties.getIfAvailable(properties::getObject));
+		return new DefaultConfigResourceClient(restClientHolder.getRestClient(),
+				importedProperties.getIfAvailable(properties::getObject));
 	}
 
 }

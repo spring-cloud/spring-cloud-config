@@ -18,10 +18,12 @@ package org.springframework.cloud.config.client;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import org.springframework.cloud.config.client.ConfigClientProperties.MultipleUriStrategy;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -29,7 +31,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.env.MockEnvironment;
 import org.springframework.test.web.client.MockRestServiceServer;
+import org.springframework.util.unit.DataSize;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestTemplate;
 
@@ -39,6 +44,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withException;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withServerError;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
@@ -148,6 +155,167 @@ public class DefaultConfigResourceClientTests {
 		this.client.getPlainTextResource("nginx.conf");
 
 		this.server.verify();
+	}
+
+	@Test
+	void basicAuthenticationComesFromTheUsernameAndPassword() {
+		this.properties.setUsername("alice");
+		this.properties.setPassword("secret");
+		this.server.expect(requestTo("http://configserver:8888/app/dev/main/nginx.conf"))
+			.andExpect(header(HttpHeaders.AUTHORIZATION, "Basic YWxpY2U6c2VjcmV0"))
+			.andRespond(withSuccess("server { }", MediaType.TEXT_PLAIN));
+
+		this.client.getPlainTextResource("nginx.conf");
+
+		this.server.verify();
+	}
+
+	@Test
+	void credentialsInTheUriAreUsed() {
+		this.properties.setUri(new String[] { "http://bob:pw@configserver:8888" });
+		this.server.expect(requestTo("http://configserver:8888/app/dev/main/nginx.conf"))
+			.andExpect(header(HttpHeaders.AUTHORIZATION, "Basic Ym9iOnB3"))
+			.andRespond(withSuccess("server { }", MediaType.TEXT_PLAIN));
+
+		this.client.getPlainTextResource("nginx.conf");
+
+		this.server.verify();
+	}
+
+	@Test
+	void configuredAuthorizationHeaderIsUsed() {
+		this.properties.setHeaders(Map.of(ConfigClientProperties.AUTHORIZATION, "Bearer token"));
+		this.server.expect(requestTo("http://configserver:8888/app/dev/main/nginx.conf"))
+			.andExpect(header(HttpHeaders.AUTHORIZATION, "Bearer token"))
+			.andRespond(withSuccess("server { }", MediaType.TEXT_PLAIN));
+
+		this.client.getPlainTextResource("nginx.conf");
+
+		this.server.verify();
+	}
+
+	@Test
+	void passwordAndAuthorizationHeaderTogetherAreRejected() {
+		this.properties.setUsername("alice");
+		this.properties.setPassword("secret");
+		this.properties.setHeaders(Map.of(ConfigClientProperties.AUTHORIZATION, "Bearer token"));
+
+		assertThatThrownBy(() -> this.client.getPlainTextResource("nginx.conf"))
+			.isInstanceOf(IllegalStateException.class)
+			.hasMessageContaining("'password' or 'authorization'");
+	}
+
+	@Test
+	void nextUriIsTriedWhenOneCannotBeReached() throws IOException {
+		this.properties.setUri(new String[] { "http://first:8888", "http://second:8888" });
+		this.server.expect(requestTo("http://first:8888/app/dev/main/nginx.conf"))
+			.andRespond(withException(new IOException("connection refused")));
+		this.server.expect(requestTo("http://second:8888/app/dev/main/nginx.conf"))
+			.andRespond(withSuccess("second", MediaType.TEXT_PLAIN));
+
+		Resource resource = this.client.getPlainTextResource("nginx.conf");
+
+		assertThat(resource.getContentAsString(StandardCharsets.UTF_8)).isEqualTo("second");
+		this.server.verify();
+	}
+
+	@Test
+	void lastUnreachableUriFails() {
+		this.properties.setUri(new String[] { "http://first:8888", "http://second:8888" });
+		this.server.expect(requestTo("http://first:8888/app/dev/main/nginx.conf"))
+			.andRespond(withException(new IOException("connection refused")));
+		this.server.expect(requestTo("http://second:8888/app/dev/main/nginx.conf"))
+			.andRespond(withException(new IOException("connection refused")));
+
+		assertThatThrownBy(() -> this.client.getPlainTextResource("nginx.conf"))
+			.isInstanceOf(ResourceAccessException.class);
+		this.server.verify();
+	}
+
+	@Test
+	void nextUriIsTriedOnAnErrorWithTheAlwaysStrategy() throws IOException {
+		this.properties.setUri(new String[] { "http://first:8888", "http://second:8888" });
+		this.server.expect(requestTo("http://first:8888/app/dev/main/nginx.conf")).andRespond(withServerError());
+		this.server.expect(requestTo("http://second:8888/app/dev/main/nginx.conf"))
+			.andRespond(withSuccess("second", MediaType.TEXT_PLAIN));
+
+		Resource resource = this.client.getPlainTextResource("nginx.conf");
+
+		assertThat(resource.getContentAsString(StandardCharsets.UTF_8)).isEqualTo("second");
+		this.server.verify();
+	}
+
+	@Test
+	void errorIsReportedWithTheConnectionTimeoutOnlyStrategy() {
+		this.properties.setUri(new String[] { "http://first:8888", "http://second:8888" });
+		this.properties.setMultipleUriStrategy(MultipleUriStrategy.CONNECTION_TIMEOUT_ONLY);
+		this.server.expect(requestTo("http://first:8888/app/dev/main/nginx.conf")).andRespond(withServerError());
+
+		assertThatThrownBy(() -> this.client.getPlainTextResource("nginx.conf"))
+			.isInstanceOf(HttpServerErrorException.class);
+		this.server.verify();
+	}
+
+	@Test
+	void labelsAreTriedInOrder() throws IOException {
+		this.properties.setLabel("feature, main");
+		this.server.expect(requestTo("http://configserver:8888/app/dev/feature/nginx.conf"))
+			.andRespond(withStatus(HttpStatus.NOT_FOUND));
+		this.server.expect(requestTo("http://configserver:8888/app/dev/main/nginx.conf"))
+			.andRespond(withSuccess("main", MediaType.TEXT_PLAIN));
+
+		Resource resource = this.client.getPlainTextResource("nginx.conf");
+
+		assertThat(resource.getContentAsString(StandardCharsets.UTF_8)).isEqualTo("main");
+		this.server.verify();
+	}
+
+	@Test
+	void fileMissingInEveryLabelIsReportedAsNotFound() {
+		this.server.expect(requestTo("http://configserver:8888/app/dev/feature/nginx.conf"))
+			.andRespond(withStatus(HttpStatus.NOT_FOUND));
+		this.server.expect(requestTo("http://configserver:8888/app/dev/main/nginx.conf"))
+			.andRespond(withStatus(HttpStatus.NOT_FOUND));
+
+		assertThatThrownBy(() -> this.client.getPlainTextResource(null, "feature,main", "nginx.conf"))
+			.isInstanceOf(HttpClientErrorException.NotFound.class);
+		this.server.verify();
+	}
+
+	@Test
+	void fileLargerThanTheLimitIsRejected() {
+		this.properties.getResourceClient().setMaxSize(DataSize.ofBytes(4));
+		this.server.expect(requestTo("http://configserver:8888/app/dev/main/nginx.conf"))
+			.andRespond(withSuccess("12345", MediaType.TEXT_PLAIN));
+
+		assertThatThrownBy(() -> this.client.getPlainTextResource("nginx.conf"))
+			.isInstanceOf(IllegalStateException.class)
+			.hasMessageContaining("exceeds the maximum size of 4 bytes");
+	}
+
+	@Test
+	void declaredContentLengthAboveTheLimitIsRejected() {
+		this.properties.getResourceClient().setMaxSize(DataSize.ofBytes(4));
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentLength(10);
+		this.server.expect(requestTo("http://configserver:8888/app/dev/main/nginx.conf"))
+			.andRespond(withSuccess("12", MediaType.TEXT_PLAIN).headers(headers));
+
+		assertThatThrownBy(() -> this.client.getPlainTextResource("nginx.conf"))
+			.isInstanceOf(IllegalStateException.class)
+			.hasMessageContaining("exceeds the maximum size");
+	}
+
+	@Test
+	void fileWithinTheLimitIsReadAndNamedAfterItsPath() throws IOException {
+		this.properties.getResourceClient().setMaxSize(DataSize.ofBytes(5));
+		this.server.expect(requestTo("http://configserver:8888/app/dev/main/conf/nginx.conf"))
+			.andRespond(withSuccess("12345", MediaType.TEXT_PLAIN));
+
+		Resource resource = this.client.getPlainTextResource("conf/nginx.conf");
+
+		assertThat(resource.getContentAsString(StandardCharsets.UTF_8)).isEqualTo("12345");
+		assertThat(resource.getFilename()).isEqualTo("nginx.conf");
 	}
 
 	@Test

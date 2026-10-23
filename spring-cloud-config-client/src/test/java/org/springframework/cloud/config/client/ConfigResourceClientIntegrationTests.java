@@ -29,24 +29,24 @@ import org.springframework.web.client.RestTemplate;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Verifies that the config server import exposes its {@link RestTemplate} and a
- * {@link RestClient} as beans, and that a {@link ConfigResourceClient} is built from
- * them.
+ * Verifies that the config server import keeps its connection for a
+ * {@link ConfigResourceClient} without exposing a {@link RestTemplate} or a
+ * {@link RestClient} bean.
  *
  * @author Sharang Gupta
  */
 public class ConfigResourceClientIntegrationTests {
 
 	@Test
-	void configDataImportExposesTheRestClientAndTheResourceClient() {
+	void configDataImportProvidesTheResourceClient() {
 		try (ConfigurableApplicationContext context = new SpringApplicationBuilder(TestConfig.class)
 			.web(WebApplicationType.NONE)
 			.run("--spring.config.import=optional:configserver:http://localhost:1", "--spring.cloud.config.name=app")) {
-			assertThat(context.getBean(ConfigServerConfigDataLocationResolver.REST_TEMPLATE_BEAN_NAME))
-				.isInstanceOf(RestTemplate.class);
-			assertThat(context.getBean(ConfigServerConfigDataLocationResolver.REST_CLIENT_BEAN_NAME))
-				.isInstanceOf(RestClient.class);
+			assertThat(context.getBean(ConfigServerRestClientHolder.class).getRestClient()).isNotNull();
 			assertThat(context.getBean(ConfigResourceClient.class)).isInstanceOf(DefaultConfigResourceClient.class);
+			// The connection is not exposed as a RestClient or RestTemplate bean
+			assertThat(context.getBeanNamesForType(RestClient.class)).isEmpty();
+			assertThat(context.getBeanNamesForType(RestTemplate.class)).isEmpty();
 		}
 	}
 
@@ -55,7 +55,7 @@ public class ConfigResourceClientIntegrationTests {
 		try (ConfigurableApplicationContext context = new SpringApplicationBuilder(TestConfig.class)
 			.web(WebApplicationType.NONE)
 			.run("--spring.cloud.config.import-check.enabled=false")) {
-			assertThat(context.containsBean(ConfigServerConfigDataLocationResolver.REST_CLIENT_BEAN_NAME)).isFalse();
+			assertThat(context.getBeanProvider(ConfigServerRestClientHolder.class).getIfAvailable()).isNull();
 			assertThat(context.getBeanProvider(ConfigResourceClient.class).getIfAvailable()).isNull();
 		}
 	}

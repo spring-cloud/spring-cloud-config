@@ -72,17 +72,6 @@ public class ConfigServerConfigDataLocationResolver
 	 */
 	public static final String PROPERTIES_BEAN_NAME = "configDataConfigClientProperties";
 
-	/**
-	 * Name of the {@link RestTemplate} bean that loaded the configuration from the config
-	 * server.
-	 */
-	public static final String REST_TEMPLATE_BEAN_NAME = "configClientRestTemplate";
-
-	/**
-	 * Name of the {@link RestClient} bean built from the {@link RestTemplate} that loaded
-	 * the configuration from the config server.
-	 */
-	public static final String REST_CLIENT_BEAN_NAME = "configClientRestClient";
 	static final boolean RSA_IS_PRESENT = ClassUtils
 		.isPresent("org.springframework.security.crypto.encrypt.RsaSecretEncryptor", null);
 
@@ -276,7 +265,7 @@ public class ConfigServerConfigDataLocationResolver
 			ConfigClientRequestTemplateFactory factory = context.get(ConfigClientRequestTemplateFactory.class);
 			return factory.create();
 		});
-		bootstrapContext.addCloseListener(this::registerRestClient);
+		bootstrapContext.addCloseListener(this::registerRestClientHolder);
 
 		bootstrapContext.registerIfAbsent(PropertyResolver.class,
 				context -> new PropertyResolver(resolverContext.getBinder(), getBindHandler(resolverContext)));
@@ -345,23 +334,24 @@ public class ConfigServerConfigDataLocationResolver
 	}
 
 	/**
-	 * Expose the {@link RestTemplate} that loaded the configuration, which carries the
-	 * URI, credentials, headers, TLS settings, timeouts and token of the client, and a
-	 * {@link RestClient} built from it, as beans for components that call the config
-	 * server at runtime, such as the {@link ConfigResourceClient}.
+	 * Keep the {@link RestTemplate} that loaded the configuration, which carries the URI,
+	 * credentials, headers, TLS settings, timeouts and interceptors of the client,
+	 * available as a {@link RestClient} to the {@link ConfigResourceClient}, without
+	 * exposing it as a {@link RestClient} bean.
 	 */
-	private void registerRestClient(BootstrapContextClosedEvent event) {
+	private void registerRestClientHolder(BootstrapContextClosedEvent event) {
 		ConfigurableListableBeanFactory beanFactory = event.getApplicationContext().getBeanFactory();
-		if (beanFactory.containsBean(REST_CLIENT_BEAN_NAME)
+		// The listener is added on every resolution (one per import location and
+		// profile pass) and runs that many times when the bootstrap context closes,
+		// while a singleton can only be registered once.
+		if (beanFactory.containsBean(ConfigServerRestClientHolder.BEAN_NAME)
 				|| !event.getBootstrapContext().isRegistered(RestTemplate.class)) {
 			return;
 		}
-		RestTemplate restTemplate = event.getBootstrapContext().get(RestTemplate.class);
-		if (!beanFactory.containsBean(REST_TEMPLATE_BEAN_NAME)) {
-			beanFactory.registerSingleton(REST_TEMPLATE_BEAN_NAME, restTemplate);
-		}
 		try {
-			beanFactory.registerSingleton(REST_CLIENT_BEAN_NAME, RestClient.create(restTemplate));
+			RestClient restClient = RestClient.create(event.getBootstrapContext().get(RestTemplate.class));
+			beanFactory.registerSingleton(ConfigServerRestClientHolder.BEAN_NAME,
+					new ConfigServerRestClientHolder(restClient));
 		}
 		catch (RuntimeException ex) {
 			// A RestTemplate that cannot back a RestClient, such as a test double
