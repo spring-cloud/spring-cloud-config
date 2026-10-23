@@ -49,6 +49,7 @@ import org.springframework.util.MimeTypeUtils;
 import org.springframework.web.context.WebApplicationContext;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -167,6 +168,40 @@ public class ResourceControllerIntegrationTests {
 			.andExpect(MockMvcResultMatchers.status().isOk());
 		verify(this.repository).findOne("foo", "default", null, false);
 		verify(this.resources).findOne("foo", "default", null, "bar/foo.txt");
+	}
+
+	@Test
+	public void resourceNoLabelInNestedSubdirectory() throws Exception {
+		when(this.repository.findOne("foo", "default", null, false))
+			.thenReturn(new Environment("foo", "default", "master"));
+		when(this.resources.findOne("foo", "default", null, "bar/baz/foo.txt"))
+			.thenReturn(new ClassPathResource("resource-controller/foo.txt"));
+		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/bar/baz/foo.txt").param("useDefaultLabel", ""))
+			.andExpect(MockMvcResultMatchers.status().isOk());
+		verify(this.resources).findOne("foo", "default", null, "bar/baz/foo.txt");
+	}
+
+	@Test
+	public void labelWithUseDefaultLabelIsPartOfThePath() throws Exception {
+		when(this.repository.findOne("foo", "default", null, false))
+			.thenReturn(new Environment("foo", "default", "master"));
+		when(this.resources.findOne("foo", "default", null, "master/foo.txt"))
+			.thenThrow(new NoSuchResourceException("Not found: master/foo.txt"));
+		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/master/foo.txt").param("useDefaultLabel", ""))
+			.andExpect(MockMvcResultMatchers.status().isNotFound());
+		verify(this.resources).findOne("foo", "default", null, "master/foo.txt");
+		verify(this.resources, never()).findOne("foo", "default", "master", "foo.txt");
+	}
+
+	@Test
+	public void noLabelWithTrailingSlashIsNotFound() throws Exception {
+		when(this.repository.findOne("foo", "default", null, false))
+			.thenReturn(new Environment("foo", "default", "master"));
+		when(this.resources.findOne("foo", "default", null, "bar/"))
+			.thenThrow(new NoSuchResourceException("Not found: bar/"));
+		this.mvc.perform(MockMvcRequestBuilders.get("/foo/default/bar/").param("useDefaultLabel", ""))
+			.andExpect(MockMvcResultMatchers.status().isNotFound());
+		verify(this.resources).findOne("foo", "default", null, "bar/");
 	}
 
 	@Test
