@@ -1,0 +1,85 @@
+[[gcp-storage-backend]]
+= Google Cloud Storage Backend
+
+Spring Cloud Config Server can use link:https://cloud.google.com/storage[Google Cloud Storage (GCS)] as an `EnvironmentRepository`. Configuration files stored in a GCS bucket are loaded and exposed as property sources.
+
+== Enabling the backend
+
+The repository is registered when the following conditions hold:
+
+* The Spring profile `gcs` is active.
+* The Google Cloud Storage client library is on the classpath.
+
+If you use `spring-cloud-config-server` without the optional Google Cloud Storage dependency, add the dependency to your application:
+
+[source,xml,indent=0]
+.pom.xml
+----
+<dependency>
+    <groupId>com.google.cloud</groupId>
+    <artifactId>google-cloud-storage</artifactId>
+</dependency>
+----
+
+Configure the repository using the `spring.cloud.config.server.gcs` property prefix:
+
+[source,yaml]
+----
+spring:
+  profiles:
+    active: gcs
+  cloud:
+    config:
+      server:
+        gcs:
+          bucket: my-config-bucket
+          project-id: my-project
+          use-directory-layout: false
+          search-paths:
+            - "{application}"
+            - "{application}/{profile}"
+          order: 0
+----
+
+== Configuration properties
+
+The following properties are available under `spring.cloud.config.server.gcs`:
+
+|===
+| Property | Default | Description
+
+| `bucket`
+| _none_
+| Name of the Google Cloud Storage bucket containing configuration files. Required.
+
+| `project-id`
+| _empty_
+| Google Cloud project ID used when creating the Storage client. If omitted, the Google Cloud client library resolves the project using its default mechanism.
+
+| `use-directory-layout`
+| `false`
+| Controls whether the default lookup uses the directory-based layout.
+
+| `search-paths`
+| Empty list
+| Custom search patterns used to locate configuration files. Patterns can contain `{application}`, `{profile}`, and `{label}` placeholders.
+
+| `order`
+| Same as other environment repositories
+| Order in a composite repository (`org.springframework.core.Ordered`).
+
+|===
+
+== Configuration file lookup
+
+The repository supports `.properties`, `.json`, `.yml`, and `.yaml` configuration files.
+
+By default, the repository constructs lookup paths using the requested label, application, and profile. When `search-paths` is configured, the repository uses those patterns to locate configuration files.
+
+The `{application}`, `{profile}`, and `{label}` placeholders are replaced with the corresponding values from the Config Server request. Search patterns can also be used to match multiple configuration files.
+
+== Authentication
+
+The Storage client uses the Google Cloud client library's default authentication mechanism. Configure credentials using link:https://cloud.google.com/docs/authentication/application-default-credentials[Application Default Credentials].
+
+Depending on the deployment environment, credentials can be provided through local development credentials or a Google Cloud runtime service account. Ensure the identity used by Config Server has permission to list and read objects in the configured bucket.
