@@ -33,6 +33,7 @@ import org.springframework.cloud.configuration.TlsProperties;
 import org.springframework.core.env.Environment;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
+import org.springframework.util.unit.DataSize;
 import org.springframework.web.util.UriComponentsBuilder;
 
 /**
@@ -142,6 +143,12 @@ public class ConfigClientProperties {
 	 * Discovery properties.
 	 */
 	private Discovery discovery = new Discovery();
+
+	/**
+	 * Settings of the {@link ConfigResourceClient} that reads plain text and binary files
+	 * from the config server.
+	 */
+	private ResourceClient resourceClient = new ResourceClient();
 
 	/**
 	 * TLS properties.
@@ -282,6 +289,14 @@ public class ConfigClientProperties {
 
 	public Discovery getDiscovery() {
 		return this.discovery;
+	}
+
+	public ResourceClient getResourceClient() {
+		return this.resourceClient;
+	}
+
+	public void setResourceClient(ResourceClient resourceClient) {
+		this.resourceClient = resourceClient;
 	}
 
 	public void setDiscovery(Discovery discovery) {
@@ -465,6 +480,27 @@ public class ConfigClientProperties {
 
 		public String getUri() {
 			return this.uri;
+		}
+
+	}
+
+	/**
+	 * Settings of the {@link ConfigResourceClient}.
+	 */
+	public static class ResourceClient {
+
+		/**
+		 * Maximum size of a file read from the config server; a larger file is rejected
+		 * instead of being loaded into memory.
+		 */
+		private DataSize maxSize = DataSize.ofMegabytes(1);
+
+		public DataSize getMaxSize() {
+			return this.maxSize;
+		}
+
+		public void setMaxSize(DataSize maxSize) {
+			this.maxSize = maxSize;
 		}
 
 	}
