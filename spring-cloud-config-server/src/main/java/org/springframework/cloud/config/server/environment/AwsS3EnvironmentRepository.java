@@ -49,6 +49,7 @@ import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.core.Ordered;
 import org.springframework.core.env.Profiles;
 import org.springframework.core.io.InputStreamResource;
+import org.springframework.core.io.Resource;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.PathMatcher;
@@ -160,94 +161,88 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 
 	private void addPropertySources(Environment environment, List<String> apps, String[] profiles,
 			List<String> labels) {
+		String[] profilesByPrecedence = profilesByPrecedence(profiles);
 		for (String label : labels) {
-			for (String profile : profiles) {
+			for (String profile : profilesByPrecedence) {
 				addPropertySourcesForApps(apps,
-						app -> addProfileSpecificPropertySource(environment, app, profile, label));
+						app -> addProfileSpecificPropertySource(environment, app, profile, profiles, label));
+			}
+			if (profiles.length == 0 && !this.searchPaths.isEmpty()) {
+				addPropertySourcesForApps(apps,
+						app -> addProfileSpecificPropertySource(environment, app, null, profiles, label));
 			}
 		}
+		if (this.searchPaths.isEmpty()) {
+			for (String label : labels) {
+				addPropertySourcesForApps(apps,
+						app -> addNonProfileSpecificPropertySource(environment, app, profiles, label));
+			}
+		}
+	}
 
-		// If we have no profiles just add property sources for all apps
-		if (profiles.length == 0) {
-			for (String label : labels) {
-				addPropertySourcesForApps(apps,
-						app -> addNonProfileSpecificPropertySource(environment, app, null, label));
-				// Even with no profiles, negated profile documents (e.g. on-profile:
-				// "!my-profile") should be included because no profile is active,
-				// so all negations are satisfied
-				addPropertySourcesForApps(apps,
-						app -> addNegatedProfilePropertySource(environment, app, profiles, label));
-			}
-		}
-		else {
-			for (String label : labels) {
-				// If we have profiles, we still need to add property sources from files
-				// that
-				// are not profile specific but we pass
-				// along the profiles as well so we can check if any non-profile specific
-				// YAML
-				// files have profile specific documents
-				// within them
-				for (String profile : profiles) {
-					addPropertySourcesForApps(apps,
-							app -> addNonProfileSpecificPropertySource(environment, app, profile, label));
-				}
-				// Handle documents with negated profile expressions (e.g. on-profile:
-				// "!my-profile")
-				// once per label rather than once per profile to avoid duplicates
-				addPropertySourcesForApps(apps,
-						app -> addNegatedProfilePropertySource(environment, app, profiles, label));
-			}
-		}
+	/**
+	 * Orders the profiles from the highest precedence to the lowest. As in the other
+	 * environment repositories, the last profile wins.
+	 * @param profiles the profiles in the order they were requested
+	 * @return the profiles in reverse order
+	 */
+	private static String[] profilesByPrecedence(String[] profiles) {
+		List<String> reversed = new ArrayList<>(Arrays.asList(profiles));
+		Collections.reverse(reversed);
+		return reversed.toArray(new String[0]);
 	}
 
 	private void addPropertySourcesForApps(List<String> apps, Consumer<String> addPropertySource) {
 		apps.forEach(addPropertySource);
 	}
 
-	private void addNegatedProfilePropertySource(Environment environment, String app, String[] allProfiles,
-			String label) {
-		List<S3ConfigFile> s3ConfigFiles = this.searchPaths.isEmpty()
-				? getNegatedProfileS3ConfigFileYaml(app, allProfiles, label) : getS3ConfigFileWithSearchPaths(app, null,
-						label, key -> wrapKeyWithNegatedConfigFiles(key, app, allProfiles, label));
+	private void addProfileSpecificPropertySource(Environment environment, String app, String profile,
+			String[] profiles, String label) {
+		List<S3ConfigFile> s3ConfigFiles = searchPaths.isEmpty()
+				? getS3ConfigFile(app, profile, label, this::getS3PropertiesOrJsonConfigFile,
+						(application, fileProfile, fileLabel) -> getYamlDocuments(null, application, fileProfile,
+								profiles, fileLabel))
+				: getS3ConfigFileWithSearchPaths(app, profile, label,
+						key -> wrapKeyWithConfigFiles(key, app, profiles, label));
 		addPropertySource(environment, s3ConfigFiles);
 	}
 
-	private List<S3ConfigFile> getNegatedProfileS3ConfigFileYaml(String application, String[] allProfiles,
+	private void addNonProfileSpecificPropertySource(Environment environment, String app, String[] profiles,
 			String label) {
-		List<S3ConfigFile> configFiles = new ArrayList<>();
-		try {
-			S3ConfigFile configFile = new NegatedProfileYamlDocumentS3ConfigFile(application, label, bucketName,
-					useApplicationAsDirectory, s3Client, allProfiles);
-			configFiles.add(configFile);
+		List<S3ConfigFile> s3ConfigFiles = new ArrayList<>();
+		S3ConfigFile configFile = getS3PropertiesOrJsonConfigFile(app, null, label);
+		if (configFile != null) {
+			s3ConfigFiles.add(configFile);
 		}
-		catch (IllegalStateException e) {
-			LOG.warn("Could not read YAML file using application <" + application + "> label <" + label + ">.", e);
+		s3ConfigFiles.addAll(getYamlDocuments(null, app, null, profiles, label));
+		addPropertySource(environment, s3ConfigFiles);
+	}
+
+	/**
+	 * Returns the documents of a YAML file that apply to the profiles, from the highest
+	 * precedence to the lowest. As in Spring Boot, a later document of a multi-document
+	 * file takes precedence over an earlier one.
+	 * @param key the key of the file, or {@code null} for the file of the application
+	 * @param application the application
+	 * @param profile the profile of a profile-specific file, or {@code null}
+	 * @param profiles the requested profiles
+	 * @param label the label
+	 * @return the documents that apply to the profiles
+	 */
+	private List<S3ConfigFile> getYamlDocuments(String key, String application, String profile, String[] profiles,
+			String label) {
+		try {
+			return new MultiDocumentYamlS3ConfigFile(key, application, profile, label, bucketName,
+					useApplicationAsDirectory, s3Client)
+				.documentsFor(profiles);
 		}
 		catch (Exception e) {
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("Did not find negated profile yaml document in non-profile specific file using application <"
-						+ application + "> label <" + label + ">.");
+				LOG.debug("Did not find yaml documents using application <" + application + "> profile <" + profile
+						+ "> key <" + key + "> label <" + label + ">.");
 			}
+			return Collections.emptyList();
 		}
-		return configFiles;
-	}
-
-	private void addProfileSpecificPropertySource(Environment environment, String app, String profile, String label) {
-		List<S3ConfigFile> s3ConfigFiles = searchPaths.isEmpty()
-				? getS3ConfigFile(app, profile, label, this::getS3PropertiesOrJsonConfigFile,
-						this::getProfileSpecificS3ConfigFileYaml)
-				: getS3ConfigFileWithSearchPaths(app, profile, label,
-						key -> wrapKeyWithConfigFiles(key, app, profile, label));
-		addPropertySource(environment, s3ConfigFiles);
-	}
-
-	private void addNonProfileSpecificPropertySource(Environment environment, String app, String profile,
-			String label) {
-		List<S3ConfigFile> s3ConfigFiles = searchPaths.isEmpty() ? getS3ConfigFile(app, profile, label,
-				this::getNonProfileSpecificPropertiesOrJsonConfigFile, this::getNonProfileSpecificS3ConfigFileYaml)
-				: Collections.emptyList();
-		addPropertySource(environment, s3ConfigFiles);
 	}
 
 	private void addPropertySource(Environment environment, List<S3ConfigFile> s3ConfigFiles) {
@@ -257,19 +252,12 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 			}
 			try {
 				final Properties config = s3ConfigFile.read();
-				// This logic handles the case where the s3 file is a YAML file that is
-				// not profile specific (ie it does not have -<profile> in the name)
-				// and does not have any profile specific documents in it. In this case we
-				// do
-				// not want to include this
-				// property source we only want to include the document for the default
-				// profile. When we create
-				// the S3ConfigFile for this file we set the
-				// shouldIncludeWithEmptyProperties to false
-				// in ProfileSpecificYamlDocumentS3ConfigFile for this specific case.
-				if (config == null || (config.isEmpty() && !s3ConfigFile.isShouldIncludeWithEmptyProperties())) {
+				if (config == null) {
 					continue;
 				}
+				// Apply the overrides before looking for the same source, which already
+				// has them
+				config.putAll(serverProperties.getOverrides());
 				String name = s3ConfigFile.getName();
 				boolean exists = environment.getPropertySources()
 					.stream()
@@ -278,7 +266,6 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 					continue;
 				}
 				environment.setVersion(s3ConfigFile.getVersion());
-				config.putAll(serverProperties.getOverrides());
 				PropertySource propertySource = new PropertySource(name, config);
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("Adding property source to environment " + propertySource);
@@ -432,36 +419,12 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 		return key.endsWith(".properties") || key.endsWith(".json") || key.endsWith(".yml") || key.endsWith(".yaml");
 	}
 
-	private List<S3ConfigFile> wrapKeyWithConfigFiles(String key, String application, String profile, String label) {
-
+	private List<S3ConfigFile> wrapKeyWithConfigFiles(String key, String application, String[] profiles, String label) {
 		if (key.endsWith(".yml") || key.endsWith(".yaml")) {
-			List<S3ConfigFile> files = new ArrayList<>();
-			files.addAll(getProfileSpecificYamlFromKey(key, application, profile, label));
-			files.addAll(getNonProfileSpecificYamlFromKey(key, application, profile, label));
-			return files;
+			return getYamlDocuments(key, application, null, profiles, label);
 		}
-		return createConfigFileFromKey(key, application, profile, label).map(Collections::singletonList)
+		return createConfigFileFromKey(key, application, null, label).map(Collections::singletonList)
 			.orElseGet(Collections::emptyList);
-	}
-
-	private List<S3ConfigFile> getProfileSpecificYamlFromKey(String key, String application, String profile,
-			String label) {
-
-		S3ConfigFileFromKey config = new S3ConfigFileFromKey(key, application, profile, label, bucketName,
-				useApplicationAsDirectory, s3Client,
-				properties -> YamlS3ConfigFile.profileMatchesActivateProperty(profile, properties)
-						? YamlProcessor.MatchStatus.FOUND : YamlProcessor.MatchStatus.NOT_FOUND);
-		config.setShouldIncludeWithEmptyProperties(false);
-		return List.of(config);
-	}
-
-	private List<S3ConfigFile> getNonProfileSpecificYamlFromKey(String key, String application, String profile,
-			String label) {
-
-		S3ConfigFileFromKey config = new S3ConfigFileFromKey(key, application, profile, label, bucketName,
-				useApplicationAsDirectory, s3Client, properties -> !YamlS3ConfigFile.onProfilePropertyExists(properties)
-						? YamlProcessor.MatchStatus.FOUND : YamlProcessor.MatchStatus.NOT_FOUND);
-		return List.of(config);
 	}
 
 	private String extractPrefix(String pattern) {
@@ -495,56 +458,6 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 		return Optional.empty();
 	}
 
-	private List<YamlS3ConfigFile> getNonProfileSpecificS3ConfigFileYaml(String application, String profile,
-			String label) {
-		List<YamlS3ConfigFile> configFiles = new ArrayList<>();
-		if (profile != null) {
-			try {
-				YamlS3ConfigFile configFileDocument = new ProfileSpecificYamlDocumentS3ConfigFile(application, profile,
-						label, bucketName, useApplicationAsDirectory, s3Client);
-				configFileDocument.setShouldIncludeWithEmptyProperties(false);
-				configFiles.add(configFileDocument);
-			}
-			catch (Exception e) {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("Did not find specific yaml document in non-profile specific file using application <"
-							+ application + "> profile <" + profile + "> label <" + label + ">.");
-				}
-			}
-		}
-		try {
-			YamlS3ConfigFile configFile = new NonProfileSpecificYamlDocumentS3ConfigFile(application, null, label,
-					bucketName, useApplicationAsDirectory, s3Client);
-			configFiles.add(configFile);
-		}
-		catch (Exception e) {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug(
-						"Did not find non-profile specific yaml document in non-profile specific file using application <"
-								+ application + "> profile <null>" + " label <" + label + ">.");
-			}
-		}
-		return configFiles;
-	}
-
-	private List<YamlS3ConfigFile> getProfileSpecificS3ConfigFileYaml(String application, String profile,
-			String label) {
-		try {
-			YamlS3ConfigFile configFile = new ProfileSpecificYamlS3ConfigFile(application, profile, label, bucketName,
-					useApplicationAsDirectory, s3Client);
-			return List.of(configFile);
-		}
-		catch (Exception e) {
-			LOG.warn("Could not read YAML file", e);
-			return Collections.emptyList();
-		}
-	}
-
-	private S3ConfigFile getNonProfileSpecificPropertiesOrJsonConfigFile(String application, String profile,
-			String label) {
-		return getS3PropertiesOrJsonConfigFile(application, null, label);
-	}
-
 	private S3ConfigFile getS3PropertiesOrJsonConfigFile(String application, String profile, String label) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("Getting S3 config file for " + application + " " + profile + " " + label);
@@ -572,33 +485,6 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 		}
 	}
 
-	private List<S3ConfigFile> wrapKeyWithNegatedConfigFiles(String key, String application, String[] allProfiles,
-			String label) {
-		if (key.endsWith(".yml") || key.endsWith(".yaml")) {
-			S3ConfigFileFromKey config = new S3ConfigFileFromKey(key, application, null, label, bucketName,
-					this.useApplicationAsDirectory, s3Client, properties -> {
-						Object onProfileValue = properties.get("spring.config.activate.on-profile");
-						if (onProfileValue == null) {
-							onProfileValue = properties.get("spring.config.activate.onProfile");
-						}
-						if (onProfileValue == null) {
-							return YamlProcessor.MatchStatus.NOT_FOUND;
-						}
-
-						String expression = onProfileValue.toString().trim();
-						if (AwsS3EnvironmentRepository.isSimpleProfileName(expression)) {
-							return YamlProcessor.MatchStatus.NOT_FOUND;
-						}
-						List<String> allProfilesList = Arrays.asList(allProfiles);
-						boolean matches = Profiles.of(expression).matches(allProfilesList::contains);
-						return matches ? YamlProcessor.MatchStatus.FOUND : YamlProcessor.MatchStatus.NOT_FOUND;
-					});
-			config.setShouldIncludeWithEmptyProperties(false);
-			return List.of(config);
-		}
-		return Collections.emptyList();
-	}
-
 	@Override
 	public Locations getLocations(String application, String profiles, String label) {
 		StringBuilder baseLocation = new StringBuilder(AWS_S3_RESOURCE_SCHEME + bucketName + PATH_SEPARATOR);
@@ -620,7 +506,7 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 
 	interface YamlS3ConfigFileCreator {
 
-		List<YamlS3ConfigFile> create(String application, String profile, String label);
+		List<S3ConfigFile> create(String application, String profile, String label);
 
 	}
 
@@ -650,8 +536,6 @@ abstract class S3ConfigFile {
 
 	private String version;
 
-	private boolean shouldIncludeWithEmptyProperties = true;
-
 	private final boolean useApplicationAsDirectory;
 
 	protected S3ConfigFile(String application, String profile, String label, String bucketName,
@@ -668,15 +552,11 @@ abstract class S3ConfigFile {
 		return version;
 	}
 
+	void setVersion(String version) {
+		this.version = version;
+	}
+
 	abstract Properties read();
-
-	boolean isShouldIncludeWithEmptyProperties() {
-		return shouldIncludeWithEmptyProperties;
-	}
-
-	void setShouldIncludeWithEmptyProperties(boolean shouldIncludeWithEmptyProperties) {
-		this.shouldIncludeWithEmptyProperties = shouldIncludeWithEmptyProperties;
-	}
 
 	public String getName() {
 		return createPropertySourceName(application, profile);
@@ -731,7 +611,7 @@ abstract class S3ConfigFile {
 		return objectKeyPrefix.toString();
 	}
 
-	private String createPropertySourceName(String app, String profile) {
+	String createPropertySourceName(String app, String profile) {
 		StringBuilder propertySourceName = new StringBuilder().append("s3:").append(app);
 		if (this.useApplicationAsDirectory) {
 			propertySourceName.append(PATH_SEPARATOR).append("application");
@@ -777,33 +657,10 @@ class PropertyS3ConfigFile extends S3ConfigFile {
 
 class YamlS3ConfigFile extends S3ConfigFile {
 
-	final YamlProcessor.DocumentMatcher[] documentMatchers;
-
 	YamlS3ConfigFile(String application, String profile, String label, String bucketName,
 			boolean useApplicationAsDirectory, S3Client s3Client) {
-		this(application, profile, label, bucketName, useApplicationAsDirectory, s3Client,
-				new YamlProcessor.DocumentMatcher[] {});
-	}
-
-	YamlS3ConfigFile(String application, String profile, String label, String bucketName,
-			boolean useApplicationAsDirectory, S3Client s3Client,
-			final YamlProcessor.DocumentMatcher... documentMatchers) {
 		super(application, profile, label, bucketName, useApplicationAsDirectory, s3Client);
-		this.documentMatchers = documentMatchers;
 		this.properties = read();
-	}
-
-	protected static boolean profileMatchesActivateProperty(String profile, Properties properties) {
-		if (profile == null) {
-			return false;
-		}
-		return profile.equals(properties.get("spring.config.activate.on-profile"))
-				|| profile.equals(properties.get("spring.config.activate.onProfile"));
-	}
-
-	protected static boolean onProfilePropertyExists(Properties properties) {
-		return properties.get("spring.config.activate.on-profile") != null
-				|| properties.get("spring.config.activate.onProfile") != null;
 	}
 
 	@Override
@@ -814,7 +671,6 @@ class YamlS3ConfigFile extends S3ConfigFile {
 		final YamlPropertiesFactoryBean yaml = new YamlPropertiesFactoryBean();
 		try (InputStream in = getObject()) {
 			yaml.setResources(new InputStreamResource(in));
-			yaml.setDocumentMatchers(documentMatchers);
 			return yaml.getObject();
 		}
 		catch (Exception e) {
@@ -826,55 +682,6 @@ class YamlS3ConfigFile extends S3ConfigFile {
 	@Override
 	protected List<String> getExtensions() {
 		return List.of("yml", "yaml");
-	}
-
-}
-
-class ProfileSpecificYamlDocumentS3ConfigFile extends YamlS3ConfigFile {
-
-	ProfileSpecificYamlDocumentS3ConfigFile(String application, String profile, String label, String bucketName,
-			boolean useApplicationAsDirectory, S3Client s3Client) {
-		super(application, profile, label, bucketName, useApplicationAsDirectory, s3Client,
-				properties -> profileMatchesActivateProperty(profile, properties) ? YamlProcessor.MatchStatus.FOUND
-						: YamlProcessor.MatchStatus.NOT_FOUND);
-	}
-
-	@Override
-	public boolean isShouldIncludeWithEmptyProperties() {
-		return false;
-	}
-
-	@Override
-	protected String buildObjectKeyPrefix() {
-		return super.buildObjectKeyPrefix(false);
-	}
-
-}
-
-class NonProfileSpecificYamlDocumentS3ConfigFile extends YamlS3ConfigFile {
-
-	NonProfileSpecificYamlDocumentS3ConfigFile(String application, String profile, String label, String bucketName,
-			boolean useApplicationAsDirectory, S3Client s3Client) {
-		super(application, profile, label, bucketName, useApplicationAsDirectory, s3Client,
-				properties -> !onProfilePropertyExists(properties) ? YamlProcessor.MatchStatus.FOUND
-						: YamlProcessor.MatchStatus.NOT_FOUND);
-	}
-
-	@Override
-	public boolean isShouldIncludeWithEmptyProperties() {
-		return false;
-	}
-
-}
-
-class ProfileSpecificYamlS3ConfigFile extends YamlS3ConfigFile {
-
-	ProfileSpecificYamlS3ConfigFile(String application, String profile, String label, String bucketName,
-			boolean useApplicationAsDirectory, S3Client s3Client) {
-		super(application, profile, label, bucketName, useApplicationAsDirectory, s3Client,
-				properties -> !onProfilePropertyExists(properties) ? YamlProcessor.MatchStatus.ABSTAIN
-						: profileMatchesActivateProperty(profile, properties) ? YamlProcessor.MatchStatus.FOUND
-								: YamlProcessor.MatchStatus.NOT_FOUND);
 	}
 
 }
@@ -900,18 +707,10 @@ class S3ConfigFileFromKey extends S3ConfigFile {
 
 	private final String key;
 
-	private final YamlProcessor.DocumentMatcher[] documentMatchers;
-
 	S3ConfigFileFromKey(String key, String application, String profile, String label, String bucketName,
-			S3Client s3Client) {
-		this(key, application, profile, label, bucketName, false, s3Client, new YamlProcessor.DocumentMatcher[] {});
-	}
-
-	S3ConfigFileFromKey(String key, String application, String profile, String label, String bucketName,
-			boolean useApplicationAsDirectory, S3Client s3Client, YamlProcessor.DocumentMatcher... documentMatchers) {
+			boolean useApplicationAsDirectory, S3Client s3Client) {
 		super(application, profile, label, bucketName, useApplicationAsDirectory, s3Client);
 		this.key = key;
-		this.documentMatchers = documentMatchers;
 		this.properties = read();
 	}
 
@@ -947,15 +746,16 @@ class S3ConfigFileFromKey extends S3ConfigFile {
 			}
 			return props;
 		}
-		else if ("json".equals(ext) || "yml".equals(ext) || "yaml".equals(ext)) {
+		else if ("json".equals(ext)) {
+			// YAML is a superset of JSON, which means you can parse JSON with a YAML
+			// parser
 			final YamlPropertiesFactoryBean yaml = new YamlPropertiesFactoryBean();
 			try (InputStream in = getObject()) {
 				yaml.setResources(new InputStreamResource(in));
-				yaml.setDocumentMatchers(documentMatchers);
 				return yaml.getObject();
 			}
 			catch (Exception e) {
-				LOG.warn("Could not read YAML/JSON file", e);
+				LOG.warn("Could not read JSON file", e);
 				throw new IllegalStateException("Cannot load environment", e);
 			}
 		}
@@ -964,53 +764,191 @@ class S3ConfigFileFromKey extends S3ConfigFile {
 
 }
 
-class NegatedProfileYamlDocumentS3ConfigFile extends YamlS3ConfigFile {
+/**
+ * A YAML file of possibly several documents. As in Spring Boot, a later document takes
+ * precedence over an earlier one, and a document applies to the requested profiles when
+ * it has no {@code spring.config.activate.on-profile} property or when one of its profile
+ * expressions matches them.
+ */
+class MultiDocumentYamlS3ConfigFile extends S3ConfigFile {
 
-	private final String[] allProfiles;
+	private static final List<String> ACTIVATION_PROPERTIES = List.of("spring.config.activate.on-profile",
+			"spring.config.activate.onProfile");
 
-	NegatedProfileYamlDocumentS3ConfigFile(String application, String label, String bucketName,
-			boolean useApplicationAsDirectory, S3Client s3Client, String[] allProfiles) {
-		super(application, null, label, bucketName, useApplicationAsDirectory, s3Client, properties -> {
-			Object onProfileValue = properties.get("spring.config.activate.on-profile");
-			if (onProfileValue == null) {
-				onProfileValue = properties.get("spring.config.activate.onProfile");
+	private final String key;
+
+	private final List<Properties> documents;
+
+	MultiDocumentYamlS3ConfigFile(String key, String application, String profile, String label, String bucketName,
+			boolean useApplicationAsDirectory, S3Client s3Client) {
+		super(application, profile, label, bucketName, useApplicationAsDirectory, s3Client);
+		this.key = key;
+		this.documents = readDocuments();
+	}
+
+	/**
+	 * Returns a config file for each non-empty document that applies to the profiles,
+	 * from the highest precedence to the lowest. Documents that would get the same name
+	 * are told apart by their position in the file.
+	 * @param profiles the requested profiles
+	 * @return the config files of the documents
+	 */
+	List<S3ConfigFile> documentsFor(String[] profiles) {
+		List<Document> applying = new ArrayList<>();
+		for (int index = this.documents.size() - 1; index >= 0; index--) {
+			Properties document = this.documents.get(index);
+			if (!document.isEmpty() && appliesTo(document, index, profiles)) {
+				applying.add(new Document(index, document, nameOf(document, profiles)));
 			}
-			if (onProfileValue == null) {
-				return YamlProcessor.MatchStatus.NOT_FOUND;
+		}
+		List<String> names = applying.stream().map(Document::name).toList();
+		return applying.stream().map(document -> {
+			String name = (Collections.frequency(names, document.name()) > 1)
+					? document.name() + " (document #" + (document.index() + 1) + ")" : document.name();
+			return (S3ConfigFile) new YamlDocumentS3ConfigFile(name, document.properties(), getVersion());
+		}).toList();
+	}
+
+	private boolean appliesTo(Properties document, int index, String[] profiles) {
+		List<String> expressions = activationExpressions(document);
+		if (expressions.isEmpty()) {
+			return true;
+		}
+		try {
+			List<String> activeProfiles = Arrays.asList(profiles);
+			return Profiles.of(expressions.toArray(new String[0])).matches(activeProfiles::contains);
+		}
+		catch (IllegalArgumentException e) {
+			LOG.warn("Skipping document #" + (index + 1) + " of " + getName() + " with the invalid profile expression "
+					+ expressions + ": " + e.getMessage());
+			return false;
+		}
+	}
+
+	private String nameOf(Properties document, String[] profiles) {
+		if (this.key != null) {
+			return "s3:" + this.bucketName + "/" + this.key;
+		}
+		if (this.profile != null) {
+			return createPropertySourceName(this.application, this.profile);
+		}
+		List<String> expressions = activationExpressions(document);
+		if (expressions.isEmpty()) {
+			return createPropertySourceName(this.application, null);
+		}
+		if (expressions.size() == 1 && AwsS3EnvironmentRepository.isSimpleProfileName(expressions.get(0))) {
+			return createPropertySourceName(this.application, expressions.get(0));
+		}
+		// A document matched by a complex or negated expression is named after the
+		// requested profiles, so that its name never collides with the one of the
+		// document that applies to every profile
+		String suffix = String.join(",", profiles);
+		return suffix.isEmpty() ? createPropertySourceName(this.application, null)
+				: createPropertySourceName(this.application, suffix);
+	}
+
+	/**
+	 * Returns the profile expressions of a document: a comma-separated list, or the
+	 * elements of a YAML list.
+	 */
+	private static List<String> activationExpressions(Properties document) {
+		for (String activationProperty : ACTIVATION_PROPERTIES) {
+			Object value = document.get(activationProperty);
+			if (value != null) {
+				return Arrays.stream(StringUtils.commaDelimitedListToStringArray(value.toString()))
+					.map(String::trim)
+					.toList();
 			}
-			String expression = onProfileValue.toString().trim();
-			// Simple positive profile names are already handled by
-			// ProfileSpecificYamlDocumentS3ConfigFile. Only process complex or negated
-			// expressions here to avoid adding duplicate property sources.
-			if (AwsS3EnvironmentRepository.isSimpleProfileName(expression)) {
-				return YamlProcessor.MatchStatus.NOT_FOUND;
+			List<String> elements = new ArrayList<>();
+			for (int i = 0; document.get(activationProperty + "[" + i + "]") != null; i++) {
+				elements.add(document.get(activationProperty + "[" + i + "]").toString().trim());
 			}
-			List<String> allProfilesList = Arrays.asList(allProfiles);
-			boolean matches = Profiles.of(expression).matches(allProfilesList::contains);
-			return matches ? YamlProcessor.MatchStatus.FOUND : YamlProcessor.MatchStatus.NOT_FOUND;
-		});
-		this.allProfiles = allProfiles;
+			if (!elements.isEmpty()) {
+				return elements;
+			}
+		}
+		return Collections.emptyList();
+	}
+
+	private List<Properties> readDocuments() {
+		try (InputStream in = getObject()) {
+			return new DocumentsLoader(new InputStreamResource(in)).load();
+		}
+		catch (Exception e) {
+			LOG.warn("Could not read YAML file", e);
+			throw new IllegalStateException("Cannot load environment", e);
+		}
+	}
+
+	/**
+	 * Returns the properties of all the documents, a later document overriding an earlier
+	 * one. The documents are added with {@link #documentsFor(String[])}.
+	 * @return the properties of the file
+	 */
+	@Override
+	Properties read() {
+		Properties properties = new Properties();
+		this.documents.forEach(properties::putAll);
+		return properties;
 	}
 
 	@Override
 	protected String buildObjectKeyPrefix() {
-		return super.buildObjectKeyPrefix(false);
+		return (this.key != null) ? this.key.substring(0, this.key.lastIndexOf('.')) : super.buildObjectKeyPrefix();
 	}
 
 	@Override
-	public boolean isShouldIncludeWithEmptyProperties() {
-		return false;
+	protected List<String> getExtensions() {
+		return (this.key != null) ? List.of(this.key.substring(this.key.lastIndexOf('.') + 1)) : List.of("yml", "yaml");
+	}
+
+	private record Document(int index, Properties properties, String name) {
+
+	}
+
+	private static final class DocumentsLoader extends YamlProcessor {
+
+		DocumentsLoader(Resource resource) {
+			setResources(resource);
+		}
+
+		List<Properties> load() {
+			List<Properties> documents = new ArrayList<>();
+			process((properties, map) -> documents.add(properties));
+			return documents;
+		}
+
+	}
+
+}
+
+/**
+ * A document of a YAML file.
+ */
+class YamlDocumentS3ConfigFile extends S3ConfigFile {
+
+	private final String name;
+
+	YamlDocumentS3ConfigFile(String name, Properties properties, String version) {
+		super(null, null, null, null, false, null);
+		this.name = name;
+		this.properties = properties;
+		setVersion(version);
 	}
 
 	@Override
 	public String getName() {
-		// This document is matched by evaluating a complex/negated on-profile
-		// expression rather than an exact profile name, so it isn't looked up by a
-		// profile-suffixed key. Suffix the name with the active profiles anyway so it
-		// never collides with the plain, non-profile-specific source's name (which
-		// would otherwise cause one to silently replace the other on the client).
-		String suffix = String.join(",", allProfiles);
-		return suffix.isEmpty() ? super.getName() : super.getName() + "-" + suffix;
+		return this.name;
+	}
+
+	@Override
+	Properties read() {
+		return this.properties;
+	}
+
+	@Override
+	protected List<String> getExtensions() {
+		return Collections.emptyList();
 	}
 
 }

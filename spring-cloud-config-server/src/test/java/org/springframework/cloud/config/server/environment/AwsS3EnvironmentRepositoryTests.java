@@ -288,18 +288,14 @@ public class AwsS3EnvironmentRepositoryTests {
 
 		List<PropertySource> propertySources = env.getPropertySources();
 
-		// Both negated profile documents match and are merged into one property source
-		Optional<PropertySource> negatedSource = propertySources.stream()
-			.filter(ps -> ps.getSource().containsKey("demo.negatedProfileMarker")
-					|| ps.getSource().containsKey("demo.otherNegatedMarker"))
-			.findFirst();
-		assertThat(negatedSource)
+		// Both negated profile documents match, each in its own property source
+		assertThat(propertySources)
 			.as("negated profile documents should be present when neither 'my-profile' nor 'other-profile' is active")
-			.isPresent();
-		assertThat(negatedSource.get().getSource().get("demo.negatedProfileMarker"))
-			.isEqualTo("present-when-my-profile-is-not-active");
-		assertThat(negatedSource.get().getSource().get("demo.otherNegatedMarker"))
-			.isEqualTo("present-when-other-profile-is-not-active");
+			.anySatisfy(ps -> assertThat(ps.getSource().get("demo.negatedProfileMarker"))
+				.isEqualTo("present-when-my-profile-is-not-active"))
+			.anySatisfy(ps -> assertThat(ps.getSource().get("demo.otherNegatedMarker"))
+				.isEqualTo("present-when-other-profile-is-not-active"));
+		assertThat(propertySources).extracting(PropertySource::getName).doesNotHaveDuplicates();
 
 		Optional<PropertySource> baseSource = propertySources.stream()
 			.filter(ps -> ps.getSource().containsKey("demo.base"))
@@ -544,12 +540,149 @@ public class AwsS3EnvironmentRepositoryTests {
 
 	@Test
 	public void findWithMultipleProfilesAllFound() {
-		putFiles("foo-profile1.yml", yamlContent);
-		String versionId = putFiles("foo-profile2.yml", jsonContent);
+		// the version is the one of the last property source, here the one of the
+		// first profile, which has the lowest precedence
+		String versionId = putFiles("foo-profile1.yml", yamlContent);
+		putFiles("foo-profile2.yml", jsonContent);
 
 		final Environment env = envRepo.findOne("foo", "profile1,profile2", null);
 
 		assertExpectedEnvironment(env, "foo", null, versionId, 2, "profile1", "profile2");
+	}
+
+	@Test
+	public void lastProfileTakesPrecedenceForProfileSpecificFiles() {
+		putFiles("foo-profile1.properties", "greeting=profile1");
+		putFiles("foo-profile2.properties", "greeting=profile2");
+
+		final Environment env = envRepo.findOne("foo", "profile1,profile2", null);
+
+		assertThat(env.getProfiles()).containsExactly("profile1", "profile2");
+		assertThat(env.getPropertySources()).extracting(source -> (Object) source.getSource().get("greeting"))
+			.containsExactly("profile2", "profile1");
+	}
+
+	@Test
+	public void applicationSpecificFileTakesPrecedenceOverProfileDocumentOfSharedFile() {
+		putFiles("foo.yml", "greeting: foo\n");
+		putFiles("application.yml",
+				"greeting: application\n---\nspring.config.activate.on-profile: profile1\ngreeting: shared\n");
+
+		final Environment env = envRepo.findOne("foo", "profile1", null);
+
+		assertThat(env.getPropertySources()).extracting(source -> (Object) source.getSource().get("greeting"))
+			.containsExactly("foo", "shared", "application");
+	}
+
+	@Test
+	public void laterDocumentTakesPrecedenceInAMultiDocumentFile() {
+		putFiles("foo.yml", "greeting: first\n---\nspring.config.activate.on-profile: profile1\ngreeting: profile1\n"
+				+ "---\ngreeting: last\n");
+
+		final Environment env = envRepo.findOne("foo", "profile1", null);
+
+		assertThat(env.getPropertySources()).extracting(source -> (Object) source.getSource().get("greeting"))
+			.containsExactly("last", "profile1", "first");
+		assertThat(env.getPropertySources()).extracting(PropertySource::getName).doesNotHaveDuplicates();
+	}
+
+	@Test
+	public void documentOrderDecidesBetweenTheProfileDocumentsOfAFile() {
+		putFiles("foo.yml", "greeting: default\n---\nspring.config.activate.on-profile: profile2\ngreeting: profile2\n"
+				+ "---\nspring.config.activate.on-profile: profile1\ngreeting: profile1\n");
+
+		assertThat(envRepo.findOne("foo", "profile1,profile2", null).getPropertySources())
+			.extracting(source -> (Object) source.getSource().get("greeting"))
+			.containsExactly("profile1", "profile2", "default");
+		assertThat(envRepo.findOne("foo", "profile2,profile1", null).getPropertySources())
+			.extracting(source -> (Object) source.getSource().get("greeting"))
+			.containsExactly("profile1", "profile2", "default");
+	}
+
+	@Test
+	public void negatedProfileDocumentFollowsTheDocumentOrder() {
+		putFiles("foo.yml",
+				"greeting: default\n---\nspring.config.activate.on-profile: \"!other\"\ngreeting: not-other\n");
+
+		final Environment env = envRepo.findOne("foo", "profile1", null);
+
+		assertThat(env.getPropertySources()).extracting(source -> (Object) source.getSource().get("greeting"))
+			.containsExactly("not-other", "default");
+	}
+
+	@Test
+	public void searchPathFileFollowsTheDocumentOrder() {
+		AwsS3EnvironmentRepository repo = new AwsS3EnvironmentRepository(s3Client, "bucket1", false, server,
+				List.of("{label}/{application}.yml"));
+		putFiles("v1/app.yml", "greeting: first\n---\nspring.config.activate.on-profile: profile1\ngreeting: profile1\n"
+				+ "---\ngreeting: last\n");
+
+		Environment env = repo.findOne("app", "profile1", "v1");
+
+		assertThat(env.getPropertySources()).extracting(source -> (Object) source.getSource().get("greeting"))
+			.containsExactly("last", "profile1", "first");
+		assertThat(env.getPropertySources()).extracting(PropertySource::getName).doesNotHaveDuplicates();
+	}
+
+	@Test
+	public void profileSpecificFileHonoursTheProfileExpressionsOfItsDocuments() {
+		putFiles("foo-profile1.yml",
+				"greeting: plain\n---\nspring.config.activate.on-profile: \"!other\"\ngreeting: not-other\n");
+
+		final Environment env = envRepo.findOne("foo", "profile1", null);
+
+		assertThat(env.getPropertySources()).extracting(source -> (Object) source.getSource().get("greeting"))
+			.containsExactly("not-other", "plain");
+		assertThat(env.getPropertySources()).extracting(PropertySource::getName).doesNotHaveDuplicates();
+	}
+
+	@Test
+	public void invalidProfileExpressionSkipsOnlyItsDocument() {
+		putFiles("foo.yml",
+				"greeting: plain\n---\nspring.config.activate.on-profile: \"profile1 & (other\"\ngreeting: invalid\n");
+
+		final Environment env = envRepo.findOne("foo", "profile1", null);
+
+		assertThat(env.getPropertySources()).extracting(source -> (Object) source.getSource().get("greeting"))
+			.containsExactly("plain");
+	}
+
+	@Test
+	public void commaSeparatedProfilesActivateADocument() {
+		putFiles("foo.yml",
+				"greeting: plain\n---\nspring.config.activate.on-profile: other,profile1\ngreeting: listed\n");
+
+		final Environment env = envRepo.findOne("foo", "profile1", null);
+
+		assertThat(env.getPropertySources()).extracting(source -> (Object) source.getSource().get("greeting"))
+			.containsExactly("listed", "plain");
+	}
+
+	@Test
+	public void listOfProfilesActivatesADocumentOnlyForThoseProfiles() {
+		putFiles("foo.yml", "greeting: plain\n---\nspring:\n  config:\n    activate:\n      on-profile:\n"
+				+ "        - other\n        - profile1\ngreeting: listed\n");
+
+		assertThat(envRepo.findOne("foo", "profile1", null).getPropertySources())
+			.extracting(source -> (Object) source.getSource().get("greeting"))
+			.containsExactly("listed", "plain");
+		assertThat(envRepo.findOne("foo", "profile2", null).getPropertySources())
+			.extracting(source -> (Object) source.getSource().get("greeting"))
+			.containsExactly("plain");
+	}
+
+	@Test
+	public void searchPathFileIsAddedOnceForSeveralProfilesWithOverrides() {
+		ConfigServerProperties serverWithOverrides = new ConfigServerProperties();
+		serverWithOverrides.setOverrides(Map.of("overridden", "yes"));
+		AwsS3EnvironmentRepository repo = new AwsS3EnvironmentRepository(s3Client, "bucket1", false,
+				serverWithOverrides, List.of("{label}/{application}.yml"));
+		putFiles("v1/app.yml", "greeting: plain\n");
+
+		Environment env = repo.findOne("app", "profile1,profile2", "v1");
+
+		assertThat(env.getPropertySources()).hasSize(1);
+		assertThat(env.getPropertySources().get(0).getSource().get("overridden")).isEqualTo("yes");
 	}
 
 	@Test
@@ -685,8 +818,10 @@ public class AwsS3EnvironmentRepositoryTests {
 
 	@Test
 	public void findWithMultipleProfilesAllFound_ApplicationDirVariant() {
-		putFiles("foo/application-profile1.yml", yamlContent);
-		String versionId = putFiles("foo/application-profile2.yml", jsonContent);
+		// the version is the one of the last property source, here the one of the
+		// first profile, which has the lowest precedence
+		String versionId = putFiles("foo/application-profile1.yml", yamlContent);
+		putFiles("foo/application-profile2.yml", jsonContent);
 
 		final Environment env = envRepoApplicationDir.findOne("foo", "profile1,profile2", null);
 
@@ -879,7 +1014,7 @@ public class AwsS3EnvironmentRepositoryTests {
 	}
 
 	@Test
-	public void multiDocumentYaml_withSearchPaths_shouldNotSplitDocuments() throws IOException {
+	public void multiDocumentYaml_withSearchPaths_shouldKeepEveryDocumentUnderAUniqueName() throws IOException {
 		List<String> paths = List.of("{label}/{application}.yml");
 		AwsS3EnvironmentRepository repo = new AwsS3EnvironmentRepository(s3Client, "bucket1", false, server, paths);
 
@@ -887,10 +1022,10 @@ public class AwsS3EnvironmentRepositoryTests {
 		putFiles("lab/app.yml", multi);
 
 		Environment env = repo.findOne("app", "", "lab");
-		assertThat(env.getPropertySources()).hasSize(1);
-		@SuppressWarnings("unchecked")
-		Map<String, Object> map = (Map<String, Object>) env.getPropertySources().get(0).getSource();
-		assertThat(map).containsEntry("a", 1).containsEntry("b", 2);
+		assertThat(env.getPropertySources()).hasSize(2);
+		assertThat(env.getPropertySources()).extracting(PropertySource::getName).doesNotHaveDuplicates();
+		assertThat(env.getPropertySources().get(0).getSource().get("b")).isEqualTo(2);
+		assertThat(env.getPropertySources().get(1).getSource().get("a")).isEqualTo(1);
 	}
 
 	@Test
