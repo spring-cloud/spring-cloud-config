@@ -127,12 +127,6 @@
 			<artifactId>azure-security-keyvault-secrets</artifactId>
 			<optional>true</optional>
 		</dependency>
-
-		<dependency>
-			<groupId>com.azure</groupId>
-			<artifactId>azure-identity</artifactId>
-			<optional>true</optional>
-		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-autoconfigure-processor</artifactId>
@@ -232,7 +226,6 @@
 		<dependency>
 			<groupId>io.micrometer</groupId>
 			<artifactId>micrometer-tracing-test</artifactId>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>io.micrometer</groupId>
@@ -339,5 +332,4 @@
 				</executions>
 			</plugin>
 		</plugins>
-	</build>
 </project>
