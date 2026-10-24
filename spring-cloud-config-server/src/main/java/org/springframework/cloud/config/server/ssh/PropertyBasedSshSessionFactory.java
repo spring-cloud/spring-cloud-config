@@ -49,6 +49,7 @@ import org.eclipse.jgit.transport.sshd.SshdSessionFactory;
 
 import org.springframework.cloud.config.server.environment.JGitEnvironmentProperties;
 import org.springframework.cloud.config.server.proxy.ProxyHostProperties;
+import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 /**
@@ -58,6 +59,7 @@ import org.springframework.util.StringUtils;
  *
  * @author William Tran
  * @author Ollie Hughes
+ * @author Ngoc Nhan
  */
 public class PropertyBasedSshSessionFactory extends SshdSessionFactory {
 
@@ -65,9 +67,8 @@ public class PropertyBasedSshSessionFactory extends SshdSessionFactory {
 
 	public PropertyBasedSshSessionFactory(Map<String, JGitEnvironmentProperties> sshKeysByHostname) {
 		super(new JGitKeyCache(), new HttpProxyDataFactory(sshKeysByHostname));
-
+		Assert.notEmpty(sshKeysByHostname, "sshKeysByHostname must not be empty");
 		this.sshKeysByHostname = sshKeysByHostname;
-		assert this.sshKeysByHostname.entrySet().size() > 0;
 	}
 
 	@Override
@@ -228,6 +229,7 @@ public class PropertyBasedSshSessionFactory extends SshdSessionFactory {
 		private final Map<String, JGitEnvironmentProperties> sshKeysByHostname;
 
 		private HttpProxyDataFactory(Map<String, JGitEnvironmentProperties> sshKeysByHostname) {
+			Assert.notEmpty(sshKeysByHostname, "sshKeysByHostname must not be empty");
 			this.sshKeysByHostname = sshKeysByHostname;
 		}
 

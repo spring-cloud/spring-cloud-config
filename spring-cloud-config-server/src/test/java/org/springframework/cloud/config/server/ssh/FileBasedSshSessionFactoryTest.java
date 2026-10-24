@@ -28,6 +28,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.cloud.config.server.environment.JGitEnvironmentProperties;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 
 /**
  * Unit tests for file based SSH config processor.
@@ -91,6 +92,13 @@ public class FileBasedSshSessionFactoryTest {
 		SshConfigStore.HostConfig sshConfig = getSshHostConfig("gitlab.example.local");
 
 		assertThat(sshConfig.getValue("ConnectTimeout")).isEqualTo("5");
+	}
+
+	@Test
+	public void throwsExceptionWhenPassedNullOrEmptyMap() {
+
+		assertThatIllegalArgumentException().isThrownBy(() -> new FileBasedSshSessionFactory(null));
+		assertThatIllegalArgumentException().isThrownBy(() -> new FileBasedSshSessionFactory(Map.of()));
 	}
 
 	private SshConfigStore.HostConfig getSshHostConfig(String hostName) {
