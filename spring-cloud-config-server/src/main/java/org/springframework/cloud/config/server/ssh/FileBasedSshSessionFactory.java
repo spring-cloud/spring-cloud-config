@@ -19,7 +19,6 @@ package org.springframework.cloud.config.server.ssh;
 import java.io.File;
 import java.util.Map;
 
-import org.eclipse.jgit.annotations.NonNull;
 import org.eclipse.jgit.internal.transport.ssh.OpenSshConfigFile;
 import org.eclipse.jgit.transport.SshConfigStore;
 import org.eclipse.jgit.transport.SshConstants;
@@ -41,7 +40,7 @@ public class FileBasedSshSessionFactory extends SshdSessionFactory {
 		return configFile == null ? null : new OpenSshConfigFile(homeDir, configFile, localUserName) {
 
 			@Override
-			public HostEntry lookup(@NonNull String hostName, int port, String userName) {
+			public HostEntry lookup(String hostName, int port, String userName) {
 				HostEntry hostEntry = super.lookup(hostName, port, userName);
 
 				JGitEnvironmentProperties sshProperties = sshKeysByHostname.get(hostName);
