@@ -61,8 +61,8 @@ public class ConfigServerHealthIndicator extends AbstractHealthIndicator {
 			List<String> sources = new ArrayList<>();
 			for (PropertySource<?> propertySource : propertySources) {
 
-				if (propertySource instanceof CompositePropertySource) {
-					for (PropertySource<?> ps : ((CompositePropertySource) propertySource).getPropertySources()) {
+				if (propertySource instanceof CompositePropertySource compositePropertySource) {
+					for (PropertySource<?> ps : compositePropertySource.getPropertySources()) {
 						sources.add(ps.getName());
 					}
 				}

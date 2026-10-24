@@ -6,7 +6,7 @@ There is also a "`native`" profile in the Config Server that does not use Git bu
 To use the native profile, launch the Config Server with `spring.profiles.active=native`.
 
 NOTE: Remember to use the `file:` prefix for file resources (the default without a prefix is usually the classpath).
-As with any Spring Boot configuration, you can embed `${}`-style environment placeholders, but remember that absolute paths in Windows require an extra `/` (for example, `file:///${user.home}/config-repo`).
+As with any Spring Boot configuration, you can embed `${}`-style environment placeholders, but remember that absolute paths in Windows require an extra `/` (for example, `\file:///${user.home}/config-repo`).
 
 WARNING: The default value of the `searchLocations` is identical to a local Spring Boot application (that is, `[classpath:/, classpath:/config,
 file:./, file:./config]`).

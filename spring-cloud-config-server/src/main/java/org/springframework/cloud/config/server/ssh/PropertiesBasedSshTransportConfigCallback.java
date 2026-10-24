@@ -23,24 +23,25 @@ import org.eclipse.jgit.transport.SshTransport;
 import org.eclipse.jgit.transport.Transport;
 
 import org.springframework.cloud.config.server.environment.JGitEnvironmentProperties;
-import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentProperties;
 
 /**
  * Configure JGit transport command to use a SSH session factory that is configured using
- * properties defined in {@link MultipleJGitEnvironmentProperties}.
+ * properties defined in {@link JGitEnvironmentProperties}.
  *
  * @author Dylan Roberts
  */
 public class PropertiesBasedSshTransportConfigCallback implements TransportConfigCallback {
 
-	private final MultipleJGitEnvironmentProperties sshUriProperties;
+	private final JGitEnvironmentProperties sshUriProperties;
 
 	private final PropertyBasedSshSessionFactory sshdSessionFactory;
 
-	public PropertiesBasedSshTransportConfigCallback(MultipleJGitEnvironmentProperties sshUriProperties) {
+	public PropertiesBasedSshTransportConfigCallback(JGitEnvironmentProperties sshUriProperties) {
 		this.sshUriProperties = sshUriProperties;
+
 		Map<String, JGitEnvironmentProperties> sshKeysByHostname = new SshUriPropertyProcessor(this.sshUriProperties)
 			.getSshKeysByHostname();
+
 		if (sshKeysByHostname.isEmpty()) {
 			this.sshdSessionFactory = null;
 		}
@@ -49,7 +50,7 @@ public class PropertiesBasedSshTransportConfigCallback implements TransportConfi
 		}
 	}
 
-	public MultipleJGitEnvironmentProperties getSshUriProperties() {
+	public JGitEnvironmentProperties getSshUriProperties() {
 		return this.sshUriProperties;
 	}
 

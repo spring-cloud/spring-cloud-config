@@ -288,8 +288,7 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 
 			PropertySourceConfigData configData = propertySourceToConfigData.get(source.getOriginalPropertySource());
 			// try and get information directly from ConfigData
-			if (configData != null && configData.resource instanceof StandardConfigDataResource) {
-				StandardConfigDataResource configDataResource = (StandardConfigDataResource) configData.resource;
+			if (configData != null && configData.resource instanceof StandardConfigDataResource configDataResource) {
 				// use StandardConfigDataResource as that format is expected still
 				name = configDataResource.toString();
 				locations = configDataLocations(configData.location.split());

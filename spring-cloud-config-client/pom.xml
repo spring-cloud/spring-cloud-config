@@ -49,13 +49,13 @@
 			<artifactId>jackson-annotations</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework.retry</groupId>
-			<artifactId>spring-retry</artifactId>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
 			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-actuator</artifactId>
+			<artifactId>spring-boot-starter-security-oauth2-client</artifactId>
 			<optional>true</optional>
 		</dependency>
 		<dependency>

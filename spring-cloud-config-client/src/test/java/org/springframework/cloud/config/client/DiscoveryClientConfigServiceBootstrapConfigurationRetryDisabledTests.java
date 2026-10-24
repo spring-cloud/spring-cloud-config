@@ -18,29 +18,29 @@ package org.springframework.cloud.config.client;
 
 import org.junit.jupiter.api.Test;
 
-import org.springframework.cloud.test.ClassPathExclusions;
-
 import static org.springframework.cloud.config.client.ConfigClientProperties.Discovery.DEFAULT_CONFIG_SERVER;
 
-@ClassPathExclusions({ "spring-retry-*.jar", "spring-boot-starter-aop-*.jar" })
-public class DiscoveryClientConfigServiceBootstrapConfigurationNoSpringRetryTests
+public class DiscoveryClientConfigServiceBootstrapConfigurationRetryDisabledTests
 		extends BaseDiscoveryClientConfigServiceBootstrapConfigurationTests {
+
+	private static final String RETRY_DISABLED = "spring.cloud.config.retry.enabled=false";
 
 	@Test
 	public void shouldFailWithExceptionGetConfigServerInstanceFromDiscoveryClient() throws Exception {
 		org.assertj.core.api.Assertions.assertThatThrownBy(() -> {
 			givenDiscoveryClientReturnsNoInfo();
-			setup("spring.cloud.config.discovery.enabled=true", "spring.cloud.config.fail-fast=true");
+			setup("spring.cloud.config.discovery.enabled=true", "spring.cloud.config.fail-fast=true", RETRY_DISABLED);
 		})
 			.isInstanceOf(IllegalStateException.class)
 			.hasMessageContaining("No instances found of configserver (" + DEFAULT_CONFIG_SERVER + ")");
+		verifyDiscoveryClientCalledOnce();
 	}
 
 	@Test
 	public void shouldFailWithMessageGetConfigServerInstanceFromDiscoveryClient() throws Exception {
 		givenDiscoveryClientReturnsNoInfo();
 
-		setup("spring.cloud.config.discovery.enabled=true", "spring.cloud.config.fail-fast=false");
+		setup("spring.cloud.config.discovery.enabled=true", "spring.cloud.config.fail-fast=false", RETRY_DISABLED);
 
 		expectDiscoveryClientConfigServiceBootstrapConfigurationIsSetup();
 		expectConfigClientPropertiesHasDefaultConfiguration();
@@ -51,7 +51,7 @@ public class DiscoveryClientConfigServiceBootstrapConfigurationNoSpringRetryTest
 	public void shouldSucceedGetConfigServerInstanceFromDiscoveryClient() throws Exception {
 		givenDiscoveryClientReturnsInfo();
 
-		setup("spring.cloud.config.discovery.enabled=true", "spring.cloud.config.fail-fast=true");
+		setup("spring.cloud.config.discovery.enabled=true", "spring.cloud.config.fail-fast=true", RETRY_DISABLED);
 
 		expectDiscoveryClientConfigServiceBootstrapConfigurationIsSetup();
 		expectConfigClientPropertiesHasConfigurationFromEureka();

@@ -19,7 +19,9 @@ package org.springframework.cloud.config.server.config;
 import java.util.List;
 import java.util.Optional;
 
+import com.google.cloud.parametermanager.v1.ParameterManagerClient;
 import com.google.cloud.secretmanager.v1.SecretManagerServiceClient;
+import com.google.cloud.storage.Storage;
 import io.micrometer.observation.ObservationRegistry;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.http.client.HttpClient;
@@ -58,6 +60,11 @@ import org.springframework.cloud.config.server.environment.CredhubEnvironmentRep
 import org.springframework.cloud.config.server.environment.CredhubEnvironmentRepositoryFactory;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
 import org.springframework.cloud.config.server.environment.EnvironmentWatch;
+import org.springframework.cloud.config.server.environment.GcsEnvironmentProperties;
+import org.springframework.cloud.config.server.environment.GcsEnvironmentRepositoryFactory;
+import org.springframework.cloud.config.server.environment.GoogleParameterManagerEnvironmentProperties;
+import org.springframework.cloud.config.server.environment.GoogleParameterManagerEnvironmentRepository;
+import org.springframework.cloud.config.server.environment.GoogleParameterManagerEnvironmentRepositoryFactory;
 import org.springframework.cloud.config.server.environment.GoogleSecretManagerEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.GoogleSecretManagerEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.GoogleSecretManagerEnvironmentRepositoryFactory;
@@ -90,7 +97,7 @@ import org.springframework.cloud.config.server.environment.vault.SpringVaultEnvi
 import org.springframework.cloud.config.server.environment.vault.SpringVaultEnvironmentRepositoryFactory;
 import org.springframework.cloud.config.server.environment.vault.SpringVaultTemplateBuilder;
 import org.springframework.cloud.config.server.support.GitCredentialsProviderFactory;
-import org.springframework.cloud.config.server.support.GoogleCloudSourceSupport;
+import org.springframework.cloud.config.server.support.GitTransportConfigCallbackProvider;
 import org.springframework.cloud.config.server.support.TransportConfigCallbackFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -122,13 +129,16 @@ import org.springframework.vault.core.VaultTemplate;
 		JdbcEnvironmentProperties.class, NativeEnvironmentProperties.class, VaultEnvironmentProperties.class,
 		RedisEnvironmentProperties.class, AwsS3EnvironmentProperties.class,
 		AwsSecretsManagerEnvironmentProperties.class, AwsParameterStoreEnvironmentProperties.class,
-		GoogleSecretManagerEnvironmentProperties.class, MongoDbEnvironmentProperties.class })
+		GcsEnvironmentProperties.class, GoogleSecretManagerEnvironmentProperties.class,
+		GoogleParameterManagerEnvironmentProperties.class, MongoDbEnvironmentProperties.class })
 @Import({ CompositeRepositoryConfiguration.class, JdbcRepositoryConfiguration.class, VaultConfiguration.class,
 		SpringVaultRepositoryConfiguration.class, CredhubConfiguration.class, CredhubRepositoryConfiguration.class,
 		SvnRepositoryConfiguration.class, NativeRepositoryConfiguration.class, GitRepositoryConfiguration.class,
-		RedisRepositoryConfiguration.class, GoogleCloudSourceConfiguration.class, AwsS3RepositoryConfiguration.class,
+		RedisRepositoryConfiguration.class, GoogleCloudSourceConfiguration.class,
+		AzureDevOpsWorkloadIdentityConfiguration.class, AwsS3RepositoryConfiguration.class,
 		AwsSecretsManagerRepositoryConfiguration.class, AwsParameterStoreRepositoryConfiguration.class,
-		GoogleSecretManagerRepositoryConfiguration.class, MongoRepositoryConfiguration.class,
+		GcsRepositoryConfiguration.class, GoogleSecretManagerRepositoryConfiguration.class,
+		GoogleParameterManagerRepositoryConfiguration.class, MongoRepositoryConfiguration.class,
 		// DefaultRepositoryConfiguration must be last
 		DefaultRepositoryConfiguration.class })
 public class EnvironmentRepositoryConfiguration {
@@ -189,11 +199,11 @@ public class EnvironmentRepositoryConfiguration {
 				ConfigurableEnvironment environment, ConfigServerProperties server,
 				Optional<ConfigurableHttpConnectionFactory> jgitHttpConnectionFactory,
 				Optional<TransportConfigCallback> customTransportConfigCallback,
-				Optional<GoogleCloudSourceSupport> googleCloudSourceSupport,
+				ObjectProvider<GitTransportConfigCallbackProvider> callbackProviders,
 				GitCredentialsProviderFactory gitCredentialsProviderFactory,
 				List<HttpClient4BuilderCustomizer> customizers) {
 			final TransportConfigCallbackFactory transportConfigCallbackFactory = new TransportConfigCallbackFactory(
-					customTransportConfigCallback.orElse(null), googleCloudSourceSupport.orElse(null));
+					customTransportConfigCallback.orElse(null), callbackProviders.orderedStream().toList());
 			return new MultipleJGitEnvironmentRepositoryFactory(environment, server, jgitHttpConnectionFactory,
 					transportConfigCallbackFactory, gitCredentialsProviderFactory, customizers);
 		}
@@ -224,6 +234,18 @@ public class EnvironmentRepositoryConfiguration {
 		@Bean
 		public AwsS3EnvironmentRepositoryFactory awsS3EnvironmentRepositoryFactory(ConfigServerProperties server) {
 			return new AwsS3EnvironmentRepositoryFactory(server);
+		}
+
+	}
+
+	@Configuration(proxyBeanMethods = false)
+	@ConditionalOnClass(Storage.class)
+	static class GcsFactoryConfig {
+
+		@Bean
+		public GcsEnvironmentRepositoryFactory gcsEnvironmentRepositoryFactory(ConfigServerProperties server,
+				ObjectProvider<Storage> storageProvider) {
+			return new GcsEnvironmentRepositoryFactory(server, storageProvider.getIfUnique());
 		}
 
 	}
@@ -280,6 +302,18 @@ public class EnvironmentRepositoryConfiguration {
 		public GoogleSecretManagerEnvironmentRepositoryFactory googleSecretManagerEnvironmentRepositoryFactory(
 				ObjectProvider<HttpServletRequest> request) {
 			return new GoogleSecretManagerEnvironmentRepositoryFactory(request);
+		}
+
+	}
+
+	@Configuration(proxyBeanMethods = false)
+	@ConditionalOnClass(ParameterManagerClient.class)
+	static class GoogleParameterManagerFactoryConfig {
+
+		@Bean
+		public GoogleParameterManagerEnvironmentRepositoryFactory googleParameterManagerEnvironmentRepositoryFactory(
+				ConfigServerProperties server) {
+			return new GoogleParameterManagerEnvironmentRepositoryFactory(server);
 		}
 
 	}
@@ -557,6 +591,20 @@ class GoogleSecretManagerRepositoryConfiguration {
 	public GoogleSecretManagerEnvironmentRepository googleSecretManagerEnvironmentRepository(
 			GoogleSecretManagerEnvironmentRepositoryFactory factory,
 			GoogleSecretManagerEnvironmentProperties environmentProperties) throws Exception {
+		return factory.build(environmentProperties);
+	}
+
+}
+
+@Configuration(proxyBeanMethods = false)
+@Profile("parameter-manager")
+@ConditionalOnClass(ParameterManagerClient.class)
+class GoogleParameterManagerRepositoryConfiguration {
+
+	@Bean
+	public GoogleParameterManagerEnvironmentRepository googleParameterManagerEnvironmentRepository(
+			GoogleParameterManagerEnvironmentRepositoryFactory factory,
+			GoogleParameterManagerEnvironmentProperties environmentProperties) throws Exception {
 		return factory.build(environmentProperties);
 	}
 

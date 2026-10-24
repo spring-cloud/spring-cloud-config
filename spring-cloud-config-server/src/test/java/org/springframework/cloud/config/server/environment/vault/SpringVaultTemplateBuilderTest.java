@@ -38,6 +38,7 @@ import org.springframework.vault.support.VaultToken;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalToJson;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
@@ -57,6 +58,11 @@ class SpringVaultTemplateBuilderTest {
 		mockVaultServer = new WireMockServer();
 		mockVaultServer.start();
 		WireMock.configureFor("http", "localhost", mockVaultServer.port());
+		// Vault answers with JSON, whereas WireMock's default unmatched response is
+		// text/plain, which VaultTemplate cannot convert since it reads 404 bodies.
+		mockVaultServer.stubFor(get("/v1/secrets/test").willReturn(aResponse().withStatus(200).withBody("""
+					{"data": {}}
+				""").withHeader("Content-Type", "application/json")));
 	}
 
 	@AfterEach

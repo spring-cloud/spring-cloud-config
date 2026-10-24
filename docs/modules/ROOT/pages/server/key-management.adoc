@@ -10,18 +10,41 @@ NOTE: If you include `spring-cloud-starter-bootstrap` on the classpath or set `s
 
 NOTE: You cannot configure an asymmetric key using `encrypt.key`.
 
-To configure an asymmetric key use a keystore (e.g. as
+To configure an asymmetric key, use a keystore (for example, one
 created by the `keytool` utility that comes with the JDK). The
-keystore properties are `encrypt.keyStore.\*` with `*` equal to
+keystore properties use the `encrypt.key-store` prefix.
 
 [options="header"]
 |===
 ^|Property ^|Description
-|`encrypt.keyStore.location`|Contains a `Resource` location
-|`encrypt.keyStore.password`|Holds the password that unlocks the keystore
-|`encrypt.keyStore.alias`|Identifies which key in the store to use
-|`encrypt.keyStore.type`|The type of KeyStore to create.  Defaults to `jks`.
+|`encrypt.key-store.location`|Contains a `Resource` location
+|`encrypt.key-store.password`|Holds the password that unlocks the keystore
+|`encrypt.key-store.alias`|Identifies which key in the store to use
+|`encrypt.key-store.type`|The type of KeyStore to create. Defaults to `jks`.
 |===
+
+The RSA encryption algorithm can also be configured using properties
+with the `encrypt.rsa` prefix.
+
+[options="header"]
+|===
+^|Property ^|Description
+|`encrypt.rsa.algorithm`|The RSA algorithm to use. Defaults to `DEFAULT`.
+|`encrypt.rsa.strong`|Whether to use strong AES encryption internally. Defaults to `false`.
+|`encrypt.rsa.salt`|The salt used for the random secret used to encrypt cipher text. Defaults to `deadbeef`.
+|===
+
+For example, the following configuration uses a JKS keystore for RSA encryption:
+
+[source,yaml]
+----
+encrypt:
+  key-store:
+    location: classpath:server.jks
+    password: letmein
+    alias: myKey
+    type: jks
+----
 
 The encryption is done with the public key, and a private key is
 needed for decryption.
@@ -29,4 +52,3 @@ Thus, in principle, you can configure only the public key in the server if you w
 In practice, you might not want to do decrypt locally, because it spreads the key management process around all the clients, instead of
 concentrating it in the server.
 On the other hand, it can be a useful option if your config server is relatively insecure and only a handful of clients need the encrypted properties.
-

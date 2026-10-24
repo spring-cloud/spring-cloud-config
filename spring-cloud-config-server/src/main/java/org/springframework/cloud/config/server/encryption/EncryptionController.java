@@ -88,10 +88,10 @@ public class EncryptionController {
 	@GetMapping("/key/{name}/{profiles}")
 	public String getPublicKey(@PathVariable String name, @PathVariable String profiles) {
 		TextEncryptor encryptor = getEncryptor(name, profiles, "");
-		if (!(encryptor instanceof RsaKeyHolder)) {
+		if (!(encryptor instanceof RsaKeyHolder rsaKeyHolder)) {
 			throw new KeyNotAvailableException();
 		}
-		return ((RsaKeyHolder) encryptor).getPublicKey();
+		return rsaKeyHolder.getPublicKey();
 	}
 
 	@GetMapping("encrypt/status")
@@ -180,7 +180,7 @@ public class EncryptionController {
 	}
 
 	private void checkDecryptionPossible(TextEncryptor textEncryptor) {
-		if (textEncryptor instanceof RsaSecretEncryptor && !((RsaSecretEncryptor) textEncryptor).canDecrypt()) {
+		if (textEncryptor instanceof RsaSecretEncryptor rsaSecretEncryptor && !rsaSecretEncryptor.canDecrypt()) {
 			throw new DecryptionNotSupportedException();
 		}
 	}

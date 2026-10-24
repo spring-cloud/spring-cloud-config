@@ -179,7 +179,8 @@ public class TransportConfigurationIntegrationTests {
 				assertThat(callback).isInstanceOf(PropertiesBasedSshTransportConfigCallback.class);
 
 				PropertiesBasedSshTransportConfigCallback configCallback = (PropertiesBasedSshTransportConfigCallback) callback;
-				MultipleJGitEnvironmentProperties sshUriProperties = configCallback.getSshUriProperties();
+				MultipleJGitEnvironmentProperties sshUriProperties = (MultipleJGitEnvironmentProperties) configCallback
+					.getSshUriProperties();
 				assertThat(configCallback.getSshUriProperties().getPrivateKey())
 					.isEqualTo(TestProperties.TEST_PRIVATE_KEY_1);
 
@@ -206,7 +207,8 @@ public class TransportConfigurationIntegrationTests {
 				assertThat(callback).isInstanceOf(PropertiesBasedSshTransportConfigCallback.class);
 
 				PropertiesBasedSshTransportConfigCallback configCallback = (PropertiesBasedSshTransportConfigCallback) callback;
-				MultipleJGitEnvironmentProperties sshUriProperties = configCallback.getSshUriProperties();
+				MultipleJGitEnvironmentProperties sshUriProperties = (MultipleJGitEnvironmentProperties) configCallback
+					.getSshUriProperties();
 				assertThat(configCallback.getSshUriProperties().getPrivateKey())
 					.isEqualTo(TestProperties.TEST_PRIVATE_KEY_1);
 

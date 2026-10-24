@@ -26,6 +26,8 @@ import org.springframework.cloud.commons.util.UtilAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.ProxyType;
+import org.springframework.context.annotation.Proxyable;
 
 /**
  * Bootstrap configuration for a config client that wants to lookup the config server via
@@ -40,6 +42,7 @@ import org.springframework.context.annotation.Import;
 public class DiscoveryClientConfigServiceBootstrapConfiguration {
 
 	@Bean
+	@Proxyable(ProxyType.TARGET_CLASS)
 	public ConfigServerInstanceProvider configServerInstanceProvider(
 			ObjectProvider<ConfigServerInstanceProvider.Function> function,
 			ObjectProvider<DiscoveryClient> discoveryClient) {

@@ -13,12 +13,15 @@
 |spring.cloud.config.media-type |  | The Accept header media type to send to config server.
 |spring.cloud.config.multiple-uri-strategy | `+++always+++` | The strategy to use when call to server fails and there are multiple URLs configured on the uri property (default {@link MultipleUriStrategy#ALWAYS}).
 |spring.cloud.config.name |  | Name of application used to fetch remote properties.
+|spring.cloud.config.oauth2.client-registration-id |  | Spring Security client registration id (as configured under {@code spring.security.oauth2.client.registration.<id>}) to use when fetching the access token.
+|spring.cloud.config.oauth2.enabled | `+++false+++` | Whether to attach an OAuth2 bearer token to outbound config-client requests.
 |spring.cloud.config.override-none | `+++false+++` | Flag to indicate that when {@link #setAllowOverride(boolean) allowOverride} is true, external properties should take lowest priority and should not override any existing property sources (including local config files). Default false. This will only have an effect when using config first bootstrap.
 |spring.cloud.config.override-system-properties | `+++true+++` | Flag to indicate that the external properties should override system properties. Default true.
 |spring.cloud.config.password |  | The password to use (HTTP Basic) when contacting the remote server.
 |spring.cloud.config.profile | `+++default+++` | The default profile to use when fetching remote configuration (comma-separated). Default is "default".
 |spring.cloud.config.request-connect-timeout |  | timeout on waiting to connect to the Config Server.
 |spring.cloud.config.request-read-timeout |  | timeout on waiting to read data from the Config Server.
+|spring.cloud.config.retry.enabled | `+++false+++` | Whether to retry failed requests to the Config Server. Only has an effect when spring.cloud.config.fail-fast is enabled.
 |spring.cloud.config.retry.initial-interval | `+++1000+++` | Initial retry interval in milliseconds.
 |spring.cloud.config.retry.max-attempts | `+++6+++` | Maximum number of attempts.
 |spring.cloud.config.retry.max-interval | `+++2000+++` | Maximum interval for backoff.

@@ -41,10 +41,12 @@ import org.springframework.cloud.bootstrap.encrypt.KeyProperties;
 import org.springframework.cloud.bootstrap.encrypt.RsaProperties;
 import org.springframework.cloud.bootstrap.encrypt.TextEncryptorUtils;
 import org.springframework.cloud.client.ServiceInstance;
+import org.springframework.cloud.config.client.oauth2.ConfigClientOAuth2Support;
+import org.springframework.cloud.config.client.validation.ApplicationNameValidator;
 import org.springframework.cloud.context.encrypt.EncryptorFactory;
 import org.springframework.core.Ordered;
 import org.springframework.core.log.LogMessage;
-import org.springframework.retry.support.RetryTemplate;
+import org.springframework.core.retry.RetryTemplate;
 import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
@@ -192,7 +194,6 @@ public class ConfigServerConfigDataLocationResolver
 			}
 			configClientProperties.setUri(uri);
 		}
-
 		return holder;
 	}
 
@@ -232,6 +233,9 @@ public class ConfigServerConfigDataLocationResolver
 		PropertyHolder propertyHolder = loadProperties(resolverContext, uris);
 		ConfigClientProperties properties = propertyHolder.properties;
 
+		if (!ApplicationNameValidator.validate(properties, log)) {
+			return new ArrayList<>();
+		}
 		ConfigurableBootstrapContext bootstrapContext = resolverContext.getBootstrapContext();
 		bootstrapContext.register(ConfigClientProperties.class,
 				InstanceSupplier.of(properties).withScope(BootstrapRegistry.Scope.PROTOTYPE));
@@ -240,8 +244,13 @@ public class ConfigServerConfigDataLocationResolver
 			.registerSingleton("configDataConfigClientProperties",
 					event.getBootstrapContext().get(ConfigClientProperties.class)));
 
-		bootstrapContext.registerIfAbsent(ConfigClientRequestTemplateFactory.class,
-				context -> new ConfigClientRequestTemplateFactory(log, context.get(ConfigClientProperties.class)));
+		bootstrapContext.registerIfAbsent(ConfigClientRequestTemplateFactory.class, context -> {
+			ConfigClientRequestTemplateFactory factory = new ConfigClientRequestTemplateFactory(log,
+					context.get(ConfigClientProperties.class));
+			ConfigClientOAuth2Support.registerInterceptor(bootstrapContext, resolverContext.getBinder(),
+					getBindHandler(resolverContext), factory);
+			return factory;
+		});
 
 		bootstrapContext.registerIfAbsent(RestTemplate.class, context -> {
 			ConfigClientRequestTemplateFactory factory = context.get(ConfigClientRequestTemplateFactory.class);
@@ -264,7 +273,7 @@ public class ConfigServerConfigDataLocationResolver
 		boolean retryEnabled = resolverContext.getBinder()
 			.bind(ConfigClientProperties.PREFIX + ".fail-fast", Bindable.of(Boolean.class),
 					getBindHandler(resolverContext))
-			.orElse(false);
+			.orElse(false) && propertyHolder.retryProperties.isEnabled();
 
 		if (discoveryEnabled) {
 			log.debug(LogMessage.format("discovery enabled"));
@@ -274,14 +283,14 @@ public class ConfigServerConfigDataLocationResolver
 					.get(ConfigServerInstanceProvider.Function.class);
 
 				ConfigServerInstanceProvider instanceProvider;
-				if (ConfigClientRetryBootstrapper.RETRY_IS_PRESENT && retryEnabled) {
+				if (retryEnabled) {
 					log.debug(LogMessage.format("discovery plus retry enabled"));
 					RetryTemplate retryTemplate = RetryTemplateFactory.create(propertyHolder.retryProperties, log);
 					instanceProvider = new ConfigServerInstanceProvider(function, resolverContext.getBinder(),
 							getBindHandler(resolverContext)) {
 						@Override
 						public List<ServiceInstance> getConfigServerInstances(String serviceId) {
-							return retryTemplate.execute(retryContext -> super.getConfigServerInstances(serviceId));
+							return retryTemplate.invoke(() -> super.getConfigServerInstances(serviceId));
 						}
 					};
 				}

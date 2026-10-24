@@ -28,6 +28,7 @@ import org.eclipse.jgit.transport.URIish;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentProperties;
 import org.springframework.cloud.config.server.support.GoogleCloudSourceSupport.CredentialsProvider;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -105,6 +106,30 @@ public class GoogleCloudSourceSupportTests {
 		callback.configure(transport);
 
 		verifyOnlyValidInteraction(transport);
+	}
+
+	@Test
+	public void canHandleWithMultipleJGitEnvironmentProperties() {
+		MultipleJGitEnvironmentProperties properties = new MultipleJGitEnvironmentProperties();
+		properties.setUri(HTTPS_GOOGLE_CLOUD_SOURCE_REPO);
+
+		assertThat(new GoogleCloudSourceSupport().canHandle(properties)).isTrue();
+	}
+
+	@Test
+	public void doesNotHandleWithMultipleJGitEnvironmentPropertiesForOtherRepo() {
+		MultipleJGitEnvironmentProperties properties = new MultipleJGitEnvironmentProperties();
+		properties.setUri(HTTPS_OTHER_REPO);
+
+		assertThat(new GoogleCloudSourceSupport().canHandle(properties)).isFalse();
+	}
+
+	@Test
+	public void doesNotHandleNullOrEmptyUri() {
+		assertThat(new GoogleCloudSourceSupport().canHandle((String) null)).isFalse();
+		assertThat(new GoogleCloudSourceSupport().canHandle("")).isFalse();
+		assertThat(new GoogleCloudSourceSupport().canHandle("   ")).isFalse();
+		assertThat(new GoogleCloudSourceSupport().canHandle((MultipleJGitEnvironmentProperties) null)).isFalse();
 	}
 
 	private void verifyOnlyValidInteraction(Transport transport) {

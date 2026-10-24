@@ -121,6 +121,7 @@ the config server would look like this:
 
 [source,json]
 ----
+{
     "label": null,
     "name": "application",
     "profiles": [

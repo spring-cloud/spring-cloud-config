@@ -4,7 +4,7 @@
 
 Many source code repository providers (such as Github, Gitlab, Gitea, Gitee, Gogs, or Bitbucket) notify you of changes in a repository through a webhook.
 You can configure the webhook through the provider's user interface as a URL and a set of events in which you are interested.
-For instance, https://developer.github.com/v3/activity/events/types/#pushevent[Github] uses a POST to the webhook with a JSON body containing a list of commits and a header (`X-Github-Event`) set to `push`.
+For instance, https://developer.github.com/v3/activity/events/types/#push[Github] uses a POST to the webhook with a JSON body containing a list of commits and a header (`X-Github-Event`) set to `push`.
 If you add a dependency on the `spring-cloud-config-monitor` library and activate the Spring Cloud Bus in your Config Server, then a `/monitor` endpoint is enabled.
 
 When the webhook is activated, the Config Server sends a `RefreshRemoteApplicationEvent` targeted at the applications it thinks might have changed.
@@ -15,6 +15,43 @@ The strategy to use when you want to override the behavior is `PropertyPathNotif
 The default configuration works out of the box with Github, Gitlab, Gitea, Gitee, Gogs or Bitbucket.
 In addition to the JSON notifications from Github, Gitlab, Gitee, or Bitbucket, you can trigger a change notification by POSTing to `/monitor` with form-encoded body parameters in the pattern of `path=\{application}`.
 Doing so broadcasts to applications matching the `\{application}` pattern (which can contain wildcards).
+
+[[ignored-monitor-paths]]
+== Ignoring Paths
+
+You can configure the Config Server to ignore specific paths when processing webhook notifications by setting `spring.cloud.config.server.monitor.ignored-paths` to a list of regular expressions.
+
+Ignored paths are excluded before the Config Server determines which applications should be refreshed. This can be useful when a repository contains files that should not trigger configuration refreshes.
+
+For example:
+
+[source,yaml]
+----
+spring:
+  cloud:
+    config:
+      server:
+        monitor:
+          ignored-paths:
+            - "docker-compose/.*"
+            - "docs/.*"
+----
+
+Each regular expression is matched against the complete webhook path. A path is ignored when it matches any configured expression.
+
+By default, the Config Server processes at most 20 paths from a single notification. You can change this limit with `spring.cloud.config.server.monitor.max-paths`. If a notification contains more paths than the configured maximum, the remaining paths are not processed and a warning is logged.
+
+For example:
+
+[source,yaml]
+----
+spring:
+  cloud:
+    config:
+      server:
+        monitor:
+          max-paths: 50
+----
 
 NOTE: The `RefreshRemoteApplicationEvent` is transmitted only if the `spring-cloud-bus` is activated in both the Config Server and in the client application.
 

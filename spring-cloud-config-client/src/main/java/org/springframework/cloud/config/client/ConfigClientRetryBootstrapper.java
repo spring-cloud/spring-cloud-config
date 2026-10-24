@@ -19,8 +19,7 @@ package org.springframework.cloud.config.client;
 import org.springframework.boot.bootstrap.BootstrapRegistry;
 import org.springframework.boot.bootstrap.BootstrapRegistryInitializer;
 import org.springframework.cloud.config.client.ConfigServerBootstrapper.LoaderInterceptor;
-import org.springframework.retry.support.RetryTemplate;
-import org.springframework.util.ClassUtils;
+import org.springframework.core.retry.RetryTemplate;
 
 /**
  * Bootstrapper.
@@ -30,26 +29,15 @@ import org.springframework.util.ClassUtils;
  */
 public class ConfigClientRetryBootstrapper implements BootstrapRegistryInitializer {
 
-	static final boolean RETRY_IS_PRESENT = ClassUtils.isPresent("org.springframework.retry.annotation.Retryable",
-			null);
-
 	@Override
 	public void initialize(BootstrapRegistry registry) {
-		if (!RETRY_IS_PRESENT) {
-			return;
-		}
-
 		registry.registerIfAbsent(LoaderInterceptor.class, context -> loadContext -> {
 			ConfigServerConfigDataResource resource = loadContext.getResource();
-			if (resource.getProperties().isFailFast()) {
-				RetryProperties properties = resource.getRetryProperties();
+			RetryProperties properties = resource.getRetryProperties();
+			if (resource.getProperties().isFailFast() && properties.isEnabled()) {
 				RetryTemplate retryTemplate = RetryTemplateFactory.create(properties, resource.getLog());
-				return retryTemplate.execute(retryContext -> {
-					if (resource.getLog().isDebugEnabled()) {
-						resource.getLog().debug("Retry: count=" + retryContext.getRetryCount());
-					}
-					return loadContext.getInvocation().apply(loadContext.getLoaderContext(), resource);
-				});
+				return retryTemplate
+					.invoke(() -> loadContext.getInvocation().apply(loadContext.getLoaderContext(), resource));
 			}
 			return loadContext.getInvocation().apply(loadContext.getLoaderContext(), resource);
 		});

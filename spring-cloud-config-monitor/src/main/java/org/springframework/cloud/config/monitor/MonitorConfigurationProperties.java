@@ -16,7 +16,9 @@
 
 package org.springframework.cloud.config.monitor;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -30,6 +32,11 @@ public class MonitorConfigurationProperties {
 	 */
 	public static final int DEFAULT_MAX_DASHES = 20;
 
+	/**
+	 * Default maximum number of paths processed from a notification.
+	 */
+	public static final int DEFAULT_MAX_PATHS = 20;
+
 	private Endpoint endpoint = new Endpoint();
 
 	/**
@@ -40,6 +47,10 @@ public class MonitorConfigurationProperties {
 	private int maxDashes = DEFAULT_MAX_DASHES;
 
 	private Http http = new Http();
+
+	private int maxPaths = DEFAULT_MAX_PATHS;
+
+	private List<String> ignoredPaths = new ArrayList<>();
 
 	private GitHub github = new GitHub();
 
@@ -123,6 +134,22 @@ public class MonitorConfigurationProperties {
 
 	public void setHttp(Http http) {
 		this.http = http;
+	}
+
+	public int getMaxPaths() {
+		return maxPaths;
+	}
+
+	public void setMaxPaths(int maxPaths) {
+		this.maxPaths = maxPaths;
+	}
+
+	public List<String> getIgnoredPaths() {
+		return ignoredPaths;
+	}
+
+	public void setIgnoredPaths(List<String> ignoredPaths) {
+		this.ignoredPaths = ignoredPaths;
 	}
 
 	public static class Http {
