@@ -26,14 +26,15 @@ import org.eclipse.jgit.transport.SshConstants;
 import org.eclipse.jgit.transport.sshd.SshdSessionFactory;
 
 import org.springframework.cloud.config.server.environment.JGitEnvironmentProperties;
+import org.springframework.util.Assert;
 
 public class FileBasedSshSessionFactory extends SshdSessionFactory {
 
 	private final Map<String, JGitEnvironmentProperties> sshKeysByHostname;
 
 	public FileBasedSshSessionFactory(Map<String, JGitEnvironmentProperties> sshKeysByHostname) {
+		Assert.notEmpty(sshKeysByHostname, "sshKeysByHostname must not be empty");
 		this.sshKeysByHostname = sshKeysByHostname;
-		assert this.sshKeysByHostname.entrySet().size() > 0;
 	}
 
 	@Override
