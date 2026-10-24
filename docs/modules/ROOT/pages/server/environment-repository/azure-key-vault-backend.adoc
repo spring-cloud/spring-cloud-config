@@ -1,0 +1,135 @@
+[[azure-key-vault-backend]]
+= Azure Key Vault Backend
+
+Spring Cloud Config Server supports link:https://azure.microsoft.com/products/key-vault/[Azure Key Vault] as a backend for configuration properties.
+
+You can enable this feature by adding the Azure Key Vault Secrets dependency to your application.
+
+[source,xml,indent=0]
+.pom.xml
+----
+<dependency>
+    <groupId>com.azure</groupId>
+    <artifactId>azure-security-keyvault-secrets</artifactId>
+</dependency>
+----
+
+The following configuration uses Azure Key Vault to access secrets.
+
+[source,yaml]
+----
+spring:
+  profiles:
+    active: azurekeyvault
+  cloud:
+    config:
+      server:
+        azure-keyvault:
+          vault-uri: https://my-vault.vault.azure.net/
+          prefix: ""
+          property-separator: "--"
+          origin: "azure:keyvault:"
+----
+
+== Secret Naming
+
+Azure Key Vault secret names use explicit prefixes to distinguish application-wide secrets from profile-specific secrets.
+
+The `property-separator` determines how property paths are represented in secret names. By default, `--` represents a dot (`.`) in a Spring configuration property name.
+
+=== Application-Wide Secrets
+
+Secrets shared across profiles follow this pattern:
+
+----
+app-{application}--{property-name}
+----
+
+For example:
+
+----
+app-foo--s3--accessKey
+app-foo--my-property
+----
+
+These secrets are exposed as:
+
+[source,properties]
+----
+s3.accessKey=<secret-value>
+my-property=<secret-value>
+----
+
+Application-wide secrets are available to the specified application across its profiles.
+
+=== Profile-Specific Secrets
+
+Secrets associated with a particular application and profile follow this pattern:
+
+----
+profile-{application}--{profile}--{property-name}
+----
+
+For example:
+
+----
+profile-foo--dev--s3--accessKey
+profile-foo--prod--feature--enabled
+----
+
+For the `dev` profile of application `foo`, the first secret is exposed as:
+
+[source,properties]
+----
+s3.accessKey=<secret-value>
+----
+
+For the `prod` profile, the second secret is exposed as:
+
+[source,properties]
+----
+feature.enabled=<secret-value>
+----
+
+Hyphens within property names are preserved. The `--` sequence represents dots in property paths.
+
+== Authentication
+
+Azure Key Vault authentication uses Azure Identity's `DefaultAzureCredential`. Configure an appropriate credential source, such as environment credentials, managed identity, or Azure CLI authentication, and grant it permission to read secrets from the vault.
+
+== Azure Key Vault Configuration Properties
+
+|===
+|Property Name |Required |Default Value |Remarks
+
+|*vault-uri*
+|yes
+|
+|The URI of the Azure Key Vault.
+
+|*prefix*
+|no
+|``
+|An optional prefix added before the secret naming pattern.
+
+|*property-separator*
+|no
+|`--`
+|String used to represent dots in property names stored in Azure Key Vault.
+
+|*origin*
+|no
+|`azure:keyvault:`
+|The prefix added to the property source name to show its provenance.
+
+|*order*
+|no
+|`Ordered.LOWEST_PRECEDENCE`
+|The order of the environment repository.
+
+|===
+
+[NOTE]
+====
+When no application is specified, the configured default application is used. When no profile is specified, the configured default profile is used.
+====
