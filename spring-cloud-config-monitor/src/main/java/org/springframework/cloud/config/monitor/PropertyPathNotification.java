@@ -26,6 +26,12 @@ public class PropertyPathNotification {
 
 	private String[] paths;
 
+	/**
+	 * URIs of the Git repository that sent the notification, as advertised by the webhook
+	 * payload. Empty when the payload does not identify the repository.
+	 */
+	private String[] repositoryUris = new String[0];
+
 	public PropertyPathNotification(String... paths) {
 		this.paths = paths;
 	}
@@ -39,6 +45,14 @@ public class PropertyPathNotification {
 
 	public void setPaths(String[] paths) {
 		this.paths = paths;
+	}
+
+	public String[] getRepositoryUris() {
+		return this.repositoryUris;
+	}
+
+	public void setRepositoryUris(String[] repositoryUris) {
+		this.repositoryUris = (repositoryUris != null) ? repositoryUris : new String[0];
 	}
 
 	public boolean equals(Object o) {
@@ -55,6 +69,9 @@ public class PropertyPathNotification {
 		if (!java.util.Arrays.deepEquals(this.getPaths(), other.getPaths())) {
 			return false;
 		}
+		if (!java.util.Arrays.deepEquals(this.getRepositoryUris(), other.getRepositoryUris())) {
+			return false;
+		}
 		return true;
 	}
 
@@ -62,6 +79,7 @@ public class PropertyPathNotification {
 		final int PRIME = 59;
 		int result = 1;
 		result = result * PRIME + java.util.Arrays.deepHashCode(this.getPaths());
+		result = result * PRIME + java.util.Arrays.deepHashCode(this.getRepositoryUris());
 		return result;
 	}
 
@@ -70,7 +88,8 @@ public class PropertyPathNotification {
 	}
 
 	public String toString() {
-		return "PropertyPathNotification(paths=" + java.util.Arrays.deepToString(this.getPaths()) + ")";
+		return "PropertyPathNotification(paths=" + java.util.Arrays.deepToString(this.getPaths()) + ", repositoryUris="
+				+ java.util.Arrays.deepToString(this.getRepositoryUris()) + ")";
 	}
 
 }

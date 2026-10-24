@@ -16,10 +16,14 @@
 
 package org.springframework.cloud.config.monitor;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.util.MultiValueMap;
+import org.springframework.util.StringUtils;
 
 /**
  * Strategy for extracting a {@link PropertyPathNotification} from an incoming,
@@ -36,5 +40,40 @@ public interface PropertyPathNotificationExtractor {
 	}
 
 	PropertyPathNotification extract(HttpHeaders headers, Map<String, Object> payload);
+
+	/**
+	 * Adds the clone URLs of a repository object in a webhook payload, such as the
+	 * {@code repository} or {@code project} object of a push event, to the URIs that
+	 * identify the repository a notification came from.
+	 * @param uris the URIs collected so far
+	 * @param repository the repository object, ignored if it is not a map
+	 */
+	static void addCloneUris(Set<String> uris, Object repository) {
+		if (!(repository instanceof Map<?, ?> map)) {
+			return;
+		}
+		for (String field : List.of("clone_url", "ssh_url", "git_url", "git_http_url", "git_ssh_url")) {
+			addUri(uris, map.get(field));
+		}
+		if (map.get("links") instanceof Map<?, ?> links && links.get("clone") instanceof Collection<?> clones) {
+			for (Object clone : clones) {
+				if (clone instanceof Map<?, ?> link) {
+					addUri(uris, link.get("href"));
+				}
+			}
+		}
+	}
+
+	/**
+	 * Adds a single URI to the URIs that identify the repository a notification came
+	 * from.
+	 * @param uris the URIs collected so far
+	 * @param uri the URI, ignored if it is not a non-blank string
+	 */
+	static void addUri(Set<String> uris, Object uri) {
+		if (uri instanceof String value && StringUtils.hasText(value)) {
+			uris.add(value);
+		}
+	}
 
 }
