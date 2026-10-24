@@ -23,6 +23,8 @@ import java.util.Set;
 
 import org.springframework.http.HttpHeaders;
 
+import static org.springframework.cloud.config.monitor.PropertyPathNotificationExtractor.addCloneUris;
+
 /**
  * @author Dave Syer
  *
@@ -72,8 +74,8 @@ public abstract class BasePropertyPathNotificationExtractor implements PropertyP
 	 * @param request the webhook payload
 	 */
 	protected void addRepositoryUris(Set<String> uris, Map<String, Object> request) {
-		PropertyPathNotificationExtractor.addCloneUris(uris, request.get("repository"));
-		PropertyPathNotificationExtractor.addCloneUris(uris, request.get("project"));
+		addCloneUris(uris, request.get("repository"));
+		addCloneUris(uris, request.get("project"));
 	}
 
 	protected abstract boolean requestBelongsToGitRepoManager(HttpHeaders headers);

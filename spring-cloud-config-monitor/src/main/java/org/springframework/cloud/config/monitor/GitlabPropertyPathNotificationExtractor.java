@@ -23,6 +23,8 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
 
+import static org.springframework.cloud.config.monitor.PropertyPathNotificationExtractor.addUri;
+
 /**
  * @author Dave Syer
  *
@@ -36,7 +38,7 @@ public class GitlabPropertyPathNotificationExtractor extends BasePropertyPathNot
 		if (request.get("repository") instanceof Map<?, ?> repository) {
 			// Legacy GitLab payloads use url for the clone URL (GitHub uses it for an API
 			// URL, which is why only GitLab reads it).
-			PropertyPathNotificationExtractor.addUri(uris, repository.get("url"));
+			addUri(uris, repository.get("url"));
 		}
 	}
 

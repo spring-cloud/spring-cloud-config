@@ -26,6 +26,9 @@ import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
 import org.springframework.util.StringUtils;
 
+import static org.springframework.cloud.config.monitor.PropertyPathNotificationExtractor.addCloneUris;
+import static org.springframework.cloud.config.monitor.PropertyPathNotificationExtractor.addUri;
+
 /**
  * @author Spencer Gibb
  * @author Dave Syer
@@ -65,9 +68,9 @@ public class BitbucketPropertyPathNotificationExtractor implements PropertyPathN
 						&& links.get("html") instanceof Map<?, ?> html) {
 					// Bitbucket Cloud advertises the repository's HTTPS location in its
 					// HTML link.
-					PropertyPathNotificationExtractor.addUri(uris, html.get("href"));
+					addUri(uris, html.get("href"));
 				}
-				PropertyPathNotificationExtractor.addCloneUris(uris, request.get("repository"));
+				addCloneUris(uris, request.get("repository"));
 				return notification(uris);
 			}
 		}
@@ -80,7 +83,7 @@ public class BitbucketPropertyPathNotificationExtractor implements PropertyPathN
 				Set<String> uris = new LinkedHashSet<>();
 				// Bitbucket Server identifies the repository by its clone links, which
 				// a payload may omit.
-				PropertyPathNotificationExtractor.addCloneUris(uris, request.get("repository"));
+				addCloneUris(uris, request.get("repository"));
 				return notification(uris);
 			}
 		}
@@ -93,7 +96,7 @@ public class BitbucketPropertyPathNotificationExtractor implements PropertyPathN
 			if (request.get("pullRequest") instanceof Map<?, ?> pullRequest
 					&& pullRequest.get("toRef") instanceof Map<?, ?> toRef) {
 				// As for repo:refs_changed, only found if the payload has clone links.
-				PropertyPathNotificationExtractor.addCloneUris(uris, toRef.get("repository"));
+				addCloneUris(uris, toRef.get("repository"));
 			}
 			return notification(uris);
 		}
