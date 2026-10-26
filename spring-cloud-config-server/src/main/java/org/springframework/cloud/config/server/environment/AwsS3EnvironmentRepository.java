@@ -51,6 +51,7 @@ import org.springframework.core.env.Profiles;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.util.AntPathMatcher;
+import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.PathMatcher;
 import org.springframework.util.StringUtils;
@@ -62,6 +63,7 @@ import static org.springframework.cloud.config.server.environment.AwsS3Environme
  * @author Scott Frederick
  * @author Daniel Aiken
  * @author Geonwook Ham
+ * @author Ngoc Nhan
  */
 public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordered, SearchPathLocator {
 
@@ -563,7 +565,7 @@ abstract class S3ConfigFile {
 	}
 
 	protected ResponseInputStream<GetObjectResponse> getObject() throws Exception {
-		assert (getExtensions() != null && !getExtensions().isEmpty());
+		Assert.notEmpty(this.getExtensions(), "getExtensions() method must not be empty");
 		List<String> extensions = getExtensions();
 		for (int i = 0; i < extensions.size(); i++) {
 			String key = buildObjectKeyPrefix() + "." + extensions.get(i);
