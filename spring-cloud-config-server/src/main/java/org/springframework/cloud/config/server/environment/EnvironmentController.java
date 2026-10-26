@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeSet;
 
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.logging.Log;
@@ -262,38 +263,78 @@ public class EnvironmentController {
 
 		// The root map which holds all the first level properties
 		Map<String, Object> rootMap = new LinkedHashMap<>();
-		Set<String> arrayContainers = arrayContainers(properties.keySet());
+		Set<String> keys = properties.keySet();
+		Set<String> arrayContainers = arrayContainers(keys);
+		boolean dottedKeys = hasDottedKeys(keys, arrayContainers);
 		for (Map.Entry<String, Object> entry : properties.entrySet()) {
 			String key = entry.getKey();
 			Object value = entry.getValue();
-			PropertyNavigator nav = new PropertyNavigator(key,
-					dottedKeyStart(key, properties.keySet(), arrayContainers));
+			DottedKey dottedKey = dottedKeys ? dottedKey(key, keys, arrayContainers) : DottedKey.NONE;
+			PropertyNavigator nav = new PropertyNavigator(key, dottedKey);
 			nav.setMapValue(rootMap, value);
 		}
 		return rootMap;
 	}
 
 	/**
-	 * Returns the position in {@code key} from which the rest of the key is kept as a
-	 * dotted key, because a shorter key in {@code keys} is a dot or bracket delimited
-	 * prefix of it and holds a value where the nested structure would start, like
-	 * {@code org.x} next to {@code org.x.y}, or because an array in
-	 * {@code arrayContainers} starts where the key continues with a dot, like
-	 * {@code a.b[0]} next to {@code a.b.c}; or {@code -1} when the whole key is
-	 * navigated.
+	 * Returns whether any key may have to stay dotted: a key is a prefix of another one,
+	 * or an array starts where a key continues with a dot. In sorted order a key is
+	 * directly followed by the keys it is a prefix of, so this finds out without scanning
+	 * every key for its prefixes.
 	 */
-	private static int dottedKeyStart(String key, Set<String> keys, Set<String> arrayContainers) {
+	private static boolean hasDottedKeys(Set<String> keys, Set<String> arrayContainers) {
+		TreeSet<String> sorted = new TreeSet<>(keys);
+		for (String key : sorted) {
+			String next = sorted.higher(key);
+			if (next != null && next.startsWith(key)) {
+				return true;
+			}
+		}
+		for (String container : arrayContainers) {
+			String next = sorted.ceiling(container + ".");
+			if (next != null && next.startsWith(container + ".")) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Returns the part of {@code key} that is kept dotted rather than nested, because a
+	 * shorter key in {@code keys} is a dot or bracket delimited prefix of it and holds a
+	 * value where the nested structure would start, or because an array in
+	 * {@code arrayContainers} starts where the key continues with a dot. The dotted part
+	 * starts after the last dot before the shorter key ends and runs to the end of the
+	 * key, like {@code server.timeout.millis} next to {@code hub.server} or {@code b.c}
+	 * next to {@code a.b[0]}; when the shorter key is an array element, like {@code a[0]}
+	 * next to {@code a[0].c}, only the element reference stays dotted and the rest of the
+	 * key is nested under it.
+	 */
+	private static DottedKey dottedKey(String key, Set<String> keys, Set<String> arrayContainers) {
+		int start = -1;
+		int end = -1;
 		for (int i = 1; i < key.length(); i++) {
 			char delimiter = key.charAt(i);
 			if (delimiter != '.' && delimiter != '[') {
 				continue;
 			}
 			String prefix = key.substring(0, i);
-			if (keys.contains(prefix) || (delimiter == '.' && arrayContainers.contains(prefix))) {
-				return key.lastIndexOf('.', i - 1) + 1;
+			if (!keys.contains(prefix) && !(delimiter == '.' && arrayContainers.contains(prefix))) {
+				continue;
 			}
+			if (start >= 0) {
+				// A second shorter key: the rest cannot be nested either
+				return new DottedKey(start, key.length());
+			}
+			start = key.lastIndexOf('.', i - 1) + 1;
+			if (delimiter == '.' && key.charAt(i - 1) == ']') {
+				// An array element: nest the rest under a key naming the element
+				end = i;
+				continue;
+			}
+			return new DottedKey(start, key.length());
 		}
-		return -1;
+		return (start >= 0) ? new DottedKey(start, end) : DottedKey.NONE;
 	}
 
 	/**
@@ -402,22 +443,31 @@ public class EnvironmentController {
 	 *    - an array
 	 * </pre>
 	 */
+	/**
+	 * The part of a key, from {@code start} to {@code end} (exclusive), that is kept
+	 * dotted rather than nested, see {@link #dottedKey(String, Set, Set)}.
+	 */
+	private record DottedKey(int start, int end) {
+
+		private static final DottedKey NONE = new DottedKey(-1, -1);
+
+	}
+
 	private static final class PropertyNavigator {
 
 		private final String propertyKey;
 
-		// Supports keys like org.x and org.x.y like in boot logging: from this position
-		// on
-		// the key stays dotted, next to the shorter key holding a value
-		private final int dottedKeyStart;
+		// Supports keys like org.x and org.x.y like in boot logging: this part
+		// of the key stays dotted, next to the shorter key holding a value
+		private final DottedKey dottedKey;
 
 		private int currentPos;
 
 		private NodeType valueType;
 
-		private PropertyNavigator(String propertyKey, int dottedKeyStart) {
+		private PropertyNavigator(String propertyKey, DottedKey dottedKey) {
 			this.propertyKey = propertyKey;
-			this.dottedKeyStart = dottedKeyStart;
+			this.dottedKey = dottedKey;
 			this.currentPos = -1;
 			this.valueType = NodeType.MAP;
 		}
@@ -534,10 +584,10 @@ public class EnvironmentController {
 		private String getKey() {
 			// Consider initial value or previous char '.' or '['
 			int start = this.currentPos + 1;
-			if (start == this.dottedKeyStart) {
-				this.currentPos = this.propertyKey.length();
-				this.valueType = NodeType.LEAF;
-				return this.propertyKey.substring(start);
+			if (start == this.dottedKey.start()) {
+				this.currentPos = this.dottedKey.end();
+				this.valueType = (this.currentPos < this.propertyKey.length()) ? NodeType.MAP : NodeType.LEAF;
+				return this.propertyKey.substring(start, this.currentPos);
 			}
 			int openingBracketPosition = -1;
 			for (int i = start; i < this.propertyKey.length(); i++) {

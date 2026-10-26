@@ -263,6 +263,63 @@ class EnvironmentControllerTests {
 		assertThat(yaml).isEqualTo("a:\n- b[0]: x\n  b: y\n");
 	}
 
+	@Test // gh-2423
+	public void propertyUnderAnArrayElementThatHoldsAValueInYaml() throws Exception {
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
+		map.put("a[0]", "x");
+		map.put("a[0].c", "y");
+		this.environment.add(new PropertySource("one", map));
+		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
+		String yaml = this.controller.yaml("foo", "bar", false).getBody();
+		assertThat(yaml).isEqualTo("a:\n- x\na[0]:\n  c: y\n");
+	}
+
+	@Test // gh-2423
+	public void propertyUnderAnArrayElementThatHoldsAValueInJson() throws Exception {
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
+		map.put("a[0]", "x");
+		map.put("a[0].c", "y");
+		this.environment.add(new PropertySource("one", map));
+		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
+		String json = this.controller.jsonProperties("foo", "bar", false).getBody();
+		assertThat(json).as("Wrong output: " + json).isEqualTo("{\"a\":[\"x\"],\"a[0]\":{\"c\":\"y\"}}");
+	}
+
+	@Test // gh-2423
+	public void propertiesUnderANestedArrayElementThatHoldsAValueInYaml() throws Exception {
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
+		map.put("x.a[0].c", "y");
+		map.put("x.a[0].d", "z");
+		map.put("x.a[0]", "x");
+		this.environment.add(new PropertySource("one", map));
+		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
+		String yaml = this.controller.yaml("foo", "bar", false).getBody();
+		assertThat(yaml).isEqualTo("x:\n  a[0]:\n    c: y\n    d: z\n  a:\n  - x\n");
+	}
+
+	@Test // gh-2423
+	public void arrayUnderAnArrayElementThatHoldsAValueInYaml() throws Exception {
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
+		map.put("a[0]", "x");
+		map.put("a[0][1]", "y");
+		this.environment.add(new PropertySource("one", map));
+		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
+		String yaml = this.controller.yaml("foo", "bar", false).getBody();
+		assertThat(yaml).isEqualTo("a:\n- x\na[0][1]: y\n");
+	}
+
+	@Test // gh-2423
+	public void propertiesUnderAnArrayElementThatHoldValuesAtTwoLevelsInYaml() throws Exception {
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
+		map.put("a[0].c.d", "z");
+		map.put("a[0].c", "y");
+		map.put("a[0]", "x");
+		this.environment.add(new PropertySource("one", map));
+		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
+		String yaml = this.controller.yaml("foo", "bar", false).getBody();
+		assertThat(yaml).isEqualTo("a[0].c.d: z\na[0]:\n  c: y\na:\n- x\n");
+	}
+
 	@Test
 	public void arrayOverridenInEnvironment() throws Exception {
 		// Add original values first source
