@@ -49,6 +49,8 @@ public class GitlabPropertyPathNotificationExtractorTests {
 		assertThat(extracted).isNotNull();
 		String[] paths = extracted.getPaths();
 		assertThat(paths).as("paths was wrong").contains("oldapp.yml", "newapp.properties", "application.yml");
+		assertThat(extracted.getRepositoryUris()).contains("https://example.com/mike/diaspora.git",
+				"git@example.com:mike/diaspora.git");
 	}
 
 	@Test

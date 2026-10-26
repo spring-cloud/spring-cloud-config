@@ -89,6 +89,105 @@ public class MultipleJGitEnvironmentRepositoryTests {
 	}
 
 	@Test
+	public void expireRefreshRateOnlyExpiresMatchingRepository() {
+		long now = System.currentTimeMillis();
+		this.repository.setLastRefresh(now);
+		this.repository.getRepos().values().forEach(repo -> repo.setLastRefresh(now));
+		JGitEnvironmentRepository matching = this.repository.getRepos().get("test1");
+
+		assertThat(this.repository.expireRefreshRate(matching.getUri())).isTrue();
+
+		assertThat(this.repository.getLastRefresh()).isEqualTo(now);
+		assertThat(matching.getLastRefresh()).isZero();
+	}
+
+	@Test
+	public void expireRefreshRateReportsWhenNoRepositoryMatches() {
+		long now = System.currentTimeMillis();
+		this.repository.setLastRefresh(now);
+		this.repository.getRepos().values().forEach(repo -> repo.setLastRefresh(now));
+
+		assertThat(this.repository.expireRefreshRate("https://github.com/unrelated/config.git")).isFalse();
+
+		assertThat(this.repository.getLastRefresh()).isEqualTo(now);
+		assertThat(this.repository.getRepos().values())
+			.allSatisfy(repo -> assertThat(repo.getLastRefresh()).isEqualTo(now));
+	}
+
+	@Test
+	public void expireRefreshRateForDefaultRepositoryDoesNotExpireOtherRepositories() {
+		long now = System.currentTimeMillis();
+		this.repository.setLastRefresh(now);
+		this.repository.getRepos().values().forEach(repo -> repo.setLastRefresh(now));
+
+		this.repository.expireRefreshRate(this.repository.getUri());
+
+		assertThat(this.repository.getLastRefresh()).isZero();
+		assertThat(this.repository.getRepos().values())
+			.allSatisfy(repo -> assertThat(repo.getLastRefresh()).isEqualTo(now));
+	}
+
+	@Test
+	public void expireRefreshRateOnlyExpiresMatchingResolvedPlaceholders() {
+		long now = System.currentTimeMillis();
+		this.repository.setUri("https://github.com/config/{application}-{profile}-{label}.git");
+		JGitEnvironmentRepository matching = this.repository.getRepository(this.repository, "foo", "prod", "main");
+		JGitEnvironmentRepository unrelated = this.repository.getRepository(this.repository, "bar", "prod", "main");
+		JGitEnvironmentRepository otherProfile = this.repository.getRepository(this.repository, "foo", "dev", "main");
+		JGitEnvironmentRepository otherLabel = this.repository.getRepository(this.repository, "foo", "prod", "test");
+		this.repository.setLastRefresh(now);
+		matching.setLastRefresh(now);
+		unrelated.setLastRefresh(now);
+		otherProfile.setLastRefresh(now);
+		otherLabel.setLastRefresh(now);
+		this.repository.getRepos().values().forEach(repo -> repo.setLastRefresh(now));
+
+		assertThat(this.repository.expireRefreshRate("https://github.com/config/foo-prod-main.git")).isTrue();
+
+		assertThat(matching.getLastRefresh()).isZero();
+		assertThat(unrelated.getLastRefresh()).isEqualTo(now);
+		assertThat(otherProfile.getLastRefresh()).isEqualTo(now);
+		assertThat(otherLabel.getLastRefresh()).isEqualTo(now);
+		assertThat(this.repository.getLastRefresh()).isEqualTo(now);
+		assertThat(this.repository.getRepos().values())
+			.allSatisfy(repo -> assertThat(repo.getLastRefresh()).isEqualTo(now));
+	}
+
+	@Test
+	public void expireRefreshRateOnlyExpiresMatchingPatternRepositoryPlaceholders() {
+		long now = System.currentTimeMillis();
+		JGitEnvironmentRepository patternRepository = this.repository.getRepos().get("test1");
+		patternRepository.setUri("https://github.com/config/{application}.git");
+		JGitEnvironmentRepository matching = this.repository.getRepository(patternRepository, "test1-foo", "prod",
+				"main");
+		JGitEnvironmentRepository unrelated = this.repository.getRepository(patternRepository, "test1-bar", "prod",
+				"main");
+		patternRepository.setLastRefresh(now);
+		matching.setLastRefresh(now);
+		unrelated.setLastRefresh(now);
+
+		this.repository.expireRefreshRate(matching.getUri());
+
+		assertThat(matching.getLastRefresh()).isZero();
+		assertThat(unrelated.getLastRefresh()).isEqualTo(now);
+		assertThat(patternRepository.getLastRefresh()).isEqualTo(now);
+	}
+
+	@Test
+	public void expireRefreshRateExpiresAllConfigurationsForTheSameRemote() {
+		long now = System.currentTimeMillis();
+		this.repository.setLastRefresh(now);
+		JGitEnvironmentRepository matching = this.repository.getRepos().get("test1");
+		matching.setUri(this.repository.getUri());
+		matching.setLastRefresh(now);
+
+		this.repository.expireRefreshRate(this.repository.getUri());
+
+		assertThat(this.repository.getLastRefresh()).isZero();
+		assertThat(matching.getLastRefresh()).isZero();
+	}
+
+	@Test
 	public void defaultRepo() {
 		Environment environment = this.repository.findOne("bar", "staging", "master");
 		assertThat(environment.getPropertySources()).hasSize(2);

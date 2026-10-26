@@ -23,6 +23,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import io.micrometer.observation.ObservationRegistry;
 
@@ -54,7 +55,7 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 	 */
 	private Map<String, PatternMatchingJGitEnvironmentRepository> repos = new LinkedHashMap<>();
 
-	private Map<String, JGitEnvironmentRepository> placeholders = new LinkedHashMap<>();
+	private Map<String, JGitEnvironmentRepository> placeholders = new ConcurrentHashMap<>();
 
 	private final ObservationRegistry observationRegistry;
 
@@ -117,6 +118,18 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 
 	public void setRepos(Map<String, PatternMatchingJGitEnvironmentRepository> repos) {
 		this.repos.putAll(repos);
+	}
+
+	@Override
+	public boolean expireRefreshRate(String repositoryUri) {
+		boolean expired = super.expireRefreshRate(repositoryUri);
+		for (JGitEnvironmentRepository repository : this.repos.values()) {
+			expired |= repository.expireRefreshRate(repositoryUri);
+		}
+		for (JGitEnvironmentRepository repository : this.placeholders.values()) {
+			expired |= repository.expireRefreshRate(repositoryUri);
+		}
+		return expired;
 	}
 
 	@Override
@@ -230,10 +243,7 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 		if (label != null) {
 			key = key.replace("{label}", label);
 		}
-		if (!this.placeholders.containsKey(key)) {
-			this.placeholders.put(key, getRepository(repository, key));
-		}
-		return this.placeholders.get(key);
+		return this.placeholders.computeIfAbsent(key, uri -> getRepository(repository, uri));
 	}
 
 	private JGitEnvironmentRepository getRepository(JGitEnvironmentRepository source, String uri) {

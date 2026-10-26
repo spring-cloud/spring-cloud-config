@@ -74,6 +74,10 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 
 import org.springframework.cloud.config.environment.Environment;
@@ -128,6 +132,72 @@ public class JGitEnvironmentRepositoryTests {
 		if (this.basedir.exists()) {
 			FileUtils.delete(this.basedir, FileUtils.RECURSIVE | FileUtils.RETRY);
 		}
+	}
+
+	@Test
+	public void expireRefreshRateOnlyExpiresMatchingLocalRepository() {
+		long now = System.currentTimeMillis();
+		this.repository.setLastRefresh(now);
+
+		assertThat(this.repository.expireRefreshRate(this.repository.getUri() + "-other")).isFalse();
+		assertThat(this.repository.getLastRefresh()).isEqualTo(now);
+
+		assertThat(this.repository.expireRefreshRate(this.repository.getUri())).isTrue();
+		assertThat(this.repository.getLastRefresh()).isZero();
+	}
+
+	@ParameterizedTest
+	@CsvSource({ "https://github.com/team/config.git, https://github.com/team/config.git, true",
+			"https://user:password@github.com/team/config.git, https://github.com/team/config.git, true",
+			"https://github.com/team/config.git, https://github.com/team/config, true",
+			"https://github.com/team/config.git/, https://github.com/team/config.git, true",
+			"https://GITHUB.COM:443/team/config.git, https://github.com/team/config.git, true",
+			"http://git.example.com:80/team/config.git, http://git.example.com/team/config.git, true",
+			"ssh://git@github.com:22/team/config.git, ssh://git@github.com/team/config.git, true",
+			"git@git.example.com:/team/config.git, ssh://git@git.example.com/team/config.git, true",
+			"git@git.example.com:team/config.git, ssh://git@git.example.com/team/config.git, true",
+			"https://github.com/team/config.git, https://github.com/team/Config.git, true",
+			"https://github.com/Team/Config, git@github.com:team/config.git, true",
+			"https://github.com/team/config.git, http://github.com/team/config.git, true",
+			"ssh://git@git.example.com:2222/team/config.git, git@git.example.com:team/config.git, true",
+			"https://git.example.com:8443/team/config.git, https://git.example.com/team/config.git, true",
+			"alice@git.example.com:team/config.git, bob@git.example.com:team/config.git, true",
+			"git@git.example.com:/srv/config.git, git@git.example.com:/srv/config, true",
+			"file:/config/team.git, file:/config/team, true",
+			"https://github.com/team/config.git, https://github.com/team/other.git, false",
+			"https://github.com/team/config.git, https://github.com/other/config.git, false",
+			"https://github.com/team/config.git, https://gitlab.com/team/config.git, false" })
+	public void expireRefreshRateMatchesRepositoryUri(String configuredUri, String notificationUri, boolean matches) {
+		long now = System.currentTimeMillis();
+		this.repository.setUri(configuredUri);
+		this.repository.setLastRefresh(now);
+
+		assertThat(this.repository.expireRefreshRate(notificationUri)).isEqualTo(matches);
+
+		assertThat(this.repository.getLastRefresh()).isEqualTo(matches ? 0 : now);
+	}
+
+	@ParameterizedTest
+	@NullAndEmptySource
+	@ValueSource(strings = { " ", "https://", "://invalid", "https://github.com", "https://github.com/" })
+	public void expireRefreshRateIgnoresMissingOrInvalidRepositoryUri(String notificationUri) {
+		long now = System.currentTimeMillis();
+		this.repository.setLastRefresh(now);
+
+		assertThat(this.repository.expireRefreshRate(notificationUri)).isFalse();
+
+		assertThat(this.repository.getLastRefresh()).isEqualTo(now);
+	}
+
+	@Test
+	public void expireRefreshRatePreservesNegativeRefreshRate() throws Exception {
+		this.repository.setRefreshRate(-1);
+		this.repository.setLastRefresh(System.currentTimeMillis());
+
+		this.repository.expireRefreshRate(this.repository.getUri());
+
+		assertThat(this.repository.getRefreshRate()).isEqualTo(-1);
+		assertThat(this.repository.shouldPull(mock(Git.class))).isFalse();
 	}
 
 	@Test
@@ -696,6 +766,59 @@ public class JGitEnvironmentRepositoryTests {
 		long timeDiff = System.currentTimeMillis() - repo.getLastRefresh();
 
 		assertThat(timeDiff < 1000L).as("time difference (" + timeDiff + ") was longer than 1 second").isTrue();
+	}
+
+	@Test
+	public void expireRefreshRateDuringFetchIsNotOverwritten() throws Exception {
+		Git git = mock(Git.class);
+		Repository repository = mock(Repository.class);
+		StoredConfig storedConfig = mock(StoredConfig.class);
+		FetchCommand fetchCommand = mock(FetchCommand.class);
+		FetchResult fetchResult = mock(FetchResult.class);
+		when(git.getRepository()).thenReturn(repository);
+		when(git.fetch()).thenReturn(fetchCommand);
+		when(repository.getConfig()).thenReturn(storedConfig);
+
+		JGitEnvironmentProperties properties = new JGitEnvironmentProperties();
+		properties.setRefreshRate(1000);
+		properties.setUri("https://github.com/team/config.git");
+		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(this.environment, properties,
+				ObservationRegistry.NOOP);
+		// A webhook for a push that the in-flight fetch did not see arrives mid-fetch.
+		when(fetchCommand.call()).thenAnswer(invocation -> {
+			repo.expireRefreshRate("https://github.com/team/config.git");
+			return fetchResult;
+		});
+
+		repo.fetch(git, "master");
+
+		// The refresh timestamp is taken before the fetch starts, so the expiry survives
+		// and the next request fetches again.
+		assertThat(repo.getLastRefresh()).isZero();
+	}
+
+	@Test
+	public void failedFetchKeepsRefreshRateBackoff() throws Exception {
+		Git git = mock(Git.class);
+		Repository repository = mock(Repository.class);
+		StoredConfig storedConfig = mock(StoredConfig.class);
+		FetchCommand fetchCommand = mock(FetchCommand.class);
+		when(git.getRepository()).thenReturn(repository);
+		when(git.fetch()).thenReturn(fetchCommand);
+		when(repository.getConfig()).thenReturn(storedConfig);
+		when(fetchCommand.call()).thenThrow(new TransportException("remote unavailable"));
+
+		JGitEnvironmentProperties properties = new JGitEnvironmentProperties();
+		properties.setRefreshRate(1000);
+		JGitEnvironmentRepository repo = new JGitEnvironmentRepository(this.environment, properties,
+				ObservationRegistry.NOOP);
+		repo.setLastRefresh(0);
+
+		assertThat(repo.fetch(git, "master")).isNull();
+
+		// An unreachable remote is not retried on every request.
+		assertThat(repo.getLastRefresh()).isPositive();
+		assertThat(repo.shouldPull(git)).isFalse();
 	}
 
 	@Test

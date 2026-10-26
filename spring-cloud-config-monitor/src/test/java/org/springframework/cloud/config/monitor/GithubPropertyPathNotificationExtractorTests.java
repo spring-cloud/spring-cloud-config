@@ -48,6 +48,8 @@ public class GithubPropertyPathNotificationExtractorTests {
 		PropertyPathNotification extracted = this.extractor.extract(this.headers, value);
 		assertThat(extracted).isNotNull();
 		assertThat(extracted.getPaths()[0]).isEqualTo("README.md");
+		assertThat(extracted.getRepositoryUris()).containsExactly("https://github.com/baxterthehacker/public-repo.git",
+				"git@github.com:baxterthehacker/public-repo.git", "git://github.com/baxterthehacker/public-repo.git");
 	}
 
 	@Test

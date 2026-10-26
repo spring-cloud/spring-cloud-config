@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.config.monitor;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -54,6 +55,7 @@ public class BitbucketPropertyPathNotificationExtractorTests {
 		PropertyPathNotification extracted = this.extractor.extract(this.headers, value);
 		assertThat(extracted).isNotNull();
 		assertThat(extracted.getPaths()[0]).isEqualTo("application.yml");
+		assertThat(extracted.getRepositoryUris()).containsExactly("https://api.bitbucket.org/bitbucket/bitbucket");
 	}
 
 	@Test
@@ -119,6 +121,21 @@ public class BitbucketPropertyPathNotificationExtractorTests {
 		PropertyPathNotification extracted = this.extractor.extract(this.headers, value);
 		assertThat(extracted).isNotNull();
 		assertThat(extracted.getPaths()[0]).isEqualTo("application.yml");
+		// This sample does not include clone links.
+		assertThat(extracted.getRepositoryUris()).isEmpty();
+	}
+
+	@Test
+	public void bitbucketServerRepositoryCloneLinks() {
+		Map<String, Object> value = Map.of("changes", List.of(), "repository",
+				Map.of("links", Map.of("clone", List.of(
+						Map.of("href", "https://bitbucket.example.com/scm/team/config.git", "name", "http"),
+						Map.of("href", "ssh://git@bitbucket.example.com:7999/team/config.git", "name", "ssh")))));
+		setServerHeaders("repo:refs_changed");
+		PropertyPathNotification extracted = this.extractor.extract(this.headers, value);
+		assertThat(extracted).isNotNull();
+		assertThat(extracted.getRepositoryUris()).containsExactly("https://bitbucket.example.com/scm/team/config.git",
+				"ssh://git@bitbucket.example.com:7999/team/config.git");
 	}
 
 	@Test
@@ -129,6 +146,8 @@ public class BitbucketPropertyPathNotificationExtractorTests {
 		PropertyPathNotification extracted = this.extractor.extract(this.headers, value);
 		assertThat(extracted).isNotNull();
 		assertThat(extracted.getPaths()[0]).isEqualTo("application.yml");
+		// This sample does not include clone links.
+		assertThat(extracted.getRepositoryUris()).isEmpty();
 	}
 
 	private void setServerHeaders(String eventKey) {
