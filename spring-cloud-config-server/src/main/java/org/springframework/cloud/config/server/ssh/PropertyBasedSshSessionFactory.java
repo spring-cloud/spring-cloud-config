@@ -35,7 +35,6 @@ import org.apache.sshd.common.config.keys.KeyUtils;
 import org.apache.sshd.common.keyprovider.KeyIdentityProvider;
 import org.apache.sshd.common.session.SessionContext;
 import org.apache.sshd.common.util.net.SshdSocketAddress;
-import org.eclipse.jgit.annotations.NonNull;
 import org.eclipse.jgit.internal.transport.ssh.OpenSshConfigFile;
 import org.eclipse.jgit.internal.transport.sshd.OpenSshServerKeyDatabase;
 import org.eclipse.jgit.transport.CredentialsProvider;
@@ -76,7 +75,7 @@ public class PropertyBasedSshSessionFactory extends SshdSessionFactory {
 		return new SshConfigStore() {
 
 			@Override
-			public HostConfig lookup(@NonNull String hostName, int port, String userName) {
+			public HostConfig lookup(String hostName, int port, String userName) {
 				OpenSshConfigFile.HostEntry hostEntry = new OpenSshConfigFile.HostEntry();
 
 				return updateIfNeeded(hostEntry, hostName);
