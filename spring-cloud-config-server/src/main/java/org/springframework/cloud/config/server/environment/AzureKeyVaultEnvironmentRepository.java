@@ -78,11 +78,6 @@ public class AzureKeyVaultEnvironmentRepository implements EnvironmentRepository
 
 		List<String> reversedProfiles = new ArrayList<>(Arrays.asList(profiles));
 		Collections.reverse(reversedProfiles);
-
-		if (!reversedProfiles.contains(defaultProfile)) {
-			reversedProfiles.add(defaultProfile);
-		}
-
 		List<String> applications = new ArrayList<>(
 				Arrays.asList(StringUtils.commaDelimitedListToStringArray(application)));
 
