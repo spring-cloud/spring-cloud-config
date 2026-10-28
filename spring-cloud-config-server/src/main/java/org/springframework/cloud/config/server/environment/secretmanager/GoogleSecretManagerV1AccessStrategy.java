@@ -246,7 +246,7 @@ public class GoogleSecretManagerV1AccessStrategy implements GoogleSecretManagerA
 				return Boolean.FALSE;
 			}
 			TestIamPermissionsResponse testIamPermissionsResponse = service.projects()
-				.testIamPermissions(projectId, requestBody)
+				.testIamPermissions("projects/" + projectId, requestBody)
 				.execute();
 
 			if (testIamPermissionsResponse.getPermissions() != null && testIamPermissionsResponse.size() >= 1) {
