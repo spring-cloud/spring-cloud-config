@@ -16,6 +16,20 @@ The default configuration works out of the box with Github, Gitlab, Gitea, Gitee
 In addition to the JSON notifications from Github, Gitlab, Gitee, or Bitbucket, you can trigger a change notification by POSTing to `/monitor` with form-encoded body parameters in the pattern of `path=\{application}`.
 Doing so broadcasts to applications matching the `\{application}` pattern (which can contain wildcards).
 
+When a notification identifies a configured Git repository by URL, the Config Server expires that repository's `refresh-rate` before notifying applications.
+The next configuration request can then fetch the changed commit without waiting for the refresh interval to elapse.
+Unrelated repositories retain their refresh intervals, including repositories selected by application patterns or resolved URI placeholders.
+A negative `refresh-rate` still disables fetching.
+
+Repository identification uses the repository URLs in the webhook payload, such as GitHub's `repository.clone_url` and `repository.ssh_url`, or GitLab's `project.git_http_url` and `project.git_ssh_url`.
+A payload URL matches a configured repository when both point to the same host and repository path.
+The comparison ignores the protocol, credentials, SSH username, and port, is case-insensitive, and ignores a leading or trailing `/` and a trailing `.git`, so the HTTPS, `ssh://`, and `git@host:org/repo.git` forms of a repository all match.
+Matching is deliberately lenient: a false match only causes one extra fetch, while a missed match would leave the configuration stale until the refresh interval elapses.
+Notifications without a matching repository URL still notify applications, but do not expire any repository's refresh interval.
+This includes form-encoded path notifications and provider payloads without repository URLs.
+Bitbucket Server payloads identify the repository by the clone links (`links.clone`) of their repository object; a payload whose repository object has no clone links does not expire a refresh interval.
+Bitbucket Cloud's native payload only advertises the repository's HTML link, which is enough to identify the repository whether it is configured over HTTPS or SSH.
+
 [[ignored-monitor-paths]]
 == Ignoring Paths
 

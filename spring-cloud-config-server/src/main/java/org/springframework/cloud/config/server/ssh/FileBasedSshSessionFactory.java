@@ -19,21 +19,21 @@ package org.springframework.cloud.config.server.ssh;
 import java.io.File;
 import java.util.Map;
 
-import org.eclipse.jgit.annotations.NonNull;
 import org.eclipse.jgit.internal.transport.ssh.OpenSshConfigFile;
 import org.eclipse.jgit.transport.SshConfigStore;
 import org.eclipse.jgit.transport.SshConstants;
 import org.eclipse.jgit.transport.sshd.SshdSessionFactory;
 
 import org.springframework.cloud.config.server.environment.JGitEnvironmentProperties;
+import org.springframework.util.Assert;
 
 public class FileBasedSshSessionFactory extends SshdSessionFactory {
 
 	private final Map<String, JGitEnvironmentProperties> sshKeysByHostname;
 
 	public FileBasedSshSessionFactory(Map<String, JGitEnvironmentProperties> sshKeysByHostname) {
+		Assert.notEmpty(sshKeysByHostname, "sshKeysByHostname must not be empty");
 		this.sshKeysByHostname = sshKeysByHostname;
-		assert this.sshKeysByHostname.entrySet().size() > 0;
 	}
 
 	@Override
@@ -41,7 +41,7 @@ public class FileBasedSshSessionFactory extends SshdSessionFactory {
 		return configFile == null ? null : new OpenSshConfigFile(homeDir, configFile, localUserName) {
 
 			@Override
-			public HostEntry lookup(@NonNull String hostName, int port, String userName) {
+			public HostEntry lookup(String hostName, int port, String userName) {
 				HostEntry hostEntry = super.lookup(hostName, port, userName);
 
 				JGitEnvironmentProperties sshProperties = sshKeysByHostname.get(hostName);

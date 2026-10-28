@@ -72,3 +72,63 @@ will return default values from the custom repository, as shown below:
   ]
 }
 ----
+
+[[testing-custom-environment-repositories]]
+== Testing Custom Environment Repositories
+
+Clients resolve properties from the property sources in the order the `EnvironmentRepository` returns them, so a repository should order them the way Spring Boot orders config data (see xref:server/environment-repository.adoc[Environment Repository]).
+The native, Git and SVN repositories get this order from Spring Boot. Other repositories have to reproduce it.
+
+The `spring-cloud-config-server` test jar contains a compliance test suite, `EnvironmentRepositoryComplianceTests`.
+The suite stores configuration files in your backend, queries your repository, and checks the order of the returned property sources and the property values a client would resolve from them.
+To use it, add the test jar as a test dependency:
+
+[source,xml]
+----
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-config-server</artifactId>
+    <type>test-jar</type>
+    <scope>test</scope>
+</dependency>
+----
+
+Then extend `EnvironmentRepositoryComplianceTests` and supply an `EnvironmentRepositoryFixture`.
+The fixture writes each `ConfigFile` (an application, an optional profile and label, and its properties) into your backend, and declares which optional `Capability` values the backend supports, such as labels or multi-document YAML.
+Scenarios that need a capability you do not declare are skipped.
+
+[source,java]
+----
+class CustomConfigurationRepositoryComplianceTests extends EnvironmentRepositoryComplianceTests {
+
+    private final CustomStore store = new CustomStore();
+
+    @Override
+    protected EnvironmentRepositoryFixture fixture() {
+        return new EnvironmentRepositoryFixture() {
+
+            @Override
+            public void reset() {
+                store.clear();
+            }
+
+            @Override
+            public void store(ConfigFile file) {
+                store.put(file.application(), file.profile(), file.label(), file.properties());
+            }
+
+            @Override
+            public EnvironmentRepository repository() {
+                return new CustomConfigurationRepository(store);
+            }
+
+            @Override
+            public Set<Capability> capabilities() {
+                return EnumSet.of(Capability.LABELS, Capability.MULTIPLE_APPLICATIONS);
+            }
+        };
+    }
+}
+----
+
+If your repository deliberately behaves differently in a scenario, override that test method and annotate it with `@Disabled`, explaining why.

@@ -57,6 +57,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -66,6 +67,7 @@ import static org.mockito.Mockito.when;
  *
  * @author William Tran
  * @author Ollie Hughes
+ * @author Ngoc Nhan
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -328,6 +330,13 @@ public class PropertyBasedSshSessionFactoryTest {
 		setupSessionFactory(new JGitEnvironmentProperties());
 
 		assertThat(factory.getSshConfig(new File("."))).isNull();
+	}
+
+	@Test
+	public void throwsExceptionWhenPassedNullOrEmptyMap() {
+
+		assertThatIllegalArgumentException().isThrownBy(() -> new PropertyBasedSshSessionFactory(null));
+		assertThatIllegalArgumentException().isThrownBy(() -> new PropertyBasedSshSessionFactory(Map.of()));
 	}
 
 	private ProxyData getSshProxyData(String hostname) {
