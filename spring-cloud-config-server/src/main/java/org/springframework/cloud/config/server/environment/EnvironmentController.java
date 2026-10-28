@@ -428,6 +428,16 @@ public class EnvironmentController {
 	}
 
 	/**
+	 * The part of a key, from {@code start} to {@code end} (exclusive), that is kept
+	 * dotted rather than nested, see {@link #dottedKey(String, Set, Set)}.
+	 */
+	private record DottedKey(int start, int end) {
+
+		private static final DottedKey NONE = new DottedKey(-1, -1);
+
+	}
+
+	/**
 	 * Class {@code PropertyNavigator} is used to navigate through the property key and
 	 * create necessary Maps and Lists making up the nested structure to finally set the
 	 * property value at the leaf node.
@@ -443,16 +453,6 @@ public class EnvironmentController {
 	 *    - an array
 	 * </pre>
 	 */
-	/**
-	 * The part of a key, from {@code start} to {@code end} (exclusive), that is kept
-	 * dotted rather than nested, see {@link #dottedKey(String, Set, Set)}.
-	 */
-	private record DottedKey(int start, int end) {
-
-		private static final DottedKey NONE = new DottedKey(-1, -1);
-
-	}
-
 	private static final class PropertyNavigator {
 
 		private final String propertyKey;
