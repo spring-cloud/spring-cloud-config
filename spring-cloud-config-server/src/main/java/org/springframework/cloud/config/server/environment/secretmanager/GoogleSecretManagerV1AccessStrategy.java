@@ -19,6 +19,7 @@ package org.springframework.cloud.config.server.environment.secretmanager;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -27,6 +28,7 @@ import java.util.List;
 
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.HttpRequestInitializer;
+import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.gax.core.FixedCredentialsProvider;
 import com.google.api.services.cloudresourcemanager.v3.CloudResourceManager;
@@ -233,8 +235,8 @@ public class GoogleSecretManagerV1AccessStrategy implements GoogleSecretManagerA
 			AccessToken accessToken = new AccessToken(getAccessToken(), null);
 			GoogleCredentials credential = new GoogleCredentials(accessToken);
 			HttpRequestInitializer requestInitializer = new HttpCredentialsAdapter(credential);
-			service = new CloudResourceManager.Builder(GoogleNetHttpTransport.newTrustedTransport(),
-					GsonFactory.getDefaultInstance(), requestInitializer)
+			service = new CloudResourceManager.Builder(createHttpTransport(), GsonFactory.getDefaultInstance(),
+					requestInitializer)
 				.setApplicationName(APPLICATION_NAME)
 				.build();
 			List<String> permissionsList = Arrays.asList(ACCESS_SECRET_PERMISSION);
@@ -261,6 +263,17 @@ public class GoogleSecretManagerV1AccessStrategy implements GoogleSecretManagerA
 			logger.info("Unable to check token permissions", e);
 			return Boolean.FALSE;
 		}
+	}
+
+	/**
+	 * Creates the HTTP transport used to call the Cloud Resource Manager API. Visible for
+	 * testing.
+	 * @return the HTTP transport
+	 * @throws GeneralSecurityException if the trusted transport cannot be created
+	 * @throws IOException if the trusted transport cannot be created
+	 */
+	HttpTransport createHttpTransport() throws GeneralSecurityException, IOException {
+		return GoogleNetHttpTransport.newTrustedTransport();
 	}
 
 	private String getAccessToken() {
