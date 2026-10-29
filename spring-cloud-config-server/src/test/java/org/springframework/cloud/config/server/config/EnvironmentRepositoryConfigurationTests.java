@@ -29,6 +29,7 @@ import org.springframework.cloud.config.server.environment.ConfigTokenProvider;
 import org.springframework.cloud.config.server.environment.EnvironmentConfigTokenProvider;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
 import org.springframework.cloud.config.server.environment.GcsEnvironmentRepositoryFactory;
+import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentRepository;
 import org.springframework.cloud.config.server.support.AzureDevOpsWorkloadIdentitySupport;
 import org.springframework.cloud.config.server.support.GitCredentialsProviderFactory;
 import org.springframework.context.annotation.Bean;
@@ -188,6 +189,18 @@ public class EnvironmentRepositoryConfigurationTests {
 					"spring.cloud.config.server.git.uri=https://dev.azure.com/tenant/repo")
 			.run((context) -> {
 				assertThat(context).hasSingleBean(AzureDevOpsWorkloadIdentitySupport.class);
+			});
+	}
+
+	@Test
+	public void defaultEnvironmentRepositoryCanBeDisabled() {
+		new ApplicationContextRunner()
+			.withConfiguration(AutoConfigurations.of(EnvironmentRepositoryConfiguration.class, TestBeans.class))
+			.withBean(EnvironmentRepository.class, () -> mock(EnvironmentRepository.class))
+			.withPropertyValues("spring.cloud.config.server.default-repository.enabled=false")
+			.run((context) -> {
+				assertThat(context).hasNotFailed();
+				assertThat(context).doesNotHaveBean(MultipleJGitEnvironmentRepository.class);
 			});
 	}
 
