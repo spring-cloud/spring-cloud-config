@@ -1,0 +1,10 @@
+{
+	"properties": [
+		{
+			"defaultValue": "always",
+			"name": "spring.cloud.config.multiple-uri-strategy",
+			"description": "The strategy to use when call to server fails and there are multiple URLs configured on the uri property (default `MultipleUriStrategy#ALWAYS`).",
+			"type": "org.springframework.cloud.config.client.ConfigClientProperties$MultipleUriStrategy"
+		}
+	]
+}
