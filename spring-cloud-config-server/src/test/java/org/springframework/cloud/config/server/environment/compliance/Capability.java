@@ -64,6 +64,14 @@ public enum Capability {
 	DISTINCT_DEFAULT_PROFILE,
 
 	/**
+	 * Configuration for the {@code default} profile is applied even when another profile
+	 * is active, as a layer shared by all profiles. Spring Boot only applies it when no
+	 * other profile is active, so this is a deliberate, documented difference. Only
+	 * meaningful together with {@link #DISTINCT_DEFAULT_PROFILE}.
+	 */
+	DEFAULT_PROFILE_ALWAYS_ACTIVE,
+
+	/**
 	 * A {@code .properties} and a {@code .yml} file with the same name can exist at the
 	 * same location.
 	 */

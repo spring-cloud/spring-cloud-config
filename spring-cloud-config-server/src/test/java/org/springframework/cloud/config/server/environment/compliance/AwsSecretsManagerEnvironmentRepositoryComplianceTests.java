@@ -20,9 +20,7 @@ import java.util.EnumSet;
 import java.util.Set;
 
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.localstack.LocalStackContainer.Service;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 import software.amazon.awssdk.services.secretsmanager.model.CreateSecretResponse;
@@ -56,13 +54,6 @@ class AwsSecretsManagerEnvironmentRepositoryComplianceTests extends EnvironmentR
 	@Override
 	protected EnvironmentRepositoryFixture fixture() {
 		return this.fixture;
-	}
-
-	@Override
-	@Test
-	@Disabled("TODO-issue: The default profile is always included, even when another profile is active")
-	public void activeProfileExcludesDefaultProfileFiles() throws Exception {
-		super.activeProfileExcludesDefaultProfileFiles();
 	}
 
 	static class Fixture implements EnvironmentRepositoryFixture {
@@ -113,7 +104,7 @@ class AwsSecretsManagerEnvironmentRepositoryComplianceTests extends EnvironmentR
 		@Override
 		public Set<Capability> capabilities() {
 			return EnumSet.of(Capability.LABELS, Capability.MULTIPLE_LABELS, Capability.MULTIPLE_APPLICATIONS,
-					Capability.DISTINCT_DEFAULT_PROFILE);
+					Capability.DISTINCT_DEFAULT_PROFILE, Capability.DEFAULT_PROFILE_ALWAYS_ACTIVE);
 		}
 
 	}

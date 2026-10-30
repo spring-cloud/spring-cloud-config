@@ -93,7 +93,7 @@ class AwsS3EnvironmentRepositoryComplianceTests extends EnvironmentRepositoryCom
 
 		@Override
 		public Set<Capability> capabilities() {
-			return EnumSet.allOf(Capability.class);
+			return EnumSet.complementOf(EnumSet.of(Capability.DEFAULT_PROFILE_ALWAYS_ACTIVE));
 		}
 
 	}
