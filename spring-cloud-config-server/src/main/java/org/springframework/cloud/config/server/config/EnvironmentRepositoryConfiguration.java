@@ -415,6 +415,8 @@ public class EnvironmentRepositoryConfiguration {
 class DefaultRepositoryConfiguration {
 
 	@Bean
+	@ConditionalOnProperty(prefix = "spring.cloud.config.server.default-repository", name = "enabled",
+			havingValue = "true", matchIfMissing = true)
 	public MultipleJGitEnvironmentRepository defaultEnvironmentRepository(
 			MultipleJGitEnvironmentRepositoryFactory gitEnvironmentRepositoryFactory,
 			MultipleJGitEnvironmentProperties environmentProperties) throws Exception {
