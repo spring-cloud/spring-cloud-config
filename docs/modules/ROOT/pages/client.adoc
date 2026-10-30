@@ -155,7 +155,7 @@ Resource logo = configResourceClient.getBinaryResource("dev", "main", "images/lo
 
 Without a profile or label, the client uses `spring.cloud.config.profile` and `spring.cloud.config.label`; without a label, the server's default label is used.
 Like the import, it tries each configured URI according to `spring.cloud.config.multiple-uri-strategy`, with the credentials of that URI, and tries a comma-separated label one label at a time.
-A file is read into memory, so a file larger than `spring.cloud.config.resource-client.max-size` (1MB by default) is rejected.
+A file is read into memory, so a file larger than `spring.cloud.config.resource-client.max-size` (1MB by default) is rejected; `0` disables the limit.
 
 [[sharing-configuration-across-applications]]
 == Sharing Configuration Across Applications

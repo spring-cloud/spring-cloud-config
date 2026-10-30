@@ -348,16 +348,9 @@ public class ConfigServerConfigDataLocationResolver
 				|| !event.getBootstrapContext().isRegistered(RestTemplate.class)) {
 			return;
 		}
-		try {
-			RestClient restClient = RestClient.create(event.getBootstrapContext().get(RestTemplate.class));
-			beanFactory.registerSingleton(ConfigServerRestClientHolder.BEAN_NAME,
-					new ConfigServerRestClientHolder(restClient));
-		}
-		catch (RuntimeException ex) {
-			// A RestTemplate that cannot back a RestClient, such as a test double
-			this.log.debug("Could not build a RestClient from the config client RestTemplate; "
-					+ "the ConfigResourceClient will not be available", ex);
-		}
+		RestClient restClient = RestClient.create(event.getBootstrapContext().get(RestTemplate.class));
+		beanFactory.registerSingleton(ConfigServerRestClientHolder.BEAN_NAME,
+				new ConfigServerRestClientHolder(restClient));
 	}
 
 	public static class PropertyResolver {

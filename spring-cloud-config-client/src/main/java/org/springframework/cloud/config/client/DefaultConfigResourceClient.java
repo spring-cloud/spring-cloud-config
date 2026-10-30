@@ -24,6 +24,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.springframework.cloud.config.client.ConfigClientProperties.Credentials;
 import org.springframework.cloud.config.client.ConfigClientProperties.MultipleUriStrategy;
 import org.springframework.cloud.config.environment.Environment;
@@ -64,6 +67,8 @@ public class DefaultConfigResourceClient implements ConfigResourceClient {
 	static final String USE_DEFAULT_LABEL = "useDefaultLabel";
 
 	private static final int MAX_ERROR_BODY = 8 * 1024;
+
+	private static final Log logger = LogFactory.getLog(DefaultConfigResourceClient.class);
 
 	private final RestClient restClient;
 
@@ -114,7 +119,7 @@ public class DefaultConfigResourceClient implements ConfigResourceClient {
 				return getResource(name, profile, labels.get(i), path, binary);
 			}
 			catch (HttpClientErrorException.NotFound ex) {
-				// not in this label, try the next one
+				logger.debug("File [" + path + "] not found in label [" + labels.get(i) + "], trying the next label");
 			}
 		}
 		return getResource(name, profile, labels.get(labels.size() - 1), path, binary);
@@ -128,10 +133,11 @@ public class DefaultConfigResourceClient implements ConfigResourceClient {
 		if (label == null) {
 			label = this.properties.getLabel();
 		}
-		if (!StringUtils.hasText(label)) {
-			return Collections.singletonList(null);
-		}
-		return Arrays.stream(StringUtils.commaDelimitedListToStringArray(label)).map(String::trim).toList();
+		List<String> labels = Arrays.stream(StringUtils.commaDelimitedListToStringArray(label))
+			.map(String::trim)
+			.filter(StringUtils::hasText)
+			.toList();
+		return labels.isEmpty() ? Collections.singletonList(null) : labels;
 	}
 
 	/**
@@ -149,12 +155,19 @@ public class DefaultConfigResourceClient implements ConfigResourceClient {
 				if (this.properties.getMultipleUriStrategy() != MultipleUriStrategy.ALWAYS) {
 					throw ex;
 				}
+				logSkippedUri(i, label, path, ex.getStatusCode().toString());
 			}
 			catch (ResourceAccessException ex) {
-				// cannot reach this server, try the next one
+				logSkippedUri(i, label, path, ex.getMessage());
 			}
 		}
 		return getResource(last, name, profile, label, path, binary);
+	}
+
+	private void logSkippedUri(int uriIndex, String label, String path, String reason) {
+		logger.info("Failed to read file [" + path + "] with label [" + label + "] from config server at "
+				+ this.properties.getCredentials(uriIndex).getUri() + ": " + reason
+				+ ". Will try the next url if available");
 	}
 
 	private Resource getResource(int uriIndex, String name, String profile, String label, String path, boolean binary) {
@@ -217,6 +230,9 @@ public class DefaultConfigResourceClient implements ConfigResourceClient {
 							charset)
 					: HttpServerErrorException.create(status, response.getStatusText(), response.getHeaders(), body,
 							charset);
+		}
+		if (maxSize == 0) {
+			return new ConfigServerResource(response.getBody().readAllBytes(), path);
 		}
 		if (response.getHeaders().getContentLength() > maxSize) {
 			throw tooLarge(path, maxSize);

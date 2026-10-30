@@ -31,6 +31,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.config.environment.EnvironmentMediaType;
 import org.springframework.cloud.configuration.TlsProperties;
 import org.springframework.core.env.Environment;
+import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.util.unit.DataSize;
@@ -491,7 +492,7 @@ public class ConfigClientProperties {
 
 		/**
 		 * Maximum size of a file read from the config server; a larger file is rejected
-		 * instead of being loaded into memory.
+		 * instead of being loaded into memory. Zero disables the limit.
 		 */
 		private DataSize maxSize = DataSize.ofMegabytes(1);
 
@@ -500,6 +501,7 @@ public class ConfigClientProperties {
 		}
 
 		public void setMaxSize(DataSize maxSize) {
+			Assert.isTrue(!maxSize.isNegative(), "maxSize must not be negative");
 			this.maxSize = maxSize;
 		}
 

@@ -17,12 +17,16 @@
 package org.springframework.cloud.config.client;
 
 import java.io.IOException;
+import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.cloud.config.client.ConfigClientProperties.MultipleUriStrategy;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -54,6 +58,7 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
  *
  * @author Sharang Gupta
  */
+@ExtendWith(OutputCaptureExtension.class)
 public class DefaultConfigResourceClientTests {
 
 	private final RestTemplate restTemplate = new RestTemplate();
@@ -280,6 +285,73 @@ public class DefaultConfigResourceClientTests {
 		assertThatThrownBy(() -> this.client.getPlainTextResource(null, "feature,main", "nginx.conf"))
 			.isInstanceOf(HttpClientErrorException.NotFound.class);
 		this.server.verify();
+	}
+
+	@Test
+	void emptyLabelsInAListAreSkipped() throws IOException {
+		this.server.expect(requestTo("http://configserver:8888/app/dev/feature/nginx.conf"))
+			.andRespond(withStatus(HttpStatus.NOT_FOUND));
+		this.server.expect(requestTo("http://configserver:8888/app/dev/main/nginx.conf"))
+			.andRespond(withSuccess("server {}", MediaType.TEXT_PLAIN));
+
+		assertThat(this.client.getPlainTextResource(null, "feature,,main", "nginx.conf")
+			.getContentAsString(StandardCharsets.UTF_8)).isEqualTo("server {}");
+		this.server.verify();
+	}
+
+	@Test
+	void listOfOnlyEmptyLabelsUsesTheServerDefaultLabel() throws IOException {
+		this.server.expect(requestTo("http://configserver:8888/app/dev/nginx.conf?useDefaultLabel"))
+			.andRespond(withSuccess("server {}", MediaType.TEXT_PLAIN));
+
+		assertThat(this.client.getPlainTextResource(null, ",", "nginx.conf").getContentAsString(StandardCharsets.UTF_8))
+			.isEqualTo("server {}");
+		this.server.verify();
+	}
+
+	@Test
+	void skippedUriAndLabelAreLogged(CapturedOutput output) throws IOException {
+		this.properties.setUri(new String[] { "http://down:8888", "http://configserver:8888" });
+		this.server.expect(requestTo("http://down:8888/app/dev/main/nginx.conf"))
+			.andRespond(withException(new SocketTimeoutException("timed out")));
+		this.server.expect(requestTo("http://configserver:8888/app/dev/main/nginx.conf"))
+			.andRespond(withSuccess("server {}", MediaType.TEXT_PLAIN));
+
+		this.client.getPlainTextResource("nginx.conf");
+
+		assertThat(output).contains("with label [main] from config server at http://down:8888");
+	}
+
+	@Test
+	void uriSkippedOnAnErrorWithTheAlwaysStrategyIsLogged(CapturedOutput output) throws IOException {
+		this.properties.setUri(new String[] { "http://failing:8888", "http://configserver:8888" });
+		this.properties.setMultipleUriStrategy(MultipleUriStrategy.ALWAYS);
+		this.server.expect(requestTo("http://failing:8888/app/dev/main/nginx.conf")).andRespond(withServerError());
+		this.server.expect(requestTo("http://configserver:8888/app/dev/main/nginx.conf"))
+			.andRespond(withSuccess("server {}", MediaType.TEXT_PLAIN));
+
+		this.client.getPlainTextResource("nginx.conf");
+
+		assertThat(output).contains("with label [main] from config server at http://failing:8888")
+			.contains("500 INTERNAL_SERVER_ERROR");
+	}
+
+	@Test
+	void negativeLimitIsRejected() {
+		assertThatIllegalArgumentException()
+			.isThrownBy(() -> this.properties.getResourceClient().setMaxSize(DataSize.ofBytes(-1)))
+			.withMessage("maxSize must not be negative");
+	}
+
+	@Test
+	void zeroLimitDisablesTheLimit() throws IOException {
+		this.properties.getResourceClient().setMaxSize(DataSize.ofBytes(0));
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentLength(5);
+		this.server.expect(requestTo("http://configserver:8888/app/dev/main/nginx.conf"))
+			.andRespond(withSuccess("12345", MediaType.TEXT_PLAIN).headers(headers));
+
+		assertThat(this.client.getPlainTextResource("nginx.conf").contentLength()).isEqualTo(5);
 	}
 
 	@Test
