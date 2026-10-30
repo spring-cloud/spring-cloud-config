@@ -106,9 +106,8 @@ public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered
 		}
 		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
 		Environment environment = new Environment(application, profiles, label, null, null);
-		if (!config.startsWith("application")) {
-			config = "application," + config;
-		}
+		// the shared "application" is always included, duplicates are removed below
+		config = "application," + config;
 		List<String> applications = new ArrayList<>(
 				new LinkedHashSet<>(Arrays.asList(StringUtils.commaDelimitedListToStringArray(config))));
 		List<String> envs = new ArrayList<>(new LinkedHashSet<>(Arrays.asList(profiles)));
