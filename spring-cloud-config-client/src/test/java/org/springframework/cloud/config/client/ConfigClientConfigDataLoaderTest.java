@@ -27,7 +27,6 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
 
 import static org.mockito.ArgumentMatchers.eq;
@@ -60,7 +59,6 @@ public class ConfigClientConfigDataLoaderTest {
 	@Test
 	void context() {
 		RestTemplate rest = mock(RestTemplate.class);
-		when(rest.getErrorHandler()).thenReturn(new DefaultResponseErrorHandler());
 		Environment environment = new Environment("test", "default");
 		ResponseEntity<Environment> responseEntity = mock(ResponseEntity.class);
 		when(responseEntity.getStatusCode()).thenReturn(HttpStatus.OK);
