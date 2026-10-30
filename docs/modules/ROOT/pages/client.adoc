@@ -138,6 +138,25 @@ Label can also be provided as a comma-separated list.
 This behavior can be useful when working on a feature branch.
 For instance, you might want to align the config label with your branch but make it optional (in that case, use `spring.cloud.config.label=myfeature,develop`).
 
+[[reading-plain-text-and-binary-files]]
+== Reading Plain Text and Binary Files
+
+The Config Server can also serve plain text and binary files from the configuration repository (see xref:server/serving-plain-text.adoc[Serving Plain Text] and xref:server/serving-binary-files.adoc[Serving Binary Files]).
+When the configuration is imported with `spring.config.import=configserver:`, the client registers a `ConfigResourceClient` bean that reads such files with the same settings that loaded the configuration (URI, credentials, headers, TLS settings, timeouts and token), as the following example shows:
+
+[source,java]
+----
+@Autowired
+private ConfigResourceClient configResourceClient;
+
+Resource nginx = configResourceClient.getPlainTextResource("nginx.conf");
+Resource logo = configResourceClient.getBinaryResource("dev", "main", "images/logo.png");
+----
+
+Without a profile or label, the client uses `spring.cloud.config.profile` and `spring.cloud.config.label`; without a label, the server's default label is used.
+Like the import, it tries each configured URI according to `spring.cloud.config.multiple-uri-strategy`, with the credentials of that URI, and tries a comma-separated label one label at a time.
+A file is read into memory, so a file larger than `spring.cloud.config.resource-client.max-size` (1MB by default) is rejected; `0` disables the limit.
+
 [[sharing-configuration-across-applications]]
 == Sharing Configuration Across Applications
 
