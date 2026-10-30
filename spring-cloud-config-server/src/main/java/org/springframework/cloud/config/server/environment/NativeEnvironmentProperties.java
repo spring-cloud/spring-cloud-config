@@ -35,6 +35,13 @@ public class NativeEnvironmentProperties implements EnvironmentRepositoryPropert
 	 */
 	private Boolean addLabelLocations = true;
 
+	/**
+	 * Flag to determine whether, when several labels are requested, the last label takes
+	 * precedence over the earlier ones (default true). If false, the first label takes
+	 * precedence, as it did before this property was introduced.
+	 */
+	private Boolean lastLabelWins = true;
+
 	private String defaultLabel = "master";
 
 	/**
@@ -64,6 +71,14 @@ public class NativeEnvironmentProperties implements EnvironmentRepositoryPropert
 
 	public void setAddLabelLocations(Boolean addLabelLocations) {
 		this.addLabelLocations = addLabelLocations;
+	}
+
+	public Boolean getLastLabelWins() {
+		return this.lastLabelWins;
+	}
+
+	public void setLastLabelWins(Boolean lastLabelWins) {
+		this.lastLabelWins = lastLabelWins;
 	}
 
 	public String getDefaultLabel() {

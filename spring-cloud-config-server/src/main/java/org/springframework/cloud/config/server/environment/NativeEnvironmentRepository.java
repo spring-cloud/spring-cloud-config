@@ -17,10 +17,12 @@
 package org.springframework.cloud.config.server.environment;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -85,6 +87,8 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 	 */
 	private boolean addLabelLocations;
 
+	private boolean lastLabelWins = true;
+
 	/**
 	 * Version string to be reported for native repository.
 	 */
@@ -100,6 +104,7 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 			ObservationRegistry observationRegistry) {
 		this.environment = environment;
 		this.addLabelLocations = properties.getAddLabelLocations();
+		this.lastLabelWins = properties.getLastLabelWins();
 		this.defaultLabel = properties.getDefaultLabel();
 		this.failOnError = properties.getFailOnError();
 		this.order = properties.getOrder();
@@ -124,6 +129,14 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 		this.addLabelLocations = addLabelLocations;
 	}
 
+	public boolean isLastLabelWins() {
+		return this.lastLabelWins;
+	}
+
+	public void setLastLabelWins(boolean lastLabelWins) {
+		this.lastLabelWins = lastLabelWins;
+	}
+
 	public String getDefaultLabel() {
 		return this.defaultLabel;
 	}
@@ -139,7 +152,36 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 
 	@Override
 	public Environment findOne(String config, String profile, String label, boolean includeOrigin) {
+		if (!this.lastLabelWins || label == null || !label.contains(",")) {
+			return findOneForLabel(config, profile, label, includeOrigin);
+		}
+		// Resolve one label at a time, so that the last label takes precedence over the
+		// earlier ones as in the SCM repositories. Resolving them together would let
+		// Spring Boot interleave the labels by profile, giving the first label
+		// precedence.
+		List<String> labels = new ArrayList<>(Arrays.asList(StringUtils.commaDelimitedListToStringArray(label)));
+		Collections.reverse(labels);
+		Environment result = null;
+		Map<String, PropertySource> sources = new LinkedHashMap<>();
+		for (String singleLabel : labels) {
+			Environment environment = findOneForLabel(config, profile, singleLabel, includeOrigin);
+			if (result == null) {
+				result = new Environment(environment.getName(), environment.getProfiles(), label,
+						environment.getVersion(), environment.getState());
+			}
+			for (PropertySource source : environment.getPropertySources()) {
+				// A property source found for several labels comes from a location the
+				// labels share, which has a lower precedence than the label locations,
+				// so keep it at its last position
+				sources.remove(source.getName());
+				sources.put(source.getName(), source);
+			}
+		}
+		sources.values().forEach(result::add);
+		return result;
+	}
 
+	private Environment findOneForLabel(String config, String profile, String label, boolean includeOrigin) {
 		try {
 			ConfigurableEnvironment environment = getEnvironment(config, profile, label);
 			DefaultResourceLoader resourceLoader = new DefaultResourceLoader();

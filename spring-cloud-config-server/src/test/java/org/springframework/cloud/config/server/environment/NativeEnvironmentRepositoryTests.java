@@ -263,6 +263,19 @@ public class NativeEnvironmentRepositoryTests {
 	public void locationAddMultipleLabelLocations() {
 		this.repository.setSearchLocations("classpath:/test/dev/");
 		Environment environment = this.repository.findOne("foo", "development", "ignore,applicationxyz");
+		// the last label wins, the location shared by the labels comes last
+		assertThat(environment.getPropertySources()).hasSize(3);
+		assertThat(environment.getPropertySources().get(0).getSource().get("foo")).isEqualTo("default-app");
+		assertThat(environment.getPropertySources().get(1).getSource().get("foo")).isEqualTo("app");
+		assertThat(environment.getPropertySources().get(2).getSource().get("foo")).isEqualTo("dev_bar");
+		assertThat(environment.getLabel()).isEqualTo("ignore,applicationxyz");
+	}
+
+	@Test
+	public void locationAddMultipleLabelLocationsFirstLabelWins() {
+		this.repository.setLastLabelWins(false);
+		this.repository.setSearchLocations("classpath:/test/dev/");
+		Environment environment = this.repository.findOne("foo", "development", "ignore,applicationxyz");
 		assertThat(environment.getPropertySources()).hasSize(3);
 		assertThat(environment.getPropertySources().get(0).getSource().get("foo")).isEqualTo("app");
 		assertThat(environment.getPropertySources().get(1).getSource().get("foo")).isEqualTo("default-app");

@@ -19,8 +19,6 @@ package org.springframework.cloud.config.server.environment.compliance;
 import java.nio.file.Path;
 
 import io.micrometer.observation.ObservationRegistry;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
@@ -55,13 +53,6 @@ class NativeEnvironmentRepositoryComplianceTests extends EnvironmentRepositoryCo
 			};
 		}
 		return this.fixture;
-	}
-
-	@Override
-	@Test
-	@Disabled("TODO-issue: Label directories are added as search locations, so labels are interleaved by profile and the first label wins")
-	public void lastLabelTakesPrecedence() throws Exception {
-		super.lastLabelTakesPrecedence();
 	}
 
 }
