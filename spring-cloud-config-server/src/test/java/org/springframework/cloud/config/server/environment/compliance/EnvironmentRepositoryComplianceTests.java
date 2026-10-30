@@ -31,6 +31,7 @@ import org.springframework.cloud.config.server.environment.EnvironmentRepository
 import org.springframework.cloud.config.server.environment.compliance.ConfigFile.Format;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
@@ -100,12 +101,26 @@ public abstract class EnvironmentRepositoryComplianceTests {
 	@Test
 	public void activeProfileExcludesDefaultProfileFiles() throws Exception {
 		assumeCapabilities(Capability.DISTINCT_DEFAULT_PROFILE);
+		assumeNoCapability(Capability.DEFAULT_PROFILE_ALWAYS_ACTIVE);
 		store("orders", null);
 		store("application", null);
 		store("orders", "default");
 		store("orders", "dev");
 
 		assertPrecedence(findOne("orders", "dev", null), "orders-dev", "orders", "application");
+	}
+
+	@Test
+	public void defaultProfileFilesAreAppliedWhenAnotherProfileIsActive() throws Exception {
+		assumeCapabilities(Capability.DISTINCT_DEFAULT_PROFILE, Capability.DEFAULT_PROFILE_ALWAYS_ACTIVE);
+		store("orders", null);
+		store("application", null);
+		store("orders", "default");
+		store("application", "default");
+		store("orders", "dev");
+
+		assertPrecedence(findOne("orders", "dev", null), "orders-dev", "orders-default", "application-default",
+				"orders", "application");
 	}
 
 	@Test
@@ -312,6 +327,14 @@ public abstract class EnvironmentRepositoryComplianceTests {
 	protected Environment findOne(String application, String profile, String label) throws Exception {
 		fixture().prepare();
 		return fixture().repository().findOne(application, profile, label);
+	}
+
+	/**
+	 * Skip the current scenario if the fixture supports the capability.
+	 * @param capability the capability that makes the scenario not applicable
+	 */
+	protected void assumeNoCapability(Capability capability) {
+		assumeFalse(fixture().capabilities().contains(capability), () -> "Fixture has capability " + capability);
 	}
 
 	/**
