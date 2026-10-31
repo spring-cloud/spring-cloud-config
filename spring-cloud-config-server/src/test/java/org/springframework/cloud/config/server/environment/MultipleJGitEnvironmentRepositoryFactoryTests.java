@@ -20,7 +20,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import org.eclipse.jgit.api.TransportConfigCallback;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
 import org.springframework.cloud.config.server.support.GitCredentialsProviderFactory;
@@ -29,6 +31,9 @@ import org.springframework.core.env.ConfigurableEnvironment;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class MultipleJGitEnvironmentRepositoryFactoryTests {
 
@@ -46,23 +51,69 @@ public class MultipleJGitEnvironmentRepositoryFactoryTests {
 
 	@Test
 	public void buildGitCredentialsFactory() throws Exception {
-
 		multipleJGitEnvironmentRepositoryFactory = new MultipleJGitEnvironmentRepositoryFactory(environment, server,
 				connectionFactory, transportConfigCallbackFactory, gitCredentialsProviderFactory);
+
 		MultipleJGitEnvironmentProperties multipleJGitEnvironmentProperties = new MultipleJGitEnvironmentProperties();
+
 		Map<String, MultipleJGitEnvironmentProperties.PatternMatchingJGitEnvironmentProperties> patternMatchingJGitEnvironmentPropertiesMap = new HashMap<>();
 		patternMatchingJGitEnvironmentPropertiesMap.put("pattenMatchingGitRepo1",
 				new MultipleJGitEnvironmentProperties.PatternMatchingJGitEnvironmentProperties());
+
 		multipleJGitEnvironmentProperties.setRepos(patternMatchingJGitEnvironmentPropertiesMap);
+
 		MultipleJGitEnvironmentRepository multipleJGitEnvironmentRepository = multipleJGitEnvironmentRepositoryFactory
 			.build(multipleJGitEnvironmentProperties);
+
 		assertThat(multipleJGitEnvironmentRepository.getGitCredentialsProviderFactory())
 			.isSameAs(gitCredentialsProviderFactory);
+
 		MultipleJGitEnvironmentRepository.PatternMatchingJGitEnvironmentRepository pattenMatchingGitRepo = multipleJGitEnvironmentRepository
 			.getRepos()
 			.get("pattenMatchingGitRepo1");
-		assertThat(pattenMatchingGitRepo.getGitCredentialsProviderFactory()).isSameAs(gitCredentialsProviderFactory);
 
+		assertThat(pattenMatchingGitRepo.getGitCredentialsProviderFactory()).isSameAs(gitCredentialsProviderFactory);
+	}
+
+	@Test
+	public void buildTransportConfigCallbacksForEachRepository() throws Exception {
+		multipleJGitEnvironmentRepositoryFactory = new MultipleJGitEnvironmentRepositoryFactory(environment, server,
+				connectionFactory, transportConfigCallbackFactory, gitCredentialsProviderFactory);
+
+		MultipleJGitEnvironmentProperties multipleJGitEnvironmentProperties = new MultipleJGitEnvironmentProperties();
+		multipleJGitEnvironmentProperties.setUri("git@github.com:main/config.git");
+		multipleJGitEnvironmentProperties.setPrivateKey("main-private-key");
+
+		MultipleJGitEnvironmentProperties.PatternMatchingJGitEnvironmentProperties nestedProperties = new MultipleJGitEnvironmentProperties.PatternMatchingJGitEnvironmentProperties();
+		nestedProperties.setUri("git@github.com:other/config.git");
+		nestedProperties.setPrivateKey("nested-private-key");
+
+		Map<String, MultipleJGitEnvironmentProperties.PatternMatchingJGitEnvironmentProperties> repos = new HashMap<>();
+		repos.put("nested", nestedProperties);
+		multipleJGitEnvironmentProperties.setRepos(repos);
+
+		TransportConfigCallback parentCallback = mock(TransportConfigCallback.class);
+		TransportConfigCallback nestedCallback = mock(TransportConfigCallback.class);
+
+		when(transportConfigCallbackFactory.build(multipleJGitEnvironmentProperties)).thenReturn(parentCallback);
+		when(transportConfigCallbackFactory.build(nestedProperties)).thenReturn(nestedCallback);
+
+		MultipleJGitEnvironmentRepository repository = multipleJGitEnvironmentRepositoryFactory
+			.build(multipleJGitEnvironmentProperties);
+
+		assertThat(repository.getTransportConfigCallback()).isSameAs(parentCallback);
+
+		MultipleJGitEnvironmentRepository.PatternMatchingJGitEnvironmentRepository nestedRepository = repository
+			.getRepos()
+			.get("nested");
+
+		assertThat(nestedRepository.getTransportConfigCallback()).isSameAs(nestedCallback);
+
+		ArgumentCaptor<JGitEnvironmentProperties> captor = ArgumentCaptor.forClass(JGitEnvironmentProperties.class);
+
+		verify(transportConfigCallbackFactory, times(2)).build(captor.capture());
+
+		assertThat(captor.getAllValues()).containsExactly(multipleJGitEnvironmentProperties, nestedProperties);
 	}
 
 }

@@ -35,7 +35,6 @@ import org.apache.sshd.common.config.keys.KeyUtils;
 import org.apache.sshd.common.keyprovider.KeyIdentityProvider;
 import org.apache.sshd.common.session.SessionContext;
 import org.apache.sshd.common.util.net.SshdSocketAddress;
-import org.eclipse.jgit.annotations.NonNull;
 import org.eclipse.jgit.internal.transport.ssh.OpenSshConfigFile;
 import org.eclipse.jgit.internal.transport.sshd.OpenSshServerKeyDatabase;
 import org.eclipse.jgit.transport.CredentialsProvider;
@@ -49,6 +48,7 @@ import org.eclipse.jgit.transport.sshd.SshdSessionFactory;
 
 import org.springframework.cloud.config.server.environment.JGitEnvironmentProperties;
 import org.springframework.cloud.config.server.proxy.ProxyHostProperties;
+import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 /**
@@ -58,6 +58,7 @@ import org.springframework.util.StringUtils;
  *
  * @author William Tran
  * @author Ollie Hughes
+ * @author Ngoc Nhan
  */
 public class PropertyBasedSshSessionFactory extends SshdSessionFactory {
 
@@ -65,9 +66,8 @@ public class PropertyBasedSshSessionFactory extends SshdSessionFactory {
 
 	public PropertyBasedSshSessionFactory(Map<String, JGitEnvironmentProperties> sshKeysByHostname) {
 		super(new JGitKeyCache(), new HttpProxyDataFactory(sshKeysByHostname));
-
+		Assert.notEmpty(sshKeysByHostname, "sshKeysByHostname must not be empty");
 		this.sshKeysByHostname = sshKeysByHostname;
-		assert this.sshKeysByHostname.entrySet().size() > 0;
 	}
 
 	@Override
@@ -75,7 +75,7 @@ public class PropertyBasedSshSessionFactory extends SshdSessionFactory {
 		return new SshConfigStore() {
 
 			@Override
-			public HostConfig lookup(@NonNull String hostName, int port, String userName) {
+			public HostConfig lookup(String hostName, int port, String userName) {
 				OpenSshConfigFile.HostEntry hostEntry = new OpenSshConfigFile.HostEntry();
 
 				return updateIfNeeded(hostEntry, hostName);
@@ -228,6 +228,7 @@ public class PropertyBasedSshSessionFactory extends SshdSessionFactory {
 		private final Map<String, JGitEnvironmentProperties> sshKeysByHostname;
 
 		private HttpProxyDataFactory(Map<String, JGitEnvironmentProperties> sshKeysByHostname) {
+			Assert.notEmpty(sshKeysByHostname, "sshKeysByHostname must not be empty");
 			this.sshKeysByHostname = sshKeysByHostname;
 		}
 

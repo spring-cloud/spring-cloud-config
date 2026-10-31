@@ -55,6 +55,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.UnknownContentTypeException;
 
 import static org.springframework.cloud.config.client.ConfigClientProperties.DEFAULT_PROFILE;
 import static org.springframework.cloud.config.client.ConfigClientProperties.STATE_HEADER;
@@ -345,7 +346,7 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 					headers.add(STATE_HEADER, state);
 				}
 
-				final HttpEntity<Void> entity = new HttpEntity<>((Void) null, headers);
+				final HttpEntity<Void> entity = new HttpEntity<>(null, headers);
 				response = restTemplate.exchange(uri + path, HttpMethod.GET, entity, Environment.class, args);
 			}
 			catch (HttpClientErrorException | HttpServerErrorException e) {
@@ -367,6 +368,15 @@ public class ConfigServerConfigDataLoader implements ConfigDataLoader<ConfigServ
 				else {
 					continue;
 				}
+			}
+			catch (UnknownContentTypeException e) {
+				if (i < noOfUrls - 1 && properties.getMultipleUriStrategy() == MultipleUriStrategy.ALWAYS) {
+					logger.info(
+							"Failed to read the response of a config server. Will try the next url if available. Error : "
+									+ e.getMessage());
+					continue;
+				}
+				throw e;
 			}
 
 			if (response == null) {

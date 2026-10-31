@@ -130,6 +130,20 @@ class EnvironmentControllerTests {
 	}
 
 	@Test
+	public void unresolvableNestedPlaceholdersCanBeIgnoredInYaml() throws Exception {
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
+		map.put("nested", "${MISSING}");
+		map.put("value", "${nested}");
+		this.environment.add(new PropertySource("one", map));
+		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
+		this.controller.setIgnoreUnresolvableNestedPlaceholders(true);
+
+		Map<String, Object> yaml = new Yaml().load(this.controller.yaml("foo", "bar", true).getBody());
+
+		assertThat(yaml).containsEntry("nested", "${MISSING}").containsEntry("value", "${MISSING}");
+	}
+
+	@Test
 	public void placeholdersNotResolvedInYaml() throws Exception {
 		whenPlaceholders();
 		String yaml = this.controller.yaml("foo", "bar", false).getBody();
@@ -214,6 +228,130 @@ class EnvironmentControllerTests {
 		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
 		String yaml = this.controller.yaml("foo", "bar", false).getBody();
 		assertThat(yaml).isEqualTo("a:\n  test: e\n  b[hello]: c\n  b[world]: d\n  b[world]d: f\n");
+	}
+
+	@Test // gh-2423
+	public void propertyThatIsAlsoAPrefixInYaml() throws Exception {
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
+		map.put("hub.server", "my.favorite.server");
+		map.put("hub.server.timeout.millis", "30000");
+		this.environment.add(new PropertySource("one", map));
+		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
+		String yaml = this.controller.yaml("foo", "bar", false).getBody();
+		assertThat(yaml).isEqualTo("hub:\n  server: my.favorite.server\n  server.timeout.millis: '30000'\n");
+	}
+
+	@Test // gh-2423
+	public void propertyThatIsAlsoAPrefixInJson() throws Exception {
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
+		map.put("hub.server", "my.favorite.server");
+		map.put("hub.server.timeout.millis", "30000");
+		this.environment.add(new PropertySource("one", map));
+		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
+		String json = this.controller.jsonProperties("foo", "bar", false).getBody();
+		assertThat(json).as("Wrong output: " + json)
+			.isEqualTo("{\"hub\":{\"server\":\"my.favorite.server\",\"server.timeout.millis\":\"30000\"}}");
+	}
+
+	@Test // gh-2423
+	public void propertyThatIsAlsoAPrefixInYamlWhenTheLongerKeyComesFirst() throws Exception {
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
+		map.put("hub.server.timeout.millis", "30000");
+		map.put("hub.server", "my.favorite.server");
+		this.environment.add(new PropertySource("one", map));
+		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
+		String yaml = this.controller.yaml("foo", "bar", false).getBody();
+		assertThat(yaml).isEqualTo("hub:\n  server.timeout.millis: '30000'\n  server: my.favorite.server\n");
+	}
+
+	@Test // gh-2423
+	public void propertyNextToAnArrayWithTheSameNameInYaml() throws Exception {
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
+		map.put("a.b.c", "z");
+		map.put("a.b[0]", "x");
+		this.environment.add(new PropertySource("one", map));
+		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
+		String yaml = this.controller.yaml("foo", "bar", false).getBody();
+		assertThat(yaml).isEqualTo("a:\n  b.c: z\n  b:\n  - x\n");
+	}
+
+	@Test // gh-2423
+	public void propertyThatIsAlsoAnArrayInYaml() throws Exception {
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
+		map.put("a.b", "y");
+		map.put("a.b[0]", "x");
+		this.environment.add(new PropertySource("one", map));
+		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
+		String yaml = this.controller.yaml("foo", "bar", false).getBody();
+		assertThat(yaml).isEqualTo("a:\n  b: y\n  b[0]: x\n");
+	}
+
+	@Test // gh-2423
+	public void arrayElementPropertyThatIsAlsoAnArrayInYaml() throws Exception {
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
+		map.put("a[0].b[0]", "x");
+		map.put("a[0].b", "y");
+		this.environment.add(new PropertySource("one", map));
+		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
+		String yaml = this.controller.yaml("foo", "bar", false).getBody();
+		assertThat(yaml).isEqualTo("a:\n- b[0]: x\n  b: y\n");
+	}
+
+	@Test // gh-2423
+	public void propertyUnderAnArrayElementThatHoldsAValueInYaml() throws Exception {
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
+		map.put("a[0]", "x");
+		map.put("a[0].c", "y");
+		this.environment.add(new PropertySource("one", map));
+		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
+		String yaml = this.controller.yaml("foo", "bar", false).getBody();
+		assertThat(yaml).isEqualTo("a:\n- x\na[0]:\n  c: y\n");
+	}
+
+	@Test // gh-2423
+	public void propertyUnderAnArrayElementThatHoldsAValueInJson() throws Exception {
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
+		map.put("a[0]", "x");
+		map.put("a[0].c", "y");
+		this.environment.add(new PropertySource("one", map));
+		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
+		String json = this.controller.jsonProperties("foo", "bar", false).getBody();
+		assertThat(json).as("Wrong output: " + json).isEqualTo("{\"a\":[\"x\"],\"a[0]\":{\"c\":\"y\"}}");
+	}
+
+	@Test // gh-2423
+	public void propertiesUnderANestedArrayElementThatHoldsAValueInYaml() throws Exception {
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
+		map.put("x.a[0].c", "y");
+		map.put("x.a[0].d", "z");
+		map.put("x.a[0]", "x");
+		this.environment.add(new PropertySource("one", map));
+		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
+		String yaml = this.controller.yaml("foo", "bar", false).getBody();
+		assertThat(yaml).isEqualTo("x:\n  a[0]:\n    c: y\n    d: z\n  a:\n  - x\n");
+	}
+
+	@Test // gh-2423
+	public void arrayUnderAnArrayElementThatHoldsAValueInYaml() throws Exception {
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
+		map.put("a[0]", "x");
+		map.put("a[0][1]", "y");
+		this.environment.add(new PropertySource("one", map));
+		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
+		String yaml = this.controller.yaml("foo", "bar", false).getBody();
+		assertThat(yaml).isEqualTo("a:\n- x\na[0][1]: y\n");
+	}
+
+	@Test // gh-2423
+	public void propertiesUnderAnArrayElementThatHoldValuesAtTwoLevelsInYaml() throws Exception {
+		Map<String, Object> map = new LinkedHashMap<String, Object>();
+		map.put("a[0].c.d", "z");
+		map.put("a[0].c", "y");
+		map.put("a[0]", "x");
+		this.environment.add(new PropertySource("one", map));
+		when(this.repository.findOne("foo", "bar", null, false)).thenReturn(this.environment);
+		String yaml = this.controller.yaml("foo", "bar", false).getBody();
+		assertThat(yaml).isEqualTo("a[0].c.d: z\na[0]:\n  c: y\na:\n- x\n");
 	}
 
 	@Test

@@ -38,7 +38,7 @@ import org.springframework.cloud.bootstrap.config.PropertySourceLocator;
 import org.springframework.cloud.bootstrap.support.OriginTrackedCompositePropertySource;
 import org.springframework.cloud.config.client.ConfigClientProperties.Credentials;
 import org.springframework.cloud.config.client.ConfigClientProperties.MultipleUriStrategy;
-import org.springframework.cloud.config.client.validation.InvalidApplicationNameException;
+import org.springframework.cloud.config.client.validation.ApplicationNameValidator;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.core.annotation.Order;
@@ -50,15 +50,15 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.retry.annotation.Retryable;
+import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.UnknownContentTypeException;
 
-import static org.springframework.cloud.config.client.ConfigClientProperties.NAME_PLACEHOLDER;
 import static org.springframework.cloud.config.client.ConfigClientProperties.STATE_HEADER;
 import static org.springframework.cloud.config.client.ConfigClientProperties.TOKEN_HEADER;
 
@@ -76,8 +76,23 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 
 	private ConfigClientProperties defaultProperties;
 
+	private List<ClientHttpRequestInterceptor> additionalInterceptors = Collections.emptyList();
+
 	public ConfigServicePropertySourceLocator(ConfigClientProperties defaultProperties) {
 		this.defaultProperties = defaultProperties;
+	}
+
+	/**
+	 * Additional {@link ClientHttpRequestInterceptor}s applied to the
+	 * {@link RestTemplate} built per
+	 * {@link #locate(org.springframework.core.env.Environment)} call. Used by
+	 * {@link ConfigServiceBootstrapConfiguration} to attach the OAuth2 bearer-token
+	 * interceptor when {@code spring-security-oauth2-client} is on the classpath.
+	 * @param additionalInterceptors the interceptors to apply
+	 */
+	public void setAdditionalInterceptors(List<ClientHttpRequestInterceptor> additionalInterceptors) {
+		this.additionalInterceptors = (additionalInterceptors != null) ? additionalInterceptors
+				: Collections.emptyList();
 	}
 
 	/**
@@ -103,28 +118,19 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 	}
 
 	@Override
-	@Retryable(interceptor = "configServerRetryInterceptor")
 	public org.springframework.core.env.PropertySource<?> locate(org.springframework.core.env.Environment environment) {
 		ConfigClientProperties properties = this.defaultProperties.override(environment);
 		if (!StringUtils.hasText(properties.getProfile())) {
 			properties.setProfile(String.join(",", combineProfiles(properties, environment)));
 		}
 
-		if (StringUtils.startsWithIgnoreCase(properties.getName(), "application-")) {
-			InvalidApplicationNameException exception = new InvalidApplicationNameException(properties.getName());
-			if (properties.isFailFast()) {
-				throw exception;
-			}
-			else {
-				logger.warn(NAME_PLACEHOLDER + " resolved to " + properties.getName()
-						+ ", not going to load remote properties. Ensure application name doesn't start with 'application-'");
-				return null;
-			}
+		if (!ApplicationNameValidator.validate(properties, logger)) {
+			return null;
 		}
 
 		CompositePropertySource composite = new OriginTrackedCompositePropertySource("configService");
 		ConfigClientRequestTemplateFactory requestTemplateFactory = new ConfigClientRequestTemplateFactory(logger,
-				properties);
+				properties, this.additionalInterceptors);
 
 		Exception error = null;
 		String errorBody = null;
@@ -184,7 +190,6 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 	}
 
 	@Override
-	@Retryable(interceptor = "configServerRetryInterceptor")
 	public Collection<org.springframework.core.env.PropertySource<?>> locateCollection(
 			org.springframework.core.env.Environment environment) {
 		return PropertySourceLocator.locateCollection(this, environment);
@@ -283,7 +288,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 					headers.add(STATE_HEADER, state);
 				}
 
-				final HttpEntity<Void> entity = new HttpEntity<>((Void) null, headers);
+				final HttpEntity<Void> entity = new HttpEntity<>(null, headers);
 				response = restTemplate.exchange(uri + path, HttpMethod.GET, entity, Environment.class, args);
 			}
 			catch (HttpClientErrorException | HttpServerErrorException e) {
@@ -305,6 +310,15 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 				else {
 					continue;
 				}
+			}
+			catch (UnknownContentTypeException e) {
+				if (i < noOfUrls - 1 && defaultProperties.getMultipleUriStrategy() == MultipleUriStrategy.ALWAYS) {
+					logger.info(
+							"Failed to read the response of a config server. Will try the next url if available. Error : "
+									+ e.getMessage());
+					continue;
+				}
+				throw e;
 			}
 
 			if (response == null) {

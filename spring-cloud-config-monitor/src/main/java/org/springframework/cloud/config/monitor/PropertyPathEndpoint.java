@@ -16,18 +16,22 @@
 
 package org.springframework.cloud.config.monitor;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.springframework.cloud.config.server.environment.JGitEnvironmentRepository;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -61,6 +65,21 @@ public class PropertyPathEndpoint {
 	 */
 	private final int maxDashes;
 
+	/**
+	 * Upper bound on the number of paths processed from a notification. Prevents an
+	 * externally supplied notification from causing an unbounded amount of path
+	 * processing. Configurable via {@code spring.cloud.config.server.monitor.max-paths}.
+	 */
+	private final int maxPaths;
+
+	private final List<Pattern> ignoredPaths;
+
+	/**
+	 * Git repositories of this config server. Only repositories identified by the
+	 * notification have their refresh rate expired before applications are notified.
+	 */
+	private final List<JGitEnvironmentRepository> gitRepositories;
+
 	public PropertyPathEndpoint(PropertyPathNotificationExtractor extractor, PropertyPathNotifier notifier) {
 		this(extractor, List.of(notifier), MonitorConfigurationProperties.DEFAULT_MAX_DASHES);
 	}
@@ -72,9 +91,24 @@ public class PropertyPathEndpoint {
 
 	public PropertyPathEndpoint(PropertyPathNotificationExtractor extractor, List<PropertyPathNotifier> notifiers,
 			int maxDashes) {
+		this(extractor, notifiers, maxDashes, MonitorConfigurationProperties.DEFAULT_MAX_PATHS,
+				Collections.emptyList());
+	}
+
+	public PropertyPathEndpoint(PropertyPathNotificationExtractor extractor, List<PropertyPathNotifier> notifiers,
+			int maxDashes, int maxPaths, List<String> ignoredPaths) {
+		this(extractor, notifiers, maxDashes, maxPaths, ignoredPaths, Collections.emptyList());
+	}
+
+	public PropertyPathEndpoint(PropertyPathNotificationExtractor extractor, List<PropertyPathNotifier> notifiers,
+			int maxDashes, int maxPaths, List<String> ignoredPaths, List<JGitEnvironmentRepository> gitRepositories) {
 		this.extractor = extractor;
+		this.gitRepositories = gitRepositories == null ? Collections.emptyList() : gitRepositories;
 		this.notifiers = notifiers;
 		this.maxDashes = maxDashes;
+		this.maxPaths = maxPaths;
+		this.ignoredPaths = ignoredPaths == null ? Collections.emptyList()
+				: ignoredPaths.stream().map(Pattern::compile).toList();
 	}
 
 	@PostMapping
@@ -84,13 +118,25 @@ public class PropertyPathEndpoint {
 
 			Set<String> services = new LinkedHashSet<>();
 
-			for (String path : notification.getPaths()) {
-				services.addAll(guessServiceName(path));
+			String[] paths = notification.getPaths();
+			if (paths != null) {
+				int pathCount = Math.min(paths.length, this.maxPaths);
+				for (int i = 0; i < pathCount; i++) {
+					String path = paths[i];
+					if (!isIgnored(path)) {
+						services.addAll(guessServiceName(path));
+					}
+				}
+				if (paths.length > this.maxPaths) {
+					log.warn("Number of paths in notification exceeds the configured maximum of " + this.maxPaths
+							+ " (spring.cloud.config.server.monitor.max-paths); stopping path processing early");
+				}
 			}
 			if (!services.isEmpty()) {
 				for (String service : services) {
 					log.info("Refresh for: " + service);
 				}
+				expireRefreshRates(notification);
 				for (PropertyPathNotifier notifier : this.notifiers) {
 					notifier.notifyApplications(services);
 				}
@@ -107,6 +153,40 @@ public class PropertyPathEndpoint {
 		String key = "path";
 		map.put(key, request);
 		return notifyByPath(headers, map);
+	}
+
+	/**
+	 * Expires the refresh rate of the Git repositories that the notification identifies,
+	 * so the next request fetches the change that triggered the webhook. Expiry is best
+	 * effort: a failure is logged and does not stop applications from being notified.
+	 * @param notification the notification extracted from the webhook
+	 */
+	private void expireRefreshRates(PropertyPathNotification notification) {
+		if (this.gitRepositories.isEmpty()) {
+			return;
+		}
+		String[] repositoryUris = notification.getRepositoryUris();
+		if (ObjectUtils.isEmpty(repositoryUris)) {
+			log.debug("Notification does not identify a Git repository; refresh rate not expired");
+			return;
+		}
+		boolean expired = false;
+		boolean failed = false;
+		for (String repositoryUri : repositoryUris) {
+			for (JGitEnvironmentRepository repository : this.gitRepositories) {
+				try {
+					expired |= repository.expireRefreshRate(repositoryUri);
+				}
+				catch (RuntimeException ex) {
+					failed = true;
+					log.warn("Could not expire the refresh rate for " + repositoryUri, ex);
+				}
+			}
+		}
+		if (!expired && !failed) {
+			log.debug("Notification repository URIs " + Arrays.toString(repositoryUris)
+					+ " do not match a configured Git repository; refresh rate not expired");
+		}
 	}
 
 	private Set<String> guessServiceName(String path) {
@@ -135,6 +215,10 @@ public class PropertyPathEndpoint {
 			}
 		}
 		return services;
+	}
+
+	private boolean isIgnored(String path) {
+		return path != null && this.ignoredPaths.stream().anyMatch(pattern -> pattern.matcher(path).matches());
 	}
 
 }

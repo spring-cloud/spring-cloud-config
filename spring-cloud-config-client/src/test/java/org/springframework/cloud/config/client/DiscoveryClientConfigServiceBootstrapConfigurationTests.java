@@ -155,7 +155,8 @@ public class DiscoveryClientConfigServiceBootstrapConfigurationTests
 		givenDiscoveryClientReturnsInfoOnThirdTry();
 
 		setup("spring.cloud.config.discovery.enabled=true", "spring.cloud.config.retry.maxAttempts=3",
-				"spring.cloud.config.retry.initialInterval=10", "spring.cloud.config.fail-fast=true");
+				"spring.cloud.config.retry.initialInterval=10", "spring.cloud.config.fail-fast=true",
+				"spring.cloud.config.retry.enabled=true");
 
 		expectDiscoveryClientConfigServiceBootstrapConfigurationIsSetup();
 		verifyDiscoveryClientCalledThreeTimes();
@@ -182,7 +183,8 @@ public class DiscoveryClientConfigServiceBootstrapConfigurationTests
 		org.assertj.core.api.Assertions.assertThatThrownBy(() -> {
 			givenDiscoveryClientReturnsNoInfo();
 			setup("spring.cloud.config.discovery.enabled=true", "spring.cloud.config.retry.maxAttempts=3",
-					"spring.cloud.config.retry.initialInterval=10", "spring.cloud.config.fail-fast=true");
+					"spring.cloud.config.retry.initialInterval=10", "spring.cloud.config.fail-fast=true",
+					"spring.cloud.config.retry.enabled=true");
 		}).isInstanceOf(IllegalStateException.class);
 	}
 

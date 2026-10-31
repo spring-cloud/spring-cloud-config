@@ -96,8 +96,7 @@ public class GitSkipSslValidationCredentialsProvider extends CredentialsProvider
 		List<CredentialItem> unprocessedItems = new ArrayList<>();
 
 		for (CredentialItem item : items) {
-			if (item instanceof CredentialItem.YesNoType) {
-				CredentialItem.YesNoType yesNoItem = (CredentialItem.YesNoType) item;
+			if (item instanceof CredentialItem.YesNoType yesNoItem) {
 				String prompt = yesNoItem.getPromptText();
 				if (prompt == null) {
 					unprocessedItems.add(item);

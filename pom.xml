@@ -87,9 +87,10 @@
 	<properties>
 		<bintray.package>config</bintray.package>
 		<spring-cloud-commons.version>5.1.0-SNAPSHOT</spring-cloud-commons.version>
-		<aws-java-sdk.version>2.39.6</aws-java-sdk.version>
-		<google-libraries-bom.version>26.71.0</google-libraries-bom.version>
-		<google-api-services-iam.version>v2-rev20250502-2.0.0</google-api-services-iam.version>
+		<aws-java-sdk.version>2.57.4</aws-java-sdk.version>
+		<azure-identity.version>1.18.7</azure-identity.version>
+		<google-libraries-bom.version>26.90.0</google-libraries-bom.version>
+		<google-api-services-iam.version>v2-rev20250502-2.9.2</google-api-services-iam.version>
 		<google-cloud-iamcredentials.version>2.60.0</google-cloud-iamcredentials.version>
 		<wiremock.version>2.35.2</wiremock.version>
 		<spring-cloud-aws.version>3.4.2</spring-cloud-aws.version>
@@ -107,6 +108,7 @@
 		<module>spring-cloud-config-sample</module>
 		<module>spring-cloud-starter-config</module>
 		<module>spring-cloud-config-client-tls-tests</module>
+		<module>spring-cloud-config-client-oauth2-tests</module>
 		<module>docs</module>
 	</modules>
 	<dependencyManagement>
@@ -178,6 +180,7 @@
 						<configuration>
 							<excludeArtifacts>
 								<artifact>spring-cloud-config-client-tls-tests</artifact>
+								<artifact>spring-cloud-config-client-oauth2-tests</artifact>
 								<artifact>spring-cloud-config-sample</artifact>
 							</excludeArtifacts>
 						</configuration>

@@ -17,12 +17,17 @@
 package org.springframework.cloud.config.monitor;
 
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
 import org.springframework.util.StringUtils;
+
+import static org.springframework.cloud.config.monitor.PropertyPathNotificationExtractor.addCloneUris;
+import static org.springframework.cloud.config.monitor.PropertyPathNotificationExtractor.addUri;
 
 /**
  * @author Spencer Gibb
@@ -54,10 +59,19 @@ public class BitbucketPropertyPathNotificationExtractor implements PropertyPathN
 				&& StringUtils.hasText(headers.getFirst("X-Hook-UUID"))) {
 			// Bitbucket cloud
 			Object push = request.get("push");
-			if (push instanceof Map && ((Map<?, ?>) push).get("changes") instanceof Collection) {
+			if (push instanceof Map<?, ?> map && map.get("changes") instanceof Collection) {
 				// Bitbucket doesn't tell us the files that changed so this is a
 				// broadcast to all apps
-				return new PropertyPathNotification("application.yml");
+				Set<String> uris = new LinkedHashSet<>();
+				if (request.get("repository") instanceof Map<?, ?> repository
+						&& repository.get("links") instanceof Map<?, ?> links
+						&& links.get("html") instanceof Map<?, ?> html) {
+					// Bitbucket Cloud advertises the repository's HTTPS location in its
+					// HTML link.
+					addUri(uris, html.get("href"));
+				}
+				addCloneUris(uris, request.get("repository"));
+				return notification(uris);
 			}
 		}
 		else if ("repo:refs_changed".equals(headers.getFirst("X-Event-Key"))
@@ -66,7 +80,11 @@ public class BitbucketPropertyPathNotificationExtractor implements PropertyPathN
 			if (request.get("changes") instanceof Collection) {
 				// Bitbucket doesn't tell us the files that changed so this is a
 				// broadcast to all apps
-				return new PropertyPathNotification("application.yml");
+				Set<String> uris = new LinkedHashSet<>();
+				// Bitbucket Server identifies the repository by its clone links, which
+				// a payload may omit.
+				addCloneUris(uris, request.get("repository"));
+				return notification(uris);
 			}
 		}
 		else if ("pr:merged".equals(headers.getFirst("X-Event-Key"))
@@ -74,10 +92,22 @@ public class BitbucketPropertyPathNotificationExtractor implements PropertyPathN
 			// Bitbucket server
 			// Bitbucket doesn't tell us the files that changed so this is a
 			// broadcast to all apps
-			return new PropertyPathNotification("application.yml");
+			Set<String> uris = new LinkedHashSet<>();
+			if (request.get("pullRequest") instanceof Map<?, ?> pullRequest
+					&& pullRequest.get("toRef") instanceof Map<?, ?> toRef) {
+				// As for repo:refs_changed, only found if the payload has clone links.
+				addCloneUris(uris, toRef.get("repository"));
+			}
+			return notification(uris);
 		}
 
 		return null;
+	}
+
+	private static PropertyPathNotification notification(Set<String> repositoryUris) {
+		PropertyPathNotification notification = new PropertyPathNotification("application.yml");
+		notification.setRepositoryUris(repositoryUris.toArray(new String[0]));
+		return notification;
 	}
 
 }

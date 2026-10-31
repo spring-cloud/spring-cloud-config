@@ -18,6 +18,7 @@ package org.springframework.cloud.config.server.environment;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
@@ -26,6 +27,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import io.micrometer.observation.ObservationRegistry;
@@ -57,6 +59,7 @@ import org.eclipse.jgit.transport.FetchResult;
 import org.eclipse.jgit.transport.ReceiveCommand;
 import org.eclipse.jgit.transport.TagOpt;
 import org.eclipse.jgit.transport.TrackingRefUpdate;
+import org.eclipse.jgit.transport.URIish;
 
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.cloud.config.environment.Environment;
@@ -112,7 +115,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	/**
 	 * Time of the last refresh of the git repository.
 	 */
-	private long lastRefresh;
+	private volatile long lastRefresh;
 
 	/**
 	 * Flag to indicate that the repository should be cloned on startup (not on demand).
@@ -905,6 +908,62 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 
 	public void setLastRefresh(long lastRefresh) {
 		this.lastRefresh = lastRefresh;
+	}
+
+	/**
+	 * Makes the next request fetch from the matching remote repository, even if the
+	 * {@link #getRefreshRate() refresh rate} has not elapsed since the last fetch. Has no
+	 * effect if the refresh rate is negative, in which case the remote is never fetched.
+	 * <p>
+	 * Matching compares the host and repository path only, ignoring the protocol,
+	 * credentials, port, case, and a trailing {@code .git}. It is deliberately lenient: a
+	 * false match only costs one extra fetch, while a missed match leaves the repository
+	 * stale until the refresh rate elapses.
+	 * @param repositoryUri a repository URL supplied by the webhook
+	 * @return {@code true} if the URL identifies this repository
+	 */
+	public boolean expireRefreshRate(String repositoryUri) {
+		String configured = repositoryKey(getUri());
+		if (configured == null || !configured.equals(repositoryKey(repositoryUri))) {
+			return false;
+		}
+		this.lastRefresh = 0;
+		return true;
+	}
+
+	/**
+	 * Reduces a repository URI to the host and path that identify the repository on a Git
+	 * hosting service. The scheme, credentials and port are ignored, the host and path
+	 * are compared case-insensitively, and a leading or trailing {@code /} and a trailing
+	 * {@code .git} are removed. The HTTPS, {@code ssh://} and scp-like
+	 * ({@code git@host:org/repo.git}) forms of the same repository therefore match.
+	 * @param uri the repository URI, may be {@code null}
+	 * @return the key, or {@code null} if the URI does not identify a repository
+	 */
+	static String repositoryKey(String uri) {
+		if (!StringUtils.hasText(uri)) {
+			return null;
+		}
+		URIish parsed;
+		try {
+			parsed = new URIish(uri.trim());
+		}
+		catch (URISyntaxException ex) {
+			return null;
+		}
+		String path = parsed.getPath();
+		if (path == null) {
+			return null;
+		}
+		path = StringUtils.trimTrailingCharacter(StringUtils.trimLeadingCharacter(path, '/'), '/');
+		if (path.endsWith(".git")) {
+			path = StringUtils.trimTrailingCharacter(path.substring(0, path.length() - 4), '/');
+		}
+		if (path.isEmpty()) {
+			return null;
+		}
+		String host = (parsed.getHost() != null) ? parsed.getHost().toLowerCase(Locale.ROOT) : "";
+		return host + "/" + path.toLowerCase(Locale.ROOT);
 	}
 
 	/**

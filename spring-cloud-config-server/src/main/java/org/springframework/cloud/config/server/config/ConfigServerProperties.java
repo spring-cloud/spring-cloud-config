@@ -61,7 +61,7 @@ public class ConfigServerProperties {
 	/**
 	 * Extra map for a property source to be sent to all clients unconditionally.
 	 */
-	private Map<String, String> overrides = new LinkedHashMap<String, String>();
+	private Map<String, String> overrides = new LinkedHashMap<>();
 
 	/**
 	 * Flag to indicate that YAML documents that are text or collections (not a map)
@@ -98,10 +98,16 @@ public class ConfigServerProperties {
 	/**
 	 * By default the location order we use in GenericResourceRepository is the order in
 	 * which they are listed. Prior to Hoxton.SR11 the order used to be reverse. If this
-	 * property is set to true then we will reverse ther order like it used to be prior to
+	 * property is set to true then we will reverse the order like it used to be prior to
 	 * Hoxton.SR11.
 	 */
 	private boolean reverseLocationOrder = false;
+
+	/**
+	 * Flag indicating that unresolvable nested placeholders should be ignored when
+	 * resolving placeholders for YAML and JSON responses.
+	 */
+	private boolean ignoreUnresolvableNestedPlaceholders = false;
 
 	/**
 	 * Decryption configuration for when server handles encrypted properties before
@@ -201,6 +207,14 @@ public class ConfigServerProperties {
 		this.reverseLocationOrder = reverseLocationOrder;
 	}
 
+	public boolean isIgnoreUnresolvableNestedPlaceholders() {
+		return this.ignoreUnresolvableNestedPlaceholders;
+	}
+
+	public void setIgnoreUnresolvableNestedPlaceholders(boolean ignoreUnresolvableNestedPlaceholders) {
+		this.ignoreUnresolvableNestedPlaceholders = ignoreUnresolvableNestedPlaceholders;
+	}
+
 	@Override
 	public String toString() {
 		return new ToStringCreator(this).append("enabled", enabled)
@@ -215,6 +229,7 @@ public class ConfigServerProperties {
 			.append("failOnCompositeError", failOnCompositeError)
 			.append("encrypt", encrypt)
 			.append("reverseLocationOrder", reverseLocationOrder)
+			.append("ignoreUnresolvableNestedPlaceholders", ignoreUnresolvableNestedPlaceholders)
 			.toString();
 
 	}

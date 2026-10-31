@@ -47,7 +47,8 @@ public class ApplicationFailFastTests {
 			new SpringApplicationBuilder().sources(Application.class, PropertyInjectionConfiguration.class)
 				.run("--server.port=0", "--spring.cloud.config.enabled=true", "--spring.cloud.config.fail-fast=true",
 						"--spring.config.import=optional:configserver:http://serverhostdoesnotexist:1234",
-						"--spring.cloud.config.server.enabled=false", "--logging.level.org.springframework.retry=TRACE",
+						"--spring.cloud.config.server.enabled=false", "--spring.cloud.config.retry.enabled=true",
+						"--logging.level.org.springframework.core.retry=TRACE",
 						"--logging.level.org.springframework.cloud.config=TRACE",
 						"--logging.level.org.springframework.boot.context.config=TRACE");
 		}).as("Exception not caused by fail fast").hasMessageContaining("fail fast");

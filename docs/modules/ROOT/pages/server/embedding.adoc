@@ -86,3 +86,26 @@ The choice between embedding the Config Server and running it as a standalone se
 When embedding the Config Server in a multi-application environment (for example, if each microservice embeds its own Config Server), each application independently connects to the Git repository. This means each application must possess valid Git credentials and encryption keys, which can complicate secret rotation and auditing.
 ====
 
+[[disabling-the-default-environment-repository]]
+== Disabling the Default Environment Repository
+
+When embedding Config Server in another application, you may want to disable the default environment repository so that the server does not configure a default Git repository when no `EnvironmentRepository` has been explicitly configured.
+
+You can disable the default environment repository by setting the following property:
+
+[source,yaml]
+----
+spring:
+  cloud:
+    config:
+      server:
+        default-repository:
+          enabled: false
+----
+
+When this property is set to `false`, the default Git environment repository is not created. This is useful when embedding Config Server in an application that should not use the default Git repository.
+
+By default, this property is `true`, preserving the existing behavior.
+
+This property controls the creation of the default repository. The `spring.cloud.config.server.accept-empty` property separately controls whether the server returns an HTTP 404 response when the requested application is not found.
+

@@ -62,12 +62,12 @@ server {
 [[spring-cloud-config-serving-plain-text-aws-s3]]
 == AWS S3
 
-To enable serving plain text for AWS s3, the Config Server application needs to include a dependency on `io.awspring.cloud:spring-cloud-aws-context`.
+To enable serving plain text for AWS s3, the Config Server application needs to include a dependency on `io.awspring.cloud:spring-cloud-aws-s3`.
 For details on how to set up that dependency, see the
-https://docs.awspring.io/spring-cloud-aws/docs/2.4.3/reference/html/index.html#spring-cloud-aws-maven-dependency-management[Spring Cloud AWS Reference Guide].
-In addition, when using Spring Cloud AWS with Spring Boot it is useful to include the https://docs.awspring.io/spring-cloud-aws/docs/2.4.3/reference/html/index.html#spring-boot-auto-configuration[auto-configuration dependency].
+https://docs.awspring.io/spring-cloud-aws/docs/{spring-cloud-aws-version}/reference/html/index.html#starter-dependencies[Spring Cloud AWS Reference Guide].
+In addition, when using Spring Cloud AWS with Spring Boot it is useful to include the https://docs.awspring.io/spring-cloud-aws/docs/{spring-cloud-aws-version}/reference/html/index.html#spring-cloud-aws-core[auto-configuration dependency].
 Then you need to configure Spring Cloud AWS, as described in the
-https://docs.awspring.io/spring-cloud-aws/docs/2.4.3/reference/html/index.html#configuring-credentials[Spring Cloud AWS Reference Guide].
+https://docs.awspring.io/spring-cloud-aws/docs/{spring-cloud-aws-version}/reference/html/index.html#credentials[Spring Cloud AWS Reference Guide].
 
 [[decrypting-plain-text]]
 == Decrypting Plain Text
@@ -76,5 +76,5 @@ By default, encrypted values in plain text files are not decrypted. In order to 
 
 NOTE: Decrypting plain text files is only supported for YAML, JSON, and properties file extensions.
 
-If this feature is enabled, and an unsupported file extention is requested, any encrypted values in the file will not be decrypted.
+If this feature is enabled, and an unsupported file extension is requested, any encrypted values in the file will not be decrypted.
 

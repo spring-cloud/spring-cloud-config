@@ -266,8 +266,8 @@ public class FileMonitorConfiguration implements SmartLifecycle, ResourceLoaderA
 					if (log.isDebugEnabled()) {
 						log.debug("Watch Event: " + event.kind() + ": context: " + event.context());
 					}
-					if (event.context() != null && event.context() instanceof Path) {
-						files.addAll(walkDirectory((Path) event.context()));
+					if (event.context() != null && event.context() instanceof Path path) {
+						files.addAll(walkDirectory(path));
 					}
 					else {
 						for (Path path : this.directory) {

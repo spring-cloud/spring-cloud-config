@@ -42,6 +42,7 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
  * @author Spencer Gibb
  * @author Venil Noronha
  * @author Daniel Lavoie
+ * @author Sharang Gupta
  */
 public class NativeEnvironmentRepositoryTests {
 
@@ -72,6 +73,20 @@ public class NativeEnvironmentRepositoryTests {
 		Environment environment = this.repository.findOne("foo", "development", "master");
 		assertThat(environment.getPropertySources()).hasSize(2);
 		assertThat(environment.getVersion()).as("version was wrong").isEqualTo("myversion");
+	}
+
+	@Test
+	public void applicationAndProfileSpecificFilesFollowSpringBootPrecedence() {
+		this.repository.setSearchLocations("classpath:/test/precedence/");
+
+		Environment environment = this.repository.findOne("orders", "dev,mysql", null);
+
+		assertThat(environment.getPropertySources()).extracting(PropertySource::getName)
+			.containsExactly("classpath:/test/precedence/orders-mysql.yml",
+					"classpath:/test/precedence/application-mysql.yml", "classpath:/test/precedence/orders-dev.yml",
+					"classpath:/test/precedence/application-dev.yml", "classpath:/test/precedence/orders.yml",
+					"classpath:/test/precedence/application.yml");
+		assertThat(environment.getPropertySources().get(0).getSource().get("source")).isEqualTo("orders-mysql.yml");
 	}
 
 	@Test
