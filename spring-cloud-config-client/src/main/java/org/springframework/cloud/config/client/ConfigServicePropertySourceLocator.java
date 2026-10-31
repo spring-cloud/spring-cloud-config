@@ -17,7 +17,6 @@
 package org.springframework.cloud.config.client;
 
 import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -25,8 +24,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -52,6 +49,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
@@ -70,7 +68,7 @@ import static org.springframework.cloud.config.client.ConfigClientProperties.TOK
 @Order(0)
 public class ConfigServicePropertySourceLocator implements PropertySourceLocator {
 
-	private static Log logger = LogFactory.getLog(ConfigServicePropertySourceLocator.class);
+	private static final Log logger = LogFactory.getLog(ConfigServicePropertySourceLocator.class);
 
 	private RestTemplate restTemplate;
 
@@ -82,24 +80,19 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 
 	/**
 	 * Combine the active and default profiles from the environment.
-	 * @param properties config client properties,
 	 * @param environment application environment.
 	 * @return A list of combined profiles.
 	 */
-	private List<String> combineProfiles(ConfigClientProperties properties,
-			org.springframework.core.env.Environment environment) {
-		List<String> combinedProfiles = new ArrayList<>();
-		if (environment.getActiveProfiles().length > 0) {
-			List<String> finalCombinedProfiles = combinedProfiles;
-			List<String> filteredActiveProfiles = Stream.of(environment.getActiveProfiles())
-				.filter(s -> !finalCombinedProfiles.contains(s))
-				.collect(Collectors.toList());
-			combinedProfiles.addAll(filteredActiveProfiles);
+	private List<String> combineProfiles(org.springframework.core.env.Environment environment) {
+		if (!ObjectUtils.isEmpty(environment.getActiveProfiles())) {
+			return Arrays.asList(environment.getActiveProfiles());
 		}
-		else if (environment.getDefaultProfiles().length > 0 && combinedProfiles.isEmpty()) {
-			combinedProfiles = Arrays.asList(environment.getDefaultProfiles());
+
+		if (!ObjectUtils.isEmpty(environment.getDefaultProfiles())) {
+			return Arrays.asList(environment.getDefaultProfiles());
 		}
-		return combinedProfiles;
+
+		return Collections.emptyList();
 	}
 
 	@Override
@@ -107,7 +100,7 @@ public class ConfigServicePropertySourceLocator implements PropertySourceLocator
 	public org.springframework.core.env.PropertySource<?> locate(org.springframework.core.env.Environment environment) {
 		ConfigClientProperties properties = this.defaultProperties.override(environment);
 		if (!StringUtils.hasText(properties.getProfile())) {
-			properties.setProfile(String.join(",", combineProfiles(properties, environment)));
+			properties.setProfile(String.join(",", combineProfiles(environment)));
 		}
 
 		if (StringUtils.startsWithIgnoreCase(properties.getName(), "application-")) {
