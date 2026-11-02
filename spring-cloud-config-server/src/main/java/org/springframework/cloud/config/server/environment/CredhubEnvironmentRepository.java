@@ -30,7 +30,6 @@ import org.springframework.credhub.core.CredHubOperations;
 import org.springframework.credhub.support.CredentialDetails;
 import org.springframework.credhub.support.SimpleCredentialName;
 import org.springframework.credhub.support.json.JsonCredential;
-import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 import static java.util.stream.Collectors.toMap;
@@ -67,10 +66,10 @@ public class CredhubEnvironmentRepository implements EnvironmentRepository, Orde
 
 	@Override
 	public Environment findOne(String application, String profile, String label) {
-		if (ObjectUtils.isEmpty(profile)) {
+		if (!StringUtils.hasText(profile)) {
 			profile = DEFAULT_PROFILE;
 		}
-		if (ObjectUtils.isEmpty(label)) {
+		if (!StringUtils.hasText(label)) {
 			label = this.defaultLabel;
 		}
 
@@ -78,7 +77,23 @@ public class CredhubEnvironmentRepository implements EnvironmentRepository, Orde
 		List<String> profiles = normalize(profile, DEFAULT_PROFILE);
 		List<String> labels = normalize(label);
 
-		Environment environment = new Environment(application, split(profile), label, null, null);
+		String normalizedApplication = Arrays.stream(split(application))
+			.map(String::trim)
+			.filter(StringUtils::hasText)
+			.collect(Collectors.joining(","));
+
+		String[] normalizedProfiles = Arrays.stream(split(profile))
+			.map(String::trim)
+			.filter(StringUtils::hasText)
+			.toArray(String[]::new);
+
+		String normalizedLabel = Arrays.stream(split(label))
+			.map(String::trim)
+			.filter(StringUtils::hasText)
+			.collect(Collectors.joining(","));
+
+		Environment environment = new Environment(normalizedApplication, normalizedProfiles, normalizedLabel, null,
+				null);
 		for (String l : labels) {
 			for (String prof : profiles) {
 				for (String app : applications) {
