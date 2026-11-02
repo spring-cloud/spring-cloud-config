@@ -59,7 +59,7 @@ import org.springframework.web.util.UriComponentsBuilder;
  * @author Sharang Gupta
  * @since 5.1.0
  */
-public class DefaultConfigResourceClient implements ConfigResourceClient {
+class DefaultConfigResourceClient implements ConfigResourceClient {
 
 	/**
 	 * Request parameter that asks the config server to use its default label.
@@ -74,7 +74,7 @@ public class DefaultConfigResourceClient implements ConfigResourceClient {
 
 	private final ConfigClientProperties properties;
 
-	public DefaultConfigResourceClient(RestClient restClient, ConfigClientProperties properties) {
+	DefaultConfigResourceClient(RestClient restClient, ConfigClientProperties properties) {
 		Assert.notNull(restClient, "RestClient must not be null");
 		Assert.notNull(properties, "ConfigClientProperties must not be null");
 		this.restClient = restClient;
