@@ -60,8 +60,8 @@ public class MongoDbEnvironmentRepository implements EnvironmentRepository, Orde
 		String[] profilesArray = StringUtils.commaDelimitedListToStringArray(profile);
 		Environment environment = new Environment(application, profilesArray, label, null, null);
 
-		// Prepend "application," to config if not already present
-		String config = application.startsWith("application") ? application : "application," + application;
+		// Prepend "application," to config, duplicates are removed below
+		String config = "application," + application;
 
 		List<String> applications = Arrays.stream(StringUtils.commaDelimitedListToStringArray(config))
 			.distinct()
