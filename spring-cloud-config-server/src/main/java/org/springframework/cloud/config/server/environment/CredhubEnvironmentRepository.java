@@ -103,10 +103,10 @@ public class CredhubEnvironmentRepository implements EnvironmentRepository, Orde
 	 */
 	private List<String> normalize(String commaDelimitedItems) {
 		var items = Arrays.stream(split(commaDelimitedItems))
+			.map(String::trim)
 			.distinct()
 			.filter(StringUtils::hasText)
 			.collect(Collectors.toList());
-
 		Collections.reverse(items);
 		return items;
 	}

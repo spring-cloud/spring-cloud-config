@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.config.server.environment;
 
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -161,6 +162,18 @@ public class CredhubEnvironmentRepositoryTests {
 
 		assertThat(environment.getPropertySources().get(1).getName()).isEqualTo("credhub-app1-default-myLabel");
 		assertThat(environment.getPropertySources().get(1).getSource()).isEqualTo(Map.of("k1", "v1"));
+	}
+
+	@Test
+	public void shouldTrimWhitespaceFromApplicationNames() {
+		stubCredentials("/myApp/prod/myLabel", credential("c1", "k1", "v1"));
+		stubCredentials("/application/prod/myLabel", credential("c2", "k2", "v2"));
+
+		Environment environment = this.credhubEnvironmentRepository.findOne("myApp, application ", "prod", "myLabel");
+
+		assertThat(environment.getPropertySources()).hasSize(2);
+		assertThat(environment.getPropertySources().get(0).getSource()).isEqualTo(Map.of("k1", "v1"));
+		assertThat(environment.getPropertySources().get(1).getSource()).isEqualTo(Map.of("k2", "v2"));
 	}
 
 	@Test
@@ -327,7 +340,9 @@ public class CredhubEnvironmentRepositoryTests {
 
 	@SafeVarargs
 	private void stubCredentials(String path, CredentialDetails<JsonCredential>... details) {
-		when(this.credhubCredentialOperations.findByPath(path)).thenReturn(
+		String normalizedPath = Path.of("/", path.substring(1).split("/")).toString();
+
+		when(this.credhubCredentialOperations.findByPath(normalizedPath)).thenReturn(
 				Arrays.stream(details).map(it -> new CredentialSummary(it.getName())).collect(Collectors.toList()));
 
 		for (CredentialDetails<JsonCredential> d : details) {
