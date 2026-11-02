@@ -23,3 +23,8 @@ Thus, the default behaviour with no placeholders is the same as adding a search 
 For example, `file:/tmp/config` is the same as `file:/tmp/config,file:/tmp/config/\{label}`.
 This behavior can be disabled by setting `spring.cloud.config.server.native.addLabelLocations=false`.
 
+If the request contains several labels (a comma-separated list), the last label takes precedence over the earlier ones, as it does for the Git and SVN backends.
+Each label is resolved on its own, and the locations the labels share come last.
+Before this behavior was introduced, the first label took precedence.
+To restore that behavior, set `spring.cloud.config.server.native.lastLabelWins=false`.
+
