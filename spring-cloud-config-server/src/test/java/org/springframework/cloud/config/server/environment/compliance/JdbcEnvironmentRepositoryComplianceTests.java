@@ -21,8 +21,6 @@ import java.util.Set;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
 
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
 import org.springframework.cloud.config.server.environment.JdbcEnvironmentProperties;
@@ -59,13 +57,6 @@ class JdbcEnvironmentRepositoryComplianceTests extends EnvironmentRepositoryComp
 	@Override
 	protected EnvironmentRepositoryFixture fixture() {
 		return this.fixture;
-	}
-
-	@Override
-	@Test
-	@Disabled("TODO-issue: Shared application properties are skipped when the application name starts with application")
-	public void applicationNameStartingWithApplicationIncludesSharedFiles() throws Exception {
-		super.applicationNameStartingWithApplicationIncludesSharedFiles();
 	}
 
 	static class Fixture implements EnvironmentRepositoryFixture {
