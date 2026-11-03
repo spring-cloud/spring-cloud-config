@@ -23,6 +23,8 @@ import java.util.function.Supplier;
 
 import org.apache.commons.logging.Log;
 
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.boot.bootstrap.BootstrapContextClosedEvent;
 import org.springframework.boot.bootstrap.BootstrapRegistry;
 import org.springframework.boot.bootstrap.BootstrapRegistry.InstanceSupplier;
 import org.springframework.boot.bootstrap.ConfigurableBootstrapContext;
@@ -51,6 +53,7 @@ import org.springframework.security.crypto.encrypt.TextEncryptor;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestTemplate;
 
 import static org.springframework.cloud.config.client.ConfigClientProperties.CONFIG_DISCOVERY_ENABLED;
@@ -62,6 +65,13 @@ public class ConfigServerConfigDataLocationResolver
 	 * Prefix for Config Server imports.
 	 */
 	public static final String PREFIX = "configserver:";
+
+	/**
+	 * Name of the {@link ConfigClientProperties} bean resolved by the config server
+	 * import.
+	 */
+	public static final String PROPERTIES_BEAN_NAME = "configDataConfigClientProperties";
+
 	static final boolean RSA_IS_PRESENT = ClassUtils
 		.isPresent("org.springframework.security.crypto.encrypt.RsaSecretEncryptor", null);
 
@@ -241,8 +251,7 @@ public class ConfigServerConfigDataLocationResolver
 				InstanceSupplier.of(properties).withScope(BootstrapRegistry.Scope.PROTOTYPE));
 		bootstrapContext.addCloseListener(event -> event.getApplicationContext()
 			.getBeanFactory()
-			.registerSingleton("configDataConfigClientProperties",
-					event.getBootstrapContext().get(ConfigClientProperties.class)));
+			.registerSingleton(PROPERTIES_BEAN_NAME, event.getBootstrapContext().get(ConfigClientProperties.class)));
 
 		bootstrapContext.registerIfAbsent(ConfigClientRequestTemplateFactory.class, context -> {
 			ConfigClientRequestTemplateFactory factory = new ConfigClientRequestTemplateFactory(log,
@@ -256,6 +265,7 @@ public class ConfigServerConfigDataLocationResolver
 			ConfigClientRequestTemplateFactory factory = context.get(ConfigClientRequestTemplateFactory.class);
 			return factory.create();
 		});
+		bootstrapContext.addCloseListener(this::registerRestClientHolder);
 
 		bootstrapContext.registerIfAbsent(PropertyResolver.class,
 				context -> new PropertyResolver(resolverContext.getBinder(), getBindHandler(resolverContext)));
@@ -320,8 +330,34 @@ public class ConfigServerConfigDataLocationResolver
 
 		List<ConfigServerConfigDataResource> locations = new ArrayList<>();
 		locations.add(resource);
-
 		return locations;
+	}
+
+	/**
+	 * Keep the {@link RestTemplate} that loaded the configuration, which carries the URI,
+	 * credentials, headers, TLS settings, timeouts and interceptors of the client,
+	 * available as a {@link RestClient} to the {@link ConfigResourceClient}, without
+	 * exposing it as a {@link RestClient} bean.
+	 */
+	private void registerRestClientHolder(BootstrapContextClosedEvent event) {
+		ConfigurableListableBeanFactory beanFactory = event.getApplicationContext().getBeanFactory();
+		// The listener is added on every resolution (one per import location and
+		// profile pass) and runs that many times when the bootstrap context closes,
+		// while a singleton can only be registered once.
+		if (beanFactory.containsBean(ConfigServerRestClientHolder.BEAN_NAME)
+				|| !event.getBootstrapContext().isRegistered(RestTemplate.class)) {
+			return;
+		}
+		try {
+			RestClient restClient = RestClient.create(event.getBootstrapContext().get(RestTemplate.class));
+			beanFactory.registerSingleton(ConfigServerRestClientHolder.BEAN_NAME,
+					new ConfigServerRestClientHolder(restClient));
+		}
+		catch (RuntimeException ex) {
+			// An optional component must not prevent the application from starting
+			this.log.warn("Could not build a RestClient from the config client RestTemplate; "
+					+ "the ConfigResourceClient will not be available", ex);
+		}
 	}
 
 	public static class PropertyResolver {
