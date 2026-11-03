@@ -77,23 +77,18 @@ public class CredhubEnvironmentRepository implements EnvironmentRepository, Orde
 		List<String> profiles = normalize(profile, DEFAULT_PROFILE);
 		List<String> labels = normalize(label);
 
-		String normalizedApplication = Arrays.stream(split(application))
-			.map(String::trim)
-			.filter(StringUtils::hasText)
-			.collect(Collectors.joining(","));
+		List<String> normalizedApplications = normalize(application);
+		Collections.reverse(normalizedApplications);
 
-		String[] normalizedProfiles = Arrays.stream(split(profile))
-			.map(String::trim)
-			.filter(StringUtils::hasText)
-			.toArray(String[]::new);
+		List<String> normalizedProfiles = normalize(profile);
+		Collections.reverse(normalizedProfiles);
 
-		String normalizedLabel = Arrays.stream(split(label))
-			.map(String::trim)
-			.filter(StringUtils::hasText)
-			.collect(Collectors.joining(","));
+		List<String> normalizedLabels = normalize(label);
+		Collections.reverse(normalizedLabels);
 
-		Environment environment = new Environment(normalizedApplication, normalizedProfiles, normalizedLabel, null,
-				null);
+		Environment environment = new Environment(String.join(",", normalizedApplications),
+				normalizedProfiles.toArray(new String[0]), String.join(",", normalizedLabels), null, null);
+
 		for (String l : labels) {
 			for (String prof : profiles) {
 				for (String app : applications) {
