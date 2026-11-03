@@ -335,7 +335,7 @@ class EnvironmentControllerTests {
 	}
 
 	@Test
-	public void arrayOverridenInEnvironment() throws Exception {
+	public void arrayOverriddenInEnvironment() throws Exception {
 		// Add original values first source
 		Map<String, Object> oneMap = new LinkedHashMap<String, Object>();
 		oneMap.put("a.b[0]", "c");
@@ -401,7 +401,7 @@ class EnvironmentControllerTests {
 	}
 
 	@Test
-	public void arrayOverridenInYaml() throws Exception {
+	public void arrayOverriddenInYaml() throws Exception {
 		// Add original values first source
 		Map<String, Object> oneMap = new LinkedHashMap<String, Object>();
 		oneMap.put("a.b[0]", "c");
