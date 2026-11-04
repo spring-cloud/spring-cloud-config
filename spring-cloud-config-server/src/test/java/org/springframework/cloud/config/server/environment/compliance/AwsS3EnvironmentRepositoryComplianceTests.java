@@ -20,9 +20,7 @@ import java.util.EnumSet;
 import java.util.Set;
 
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.localstack.LocalStackContainer.Service;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -56,20 +54,6 @@ class AwsS3EnvironmentRepositoryComplianceTests extends EnvironmentRepositoryCom
 	@Override
 	protected EnvironmentRepositoryFixture fixture() {
 		return this.fixture;
-	}
-
-	@Override
-	@Test
-	@Disabled("TODO-issue: Documents activated by a profile expression get the lowest precedence")
-	public void profileExpressionsActivateDocuments() throws Exception {
-		super.profileExpressionsActivateDocuments();
-	}
-
-	@Override
-	@Test
-	@Disabled("TODO-issue: Labels are interleaved by profile rather than resolved one after another")
-	public void lastLabelTakesPrecedence() throws Exception {
-		super.lastLabelTakesPrecedence();
 	}
 
 	static class Fixture implements EnvironmentRepositoryFixture {
