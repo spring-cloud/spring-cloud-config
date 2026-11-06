@@ -164,6 +164,7 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 	private void addPropertySources(Environment environment, List<String> apps, String[] profiles,
 			List<String> labels) {
 		String[] profilesByPrecedence = profilesByPrecedence(profiles);
+		// Each label is resolved completely before the next one, so the last label wins
 		for (String label : labels) {
 			for (String profile : profilesByPrecedence) {
 				addPropertySourcesForApps(apps,
@@ -173,9 +174,7 @@ public class AwsS3EnvironmentRepository implements EnvironmentRepository, Ordere
 				addPropertySourcesForApps(apps,
 						app -> addProfileSpecificPropertySource(environment, app, null, profiles, label));
 			}
-		}
-		if (this.searchPaths.isEmpty()) {
-			for (String label : labels) {
+			if (this.searchPaths.isEmpty()) {
 				addPropertySourcesForApps(apps,
 						app -> addNonProfileSpecificPropertySource(environment, app, profiles, label));
 			}
