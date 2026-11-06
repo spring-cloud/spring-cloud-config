@@ -25,11 +25,14 @@ import org.springframework.web.client.RestClient;
  * TLS settings, timeouts and interceptors. It is registered as a bean of its own type,
  * not as a {@link RestClient}, so that it is neither ambiguous with the application's own
  * {@link RestClient} nor injected into it by accident.
+ * <p>
+ * Applications and libraries can inject this holder to call other config server endpoints
+ * with the same connection that loaded the configuration.
  *
  * @author Sharang Gupta
  * @since 5.1.0
  */
-final class ConfigServerRestClientHolder {
+public final class ConfigServerRestClientHolder {
 
 	/**
 	 * Name of the bean registered when the configuration is imported from the config
@@ -44,7 +47,11 @@ final class ConfigServerRestClientHolder {
 		this.restClient = restClient;
 	}
 
-	RestClient getRestClient() {
+	/**
+	 * Return the {@link RestClient} that loaded the configuration from the config server.
+	 * @return the config server client
+	 */
+	public RestClient getRestClient() {
 		return this.restClient;
 	}
 
