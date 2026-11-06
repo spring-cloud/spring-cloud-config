@@ -30,7 +30,6 @@ import org.springframework.credhub.core.CredHubOperations;
 import org.springframework.credhub.support.CredentialDetails;
 import org.springframework.credhub.support.SimpleCredentialName;
 import org.springframework.credhub.support.json.JsonCredential;
-import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 import static java.util.stream.Collectors.toMap;
@@ -67,10 +66,10 @@ public class CredhubEnvironmentRepository implements EnvironmentRepository, Orde
 
 	@Override
 	public Environment findOne(String application, String profile, String label) {
-		if (ObjectUtils.isEmpty(profile)) {
+		if (!StringUtils.hasText(profile)) {
 			profile = DEFAULT_PROFILE;
 		}
-		if (ObjectUtils.isEmpty(label)) {
+		if (!StringUtils.hasText(label)) {
 			label = this.defaultLabel;
 		}
 
@@ -78,7 +77,18 @@ public class CredhubEnvironmentRepository implements EnvironmentRepository, Orde
 		List<String> profiles = normalize(profile, DEFAULT_PROFILE);
 		List<String> labels = normalize(label);
 
-		Environment environment = new Environment(application, split(profile), label, null, null);
+		List<String> normalizedApplications = normalize(application);
+		Collections.reverse(normalizedApplications);
+
+		List<String> normalizedProfiles = normalize(profile);
+		Collections.reverse(normalizedProfiles);
+
+		List<String> normalizedLabels = normalize(label);
+		Collections.reverse(normalizedLabels);
+
+		Environment environment = new Environment(String.join(",", normalizedApplications),
+				normalizedProfiles.toArray(new String[0]), String.join(",", normalizedLabels), null, null);
+
 		for (String l : labels) {
 			for (String prof : profiles) {
 				for (String app : applications) {
@@ -103,10 +113,10 @@ public class CredhubEnvironmentRepository implements EnvironmentRepository, Orde
 	 */
 	private List<String> normalize(String commaDelimitedItems) {
 		var items = Arrays.stream(split(commaDelimitedItems))
+			.map(String::trim)
 			.distinct()
 			.filter(StringUtils::hasText)
 			.collect(Collectors.toList());
-
 		Collections.reverse(items);
 		return items;
 	}
