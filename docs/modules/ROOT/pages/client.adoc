@@ -4,6 +4,48 @@
 A Spring Boot application can take immediate advantage of the Spring Config Server (or other external property sources provided by the application developer).
 It also picks up some additional useful features related to `Environment` change events.
 
+[[immutable-configuration-properties]]
+== Refreshing Immutable Configuration Properties
+
+Constructor-bound `@ConfigurationProperties` can be used with `@RefreshScope` to keep each instance immutable while allowing configuration updates.
+When a refresh is triggered, the scoped target is discarded and a new instance is bound to the current `Environment` on the next method invocation.
+Existing consumers retain the same scoped proxy; previously obtained target instances or collections are not updated.
+
+Register the properties class with `@EnableConfigurationProperties` or `@ConfigurationPropertiesScan`, rather than annotating it with `@Configuration` or `@Component`:
+
+[source,java]
+----
+import java.util.Map;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.bind.ConstructorBinding;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
+
+@RefreshScope
+@ConfigurationProperties("config.app")
+public class AppProperties {
+
+    private final Map<String, String> map;
+
+    @ConstructorBinding
+    public AppProperties(Map<String, String> map) {
+        this.map = map != null ? Map.copyOf(map) : Map.of();
+    }
+
+    public Map<String, String> getMap() {
+        return this.map;
+    }
+}
+----
+
+For example, add `@EnableConfigurationProperties(AppProperties.class)` to an application configuration class.
+The constructor annotation is `org.springframework.boot.context.properties.bind.ConstructorBinding`.
+The defensive copy prevents application code from modifying the bound map.
+Constructor-bound properties without `@RefreshScope` retain their original values.
+
+NOTE: The default refresh-scoped proxy uses subclassing, so the properties class and its accessor methods must not be `final`.
+Java records cannot be used with this default proxy mode.
+
 [[config-data-import]]
 == Spring Boot Config Data Import
 
