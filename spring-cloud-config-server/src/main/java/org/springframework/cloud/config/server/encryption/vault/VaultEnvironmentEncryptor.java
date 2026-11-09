@@ -32,8 +32,8 @@ import org.springframework.vault.core.VaultKeyValueOperations;
 import org.springframework.vault.support.VaultResponse;
 
 /**
- * VaultEnvironmentEncryptor that can decrypt property values prefixed with {@code {vault}}
- * marker.
+ * VaultEnvironmentEncryptor that can decrypt property values prefixed with
+ * {@code {vault}} marker.
  *
  * @author Alexey Zhokhov
  */
