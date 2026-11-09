@@ -89,7 +89,7 @@
 		<spring-cloud-commons.version>5.1.0-SNAPSHOT</spring-cloud-commons.version>
 		<aws-java-sdk.version>2.57.8</aws-java-sdk.version>
 		<azure-identity.version>1.19.0</azure-identity.version>
-		<google-libraries-bom.version>26.91.0</google-libraries-bom.version>
+		<google-libraries-bom.version>26.92.0</google-libraries-bom.version>
 		<google-api-services-iam.version>v2-rev20250502-2.9.2</google-api-services-iam.version>
 		<google-cloud-iamcredentials.version>2.60.0</google-cloud-iamcredentials.version>
 		<wiremock.version>2.35.2</wiremock.version>
