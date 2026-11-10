@@ -40,3 +40,4 @@
 ** xref:server/aot-and-native-image-support.adoc[]
 * xref:client.adoc[]
 * xref:observability.adoc[]
+* xref:configprops.adoc[]
