@@ -53,6 +53,7 @@ import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.mock.http.client.MockClientHttpRequest;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
@@ -511,6 +512,48 @@ public class ConfigServicePropertySourceLocatorTests {
 		assertThat(iterator.next()).isEqualTo("zuul.routes.specificproduct.path");
 		assertThat(iterator.next()).isEqualTo("zuul.routes.specificproduct.service-id");
 		assertThat(source).isInstanceOf(LinkedHashMap.class);
+	}
+
+	@Test
+	void shouldReturnDefaultProfilesWhenNoActiveProfiles() {
+		StandardEnvironment environment = new StandardEnvironment();
+		environment.setDefaultProfiles("default-1", "default-2");
+
+		List<String> combineProfiles = ReflectionTestUtils.invokeMethod(this.locator, "combineProfiles", environment);
+
+		assertThat(combineProfiles).containsExactly("default-1", "default-2");
+	}
+
+	@Test
+	void shouldReturnActiveProfiles() {
+		StandardEnvironment environment = new StandardEnvironment();
+		environment.setActiveProfiles("active-1", "active-2");
+
+		List<String> combineProfiles = ReflectionTestUtils.invokeMethod(this.locator, "combineProfiles", environment);
+
+		assertThat(combineProfiles).containsExactly("active-1", "active-2");
+	}
+
+	@Test
+	void shouldReturnEmptyListWhenNoProfiles() {
+		StandardEnvironment environment = new StandardEnvironment();
+		environment.setActiveProfiles();
+		environment.setDefaultProfiles();
+
+		List<String> combineProfiles = ReflectionTestUtils.invokeMethod(this.locator, "combineProfiles", environment);
+
+		assertThat(combineProfiles).isEmpty();
+	}
+
+	@Test
+	void shouldReturnActiveProfilesWhenBothActiveAndDefaultProfilesAreSet() {
+		StandardEnvironment environment = new StandardEnvironment();
+		environment.setActiveProfiles("active-1", "active-2");
+		environment.setDefaultProfiles("default-1", "default-2");
+
+		List<String> combineProfiles = ReflectionTestUtils.invokeMethod(this.locator, "combineProfiles", environment);
+
+		assertThat(combineProfiles).containsExactly("active-1", "active-2");
 	}
 
 	private void assertNextUriIsNotTried(ConfigClientProperties.MultipleUriStrategy multipleUriStrategy,
