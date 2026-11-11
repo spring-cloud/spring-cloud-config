@@ -31,12 +31,23 @@ public class AwsS3EnvironmentRepositoryFactory
 
 	final private ConfigServerProperties server;
 
+	final private S3Client s3Client;
+
 	public AwsS3EnvironmentRepositoryFactory(ConfigServerProperties server) {
+		this(server, null);
+	}
+
+	public AwsS3EnvironmentRepositoryFactory(ConfigServerProperties server, S3Client s3Client) {
 		this.server = server;
+		this.s3Client = s3Client;
 	}
 
 	@Override
 	public AwsS3EnvironmentRepository build(AwsS3EnvironmentProperties environmentProperties) {
+		if (this.s3Client != null) {
+			return new AwsS3EnvironmentRepository(this.s3Client, environmentProperties, server);
+		}
+
 		final S3ClientBuilder clientBuilder = S3Client.builder();
 		configureClientBuilder(clientBuilder, environmentProperties.getRegion(), environmentProperties.getEndpoint());
 		final S3Client client = clientBuilder.build();
