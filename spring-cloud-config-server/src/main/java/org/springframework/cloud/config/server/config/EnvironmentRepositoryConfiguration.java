@@ -24,6 +24,8 @@ import com.google.cloud.secretmanager.v1.SecretManagerServiceClient;
 import com.google.cloud.storage.Storage;
 import io.micrometer.observation.ObservationRegistry;
 import jakarta.servlet.http.HttpServletRequest;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.http.client.HttpClient;
 import org.eclipse.jgit.api.TransportConfigCallback;
 import org.tmatesoft.svn.core.SVNException;
@@ -231,9 +233,17 @@ public class EnvironmentRepositoryConfiguration {
 	@ConditionalOnClass(S3Client.class)
 	static class AwsS3FactoryConfig {
 
+		private static final Log logger = LogFactory.getLog(AwsS3FactoryConfig.class);
+
 		@Bean
-		public AwsS3EnvironmentRepositoryFactory awsS3EnvironmentRepositoryFactory(ConfigServerProperties server) {
-			return new AwsS3EnvironmentRepositoryFactory(server);
+		public AwsS3EnvironmentRepositoryFactory awsS3EnvironmentRepositoryFactory(ConfigServerProperties server,
+				ObjectProvider<S3Client> s3ClientProvider) {
+			S3Client s3Client = s3ClientProvider.getIfUnique();
+			if (s3Client == null && s3ClientProvider.stream().count() > 1) {
+				logger.warn("Multiple S3Client beans found and none is marked @Primary. The Config Server will "
+						+ "create its own S3Client from spring.cloud.config.server.awss3.* properties.");
+			}
+			return new AwsS3EnvironmentRepositoryFactory(server, s3Client);
 		}
 
 	}

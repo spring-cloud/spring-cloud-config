@@ -32,6 +32,8 @@ spring:
 
 It is also possible to specify an AWS URL to link:https://aws.amazon.com/blogs/developer/using-new-regions-and-endpoints/[override the standard endpoint] of your S3 service with `spring.cloud.config.server.awss3.endpoint`. This allows support for beta regions of S3, and other S3 compatible storage APIs.
 
+If a single `S3Client` bean is present in the application context (for example, one provided by `spring-cloud-aws-starter-s3`), the Config Server uses it instead of creating its own. In that case the `region` and `endpoint` properties are ignored, as the bean is responsible for that configuration. If several `S3Client` beans exist, mark one as `@Primary` to have it used. Otherwise a warning is logged and the Config Server creates its own client.
+
 Credentials are found using the link:https://docs.aws.amazon.com/sdk-for-java/v2/developer-guide/credentials.html[Default Credential Provider Chain]. Versioned and encrypted buckets are supported without further configuration.
 
 By default, configuration files are stored in your bucket as `\{application}-\{profile}.properties`, `\{application}-\{profile}.yml` or `\{application}-\{profile}.json`. An optional label can be provided to specify a directory path to the file.
