@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 package org.springframework.cloud.config.server.encryption;
 
 import java.io.IOException;
@@ -103,7 +102,7 @@ public class CipherResourceXmlEncryptor extends AbstractCipherResourceEncryptor 
 	}
 
 	private void addIfEncrypted(Set<String> values, String value) {
-		if (value != null && value.startsWith(CIPHER_MARKER)) {
+		if (value != null && value.trim().startsWith(CIPHER_MARKER)) {
 			values.add(value.trim());
 		}
 	}
@@ -121,6 +120,9 @@ public class CipherResourceXmlEncryptor extends AbstractCipherResourceEncryptor 
 				case '>' -> escaped.append("&gt;");
 				case '"' -> escaped.append("&quot;");
 				case '\'' -> escaped.append("&apos;");
+				case '\n' -> escaped.append("&#10;");
+				case '\r' -> escaped.append("&#13;");
+				case '\t' -> escaped.append("&#9;");
 				default -> escaped.append(c);
 			}
 		}

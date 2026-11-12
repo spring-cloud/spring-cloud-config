@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-
 package org.springframework.cloud.config.server.encryption;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Map;
+
+import javax.xml.stream.XMLStreamException;
 
 import org.junit.jupiter.api.Test;
 
@@ -83,7 +84,29 @@ public class CipherResourceXmlEncryptorTests {
 	public void externalEntitiesAreNotResolved() {
 		String text = "<!DOCTYPE a [<!ENTITY x SYSTEM \"file:///etc/passwd\">]><a>&x;</a>";
 
-		assertThatThrownBy(() -> this.encryptor.decrypt(text, this.environment)).isInstanceOf(IOException.class);
+		assertThatThrownBy(() -> this.encryptor.decrypt(text, this.environment)).isInstanceOf(IOException.class)
+			.hasCauseInstanceOf(XMLStreamException.class)
+			.message()
+			.doesNotContain("root:");
+	}
+
+	@Test
+	public void leadingWhitespaceBeforeCipherIsDecrypted() throws Exception {
+		String plain = this.textEncryptor.decrypt(CIPHER.replace("{cipher}", ""));
+
+		String decrypted = this.encryptor.decrypt("<a v=\" " + CIPHER + "\">\n  " + CIPHER + "\n</a>",
+				this.environment);
+
+		assertThat(decrypted).isEqualTo("<a v=\" " + plain + "\">\n  " + plain + "\n</a>");
+	}
+
+	@Test
+	public void decryptedWhitespaceCharactersAreEscaped() throws Exception {
+		String encrypted = "{cipher}" + this.textEncryptor.encrypt("a\nb\tc\rd");
+
+		String decrypted = this.encryptor.decrypt("<a v=\"" + encrypted + "\"/>", this.environment);
+
+		assertThat(decrypted).isEqualTo("<a v=\"a&#10;b&#9;c&#13;d\"/>");
 	}
 
 	@Test
