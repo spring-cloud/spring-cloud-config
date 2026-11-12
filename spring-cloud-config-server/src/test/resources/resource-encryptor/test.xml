@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+	<foo>{cipher}d1b2458ccede07c856ff952bd841638ff4dd12ed1d36812663c3c7262d57bf46</foo>
+	<plain>value</plain>
+	<nested>
+		<item name="{cipher}d1b2458ccede07c856ff952bd841638ff4dd12ed1d36812663c3c7262d57bf46">a</item>
+		<item>{cipher}d1b2458ccede07c856ff952bd841638ff4dd12ed1d36812663c3c7262d57bf46</item>
+	</nested>
+	<key-password>{cipher}{key:mytestkey}d1b2458ccede07c856ff952bd841638ff4dd12ed1d36812663c3c7262d57bf46</key-password>
+</config>
