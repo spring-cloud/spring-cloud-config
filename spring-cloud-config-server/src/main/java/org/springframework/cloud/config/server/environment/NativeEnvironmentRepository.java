@@ -206,7 +206,8 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 							// client will make a second request
 							// after activating all the profiles to get profile specific
 							// property sources
-							if (profiles.length == 0 || "default".equalsIgnoreCase(profiles[0])) {
+							if (profiles.length == 0
+									|| (profiles.length == 1 && "default".equalsIgnoreCase(profiles[0]))) {
 								return ConfigDataEnvironmentUpdateListener.super.onConfigDataOptions(configData,
 										propertySource, options)
 									.with(ConfigData.Option.IGNORE_PROFILES);

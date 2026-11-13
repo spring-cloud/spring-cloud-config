@@ -81,4 +81,15 @@ public class ConfigDataProfileOnlyTests {
 			.isTrue();
 	}
 
+	@Test
+	public void includeProfileSpecificPropertySourcesWhenDefaultIsFirst() {
+		ResponseEntity<Environment> response = new TestRestTemplate().exchange(
+				"http://localhost:" + this.port + "/foo/default,test", HttpMethod.GET, getV2AcceptEntity(),
+				Environment.class);
+		Environment environment = response.getBody();
+		assertThat(environment.getPropertySources()).isNotEmpty();
+		assertThat(environment.getPropertySources().stream().anyMatch(p -> p.getName().contains("application-dev")))
+			.isTrue();
+	}
+
 }
