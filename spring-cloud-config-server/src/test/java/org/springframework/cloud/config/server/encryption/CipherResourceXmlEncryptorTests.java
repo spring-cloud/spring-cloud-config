@@ -66,6 +66,8 @@ public class CipherResourceXmlEncryptorTests {
 		assertThat(decrypted).doesNotContain("{cipher}");
 		assertThat(decrypted).contains("<plain>value</plain>");
 		assertThat(decrypted).contains("<foo>" + this.textEncryptor.decrypt(CIPHER.replace("{cipher}", "")) + "</foo>");
+		assertThat(decrypted).contains(
+				"<key-password>" + this.textEncryptor.decrypt(CIPHER.replace("{cipher}", "")) + "</key-password>");
 		assertThat(decrypted)
 			.contains("name=\"" + this.textEncryptor.decrypt(CIPHER.replace("{cipher}", "")) + "\">a</item>");
 	}
@@ -74,8 +76,7 @@ public class CipherResourceXmlEncryptorTests {
 	public void decryptedValueIsEscaped() throws Exception {
 		String encrypted = "{cipher}" + this.textEncryptor.encrypt("a<b&\"c\"");
 
-		String decrypted = this.encryptor.decrypt("<a v=\"" + encrypted + "\">" + encrypted + "</a>",
-				this.environment);
+		String decrypted = this.encryptor.decrypt("<a v=\"" + encrypted + "\">" + encrypted + "</a>", this.environment);
 
 		assertThat(decrypted).isEqualTo("<a v=\"a&lt;b&amp;&quot;c&quot;\">a&lt;b&amp;&quot;c&quot;</a>");
 	}
@@ -107,6 +108,34 @@ public class CipherResourceXmlEncryptorTests {
 		String decrypted = this.encryptor.decrypt("<a v=\"" + encrypted + "\"/>", this.environment);
 
 		assertThat(decrypted).isEqualTo("<a v=\"a&#10;b&#9;c&#13;d\"/>");
+	}
+
+	@Test
+	public void illegalXmlCharacterInDecryptedValueFails() {
+		String encrypted = "{cipher}" + this.textEncryptor.encrypt("a\u0001b");
+
+		assertThatThrownBy(() -> this.encryptor.decrypt("<a>" + encrypted + "</a>", this.environment))
+			.isInstanceOf(IOException.class);
+	}
+
+	@Test
+	public void cipherThatIsPrefixOfAnotherIsNotCorrupted() throws Exception {
+		TextEncryptor stub = new TextEncryptor() {
+			@Override
+			public String encrypt(String text) {
+				return text;
+			}
+
+			@Override
+			public String decrypt(String encryptedText) {
+				return "plain-" + encryptedText;
+			}
+		};
+		CipherResourceXmlEncryptor prefixEncryptor = new CipherResourceXmlEncryptor(keys -> stub);
+
+		String decrypted = prefixEncryptor.decrypt("<r><a>{cipher}AB12</a><b>{cipher}AB12CD</b></r>", this.environment);
+
+		assertThat(decrypted).isEqualTo("<r><a>plain-AB12</a><b>plain-AB12CD</b></r>");
 	}
 
 	@Test
