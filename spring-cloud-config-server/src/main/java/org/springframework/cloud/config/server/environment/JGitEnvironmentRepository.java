@@ -45,6 +45,7 @@ import org.eclipse.jgit.api.ResetCommand;
 import org.eclipse.jgit.api.ResetCommand.ResetType;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.StatusCommand;
+import org.eclipse.jgit.api.SubmoduleUpdateCommand;
 import org.eclipse.jgit.api.TransportCommand;
 import org.eclipse.jgit.api.TransportConfigCallback;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -123,7 +124,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	 */
 	private boolean cloneOnStart;
 
-	private JGitEnvironmentRepository.JGitFactory gitFactory;
+	private JGitEnvironmentRepository.JGitFactory gitFactory = new JGitFactory();
 
 	private String defaultLabel;
 
@@ -156,6 +157,8 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	 */
 	private boolean skipSslValidation;
 
+	private boolean cloneSubmodules;
+
 	private boolean tryMasterBranch;
 
 	private final ObservationRegistry observationRegistry;
@@ -177,9 +180,17 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		this.deleteUntrackedBranches = properties.isDeleteUntrackedBranches();
 		this.refreshRate = properties.getRefreshRate();
 		this.skipSslValidation = properties.isSkipSslValidation();
-		this.gitFactory = new JGitFactory(properties.isCloneSubmodules());
+		this.cloneSubmodules = properties.isCloneSubmodules();
 		this.tryMasterBranch = properties.isTryMasterBranch();
 		this.observationRegistry = observationRegistry;
+	}
+
+	public boolean isCloneSubmodules() {
+		return this.cloneSubmodules;
+	}
+
+	public void setCloneSubmodules(boolean cloneSubmodules) {
+		this.cloneSubmodules = cloneSubmodules;
 	}
 
 	public boolean isTryMasterBranch() {
@@ -324,6 +335,13 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 				FetchResult fetchStatus = fetch(git, label);
 				if (this.deleteUntrackedBranches && fetchStatus != null) {
 					deleteUntrackedLocalBranches(fetchStatus.getTrackingRefUpdates(), git);
+				}
+
+				// update submodules if needed
+				if (cloneSubmodules) {
+					SubmoduleUpdateCommand submoduleUpdate = git.submoduleUpdate().setFetch(true);
+					configureCommand(submoduleUpdate);
+					submoduleUpdate.call();
 				}
 			}
 
@@ -785,6 +803,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		// configured basedir still resolves to the directory we created.
 		assertBasedirStillResolvesTo(resolvedBasedir);
 		CloneCommand clone = this.gitFactory.getCloneCommandByCloneRepository()
+			.setCloneSubmodules(cloneSubmodules)
 			.setURI(getUri())
 			.setDirectory(resolvedBasedir.toFile());
 		configureCommand(clone);
@@ -972,23 +991,13 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 	 */
 	public static class JGitFactory {
 
-		private final boolean cloneSubmodules;
-
-		public JGitFactory() {
-			this(false);
-		}
-
-		public JGitFactory(boolean cloneSubmodules) {
-			this.cloneSubmodules = cloneSubmodules;
-		}
-
 		public Git getGitByOpen(File file) throws IOException {
 			Git git = Git.open(file);
 			return git;
 		}
 
 		public CloneCommand getCloneCommandByCloneRepository() {
-			CloneCommand command = Git.cloneRepository().setCloneSubmodules(cloneSubmodules);
+			CloneCommand command = Git.cloneRepository();
 			return command;
 		}
 
