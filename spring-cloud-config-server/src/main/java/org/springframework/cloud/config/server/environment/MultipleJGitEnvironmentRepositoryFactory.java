@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import io.micrometer.observation.ObservationConvention;
 import io.micrometer.observation.ObservationRegistry;
 import org.eclipse.jgit.transport.HttpTransport;
 
@@ -46,12 +47,14 @@ public class MultipleJGitEnvironmentRepositoryFactory
 
 	private final List<HttpClient4BuilderCustomizer> customizers;
 
+	private final ObservationConvention<ObservationEnvironmentRepositoryContext> convention;
+
 	public MultipleJGitEnvironmentRepositoryFactory(ConfigurableEnvironment environment, ConfigServerProperties server,
 			Optional<ConfigurableHttpConnectionFactory> connectionFactory,
 			TransportConfigCallbackFactory transportConfigCallbackFactory,
 			GitCredentialsProviderFactory gitCredentialsProviderFactory) {
 		this(environment, server, connectionFactory, transportConfigCallbackFactory, gitCredentialsProviderFactory,
-				Collections.EMPTY_LIST);
+				Collections.emptyList(), null);
 	}
 
 	public MultipleJGitEnvironmentRepositoryFactory(ConfigurableEnvironment environment, ConfigServerProperties server,
@@ -59,12 +62,22 @@ public class MultipleJGitEnvironmentRepositoryFactory
 			TransportConfigCallbackFactory transportConfigCallbackFactory,
 			GitCredentialsProviderFactory gitCredentialsProviderFactory,
 			List<HttpClient4BuilderCustomizer> customizers) {
+		this(environment, server, connectionFactory, transportConfigCallbackFactory, gitCredentialsProviderFactory,
+				customizers, null);
+	}
+
+	public MultipleJGitEnvironmentRepositoryFactory(ConfigurableEnvironment environment, ConfigServerProperties server,
+			Optional<ConfigurableHttpConnectionFactory> connectionFactory,
+			TransportConfigCallbackFactory transportConfigCallbackFactory,
+			GitCredentialsProviderFactory gitCredentialsProviderFactory, List<HttpClient4BuilderCustomizer> customizers,
+			ObservationConvention<ObservationEnvironmentRepositoryContext> convention) {
 		this.environment = environment;
 		this.server = server;
 		this.connectionFactory = connectionFactory;
 		this.transportConfigCallbackFactory = transportConfigCallbackFactory;
 		this.gitCredentialsProviderFactory = gitCredentialsProviderFactory;
 		this.customizers = customizers;
+		this.convention = convention;
 	}
 
 	@Override
@@ -76,7 +89,7 @@ public class MultipleJGitEnvironmentRepositoryFactory
 		}
 
 		MultipleJGitEnvironmentRepository repository = new MultipleJGitEnvironmentRepository(this.environment,
-				environmentProperties, ObservationRegistry.NOOP);
+				environmentProperties, ObservationRegistry.NOOP, this.convention);
 		repository.setTransportConfigCallback(transportConfigCallbackFactory.build(environmentProperties));
 		if (this.server.getDefaultLabel() != null) {
 			repository.setDefaultLabel(this.server.getDefaultLabel());

@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.config.server.environment;
 
+import io.micrometer.observation.ObservationConvention;
 import io.micrometer.observation.ObservationRegistry;
 
 import org.springframework.cloud.config.server.config.ConfigServerProperties;
@@ -33,17 +34,26 @@ public class SvnEnvironmentRepositoryFactory
 
 	private final ObservationRegistry observationRegistry;
 
+	private final ObservationConvention<ObservationEnvironmentRepositoryContext> convention;
+
 	public SvnEnvironmentRepositoryFactory(ConfigurableEnvironment environment, ConfigServerProperties server,
 			ObservationRegistry observationRegistry) {
+		this(environment, server, observationRegistry, null);
+	}
+
+	public SvnEnvironmentRepositoryFactory(ConfigurableEnvironment environment, ConfigServerProperties server,
+			ObservationRegistry observationRegistry,
+			ObservationConvention<ObservationEnvironmentRepositoryContext> convention) {
 		this.environment = environment;
 		this.server = server;
 		this.observationRegistry = observationRegistry;
+		this.convention = convention;
 	}
 
 	@Override
 	public SvnKitEnvironmentRepository build(SvnKitEnvironmentProperties environmentProperties) {
 		SvnKitEnvironmentRepository repository = new SvnKitEnvironmentRepository(this.environment,
-				environmentProperties, this.observationRegistry);
+				environmentProperties, this.observationRegistry, this.convention);
 		if (this.server.getDefaultLabel() != null) {
 			repository.setDefaultLabel(this.server.getDefaultLabel());
 		}

@@ -19,7 +19,9 @@ package org.springframework.cloud.config.server.environment;
 import java.util.Arrays;
 
 import io.micrometer.common.KeyValue;
+import io.micrometer.common.KeyValues;
 import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationConvention;
 import io.micrometer.observation.tck.TestObservationRegistry;
 import org.junit.jupiter.api.Test;
 
@@ -43,6 +45,40 @@ class ObservationEnvironmentRepositoryWrapperTests {
 			.hasBeenStopped()
 			.hasLowCardinalityKeyValue("spring.cloud.config.environment.class",
 					"org.springframework.cloud.config.server.environment.ObservationEnvironmentRepositoryWrapperTests$MyEnvRepo");
+	}
+
+	@Test
+	void shouldUseCustomConvention() {
+		TestObservationRegistry registry = TestObservationRegistry.create();
+		EnvironmentRepository delegate = new MyEnvRepo();
+
+		EnvironmentRepository wrapper = ObservationEnvironmentRepositoryWrapper.wrap(registry, delegate,
+				customConvention());
+
+		wrapper.findOne("foo", "bar", "baz");
+
+		assertThat(registry).hasSingleObservationThat()
+			.hasNameEqualTo("spring.cloud.config.environment.find")
+			.hasBeenStarted()
+			.hasBeenStopped()
+			.hasLowCardinalityKeyValue("custom.tag", "custom-value");
+	}
+
+	@Test
+	void shouldUseCustomConventionWhenIncludingOrigin() {
+		TestObservationRegistry registry = TestObservationRegistry.create();
+		EnvironmentRepository delegate = new MyEnvRepo();
+
+		EnvironmentRepository wrapper = ObservationEnvironmentRepositoryWrapper.wrap(registry, delegate,
+				customConvention());
+
+		wrapper.findOne("foo", "bar", "baz", true);
+
+		assertThat(registry).hasSingleObservationThat()
+			.hasNameEqualTo("spring.cloud.config.environment.find")
+			.hasBeenStarted()
+			.hasBeenStopped()
+			.hasLowCardinalityKeyValue("custom.tag", "custom-value");
 	}
 
 	@Test
@@ -113,6 +149,32 @@ class ObservationEnvironmentRepositoryWrapperTests {
 				.findFirst()
 				.orElseThrow(() -> new AssertionError("There's no observation for the wrapped EnvironmentRepository"));
 		});
+	}
+
+	private ObservationConvention<ObservationEnvironmentRepositoryContext> customConvention() {
+		return new ObservationConvention<>() {
+
+			@Override
+			public KeyValues getLowCardinalityKeyValues(ObservationEnvironmentRepositoryContext context) {
+				return KeyValues.of(KeyValue.of("custom.tag", "custom-value"));
+			}
+
+			@Override
+			public boolean supportsContext(Observation.Context context) {
+				return context instanceof ObservationEnvironmentRepositoryContext;
+			}
+
+			@Override
+			public String getName() {
+				return "spring.cloud.config.environment.find";
+			}
+
+			@Override
+			public String getContextualName(ObservationEnvironmentRepositoryContext context) {
+				return "custom environment repository";
+			}
+
+		};
 	}
 
 	private boolean contextExists(Observation.Context context, String tagName, String tagValue) {

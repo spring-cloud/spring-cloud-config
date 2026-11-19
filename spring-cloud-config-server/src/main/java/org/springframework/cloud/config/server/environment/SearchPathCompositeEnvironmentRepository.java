@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import io.micrometer.observation.ObservationConvention;
 import io.micrometer.observation.ObservationRegistry;
 
 /**
@@ -40,6 +41,21 @@ public class SearchPathCompositeEnvironmentRepository extends CompositeEnvironme
 	public SearchPathCompositeEnvironmentRepository(List<EnvironmentRepository> environmentRepositories,
 			ObservationRegistry observationRegistry, boolean failOnError) {
 		super(environmentRepositories, observationRegistry, failOnError);
+	}
+
+	/**
+	 * Creates a new {@link SearchPathCompositeEnvironmentRepository} with a custom
+	 * observation convention.
+	 * @param environmentRepositories The {@link EnvironmentRepository}s to create this
+	 * composite from.
+	 * @param observationRegistry observation registry
+	 * @param failOnError whether to throw an exception if there is an error.
+	 * @param convention custom observation convention
+	 */
+	public SearchPathCompositeEnvironmentRepository(List<EnvironmentRepository> environmentRepositories,
+			ObservationRegistry observationRegistry, boolean failOnError,
+			ObservationConvention<ObservationEnvironmentRepositoryContext> convention) {
+		super(environmentRepositories, observationRegistry, failOnError, convention);
 	}
 
 	@Override

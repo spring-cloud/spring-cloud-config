@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import io.micrometer.observation.ObservationConvention;
 import io.micrometer.observation.ObservationRegistry;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -50,11 +51,26 @@ public class CompositeEnvironmentRepository implements EnvironmentRepository {
 	 */
 	public CompositeEnvironmentRepository(List<EnvironmentRepository> environmentRepositories,
 			ObservationRegistry observationRegistry, boolean failOnError) {
+		this(environmentRepositories, observationRegistry, failOnError, null);
+	}
+
+	/**
+	 * Creates a new {@link CompositeEnvironmentRepository} with a custom observation
+	 * convention.
+	 * @param environmentRepositories The list of {@link EnvironmentRepository}s to create
+	 * the composite from.
+	 * @param observationRegistry observation registry
+	 * @param failOnError whether to throw an exception if there is an error.
+	 * @param convention custom observation convention
+	 */
+	public CompositeEnvironmentRepository(List<EnvironmentRepository> environmentRepositories,
+			ObservationRegistry observationRegistry, boolean failOnError,
+			ObservationConvention<ObservationEnvironmentRepositoryContext> convention) {
 		// Sort the environment repositories by the priority
 		Collections.sort(environmentRepositories, OrderComparator.INSTANCE);
 		this.environmentRepositories = observationRegistry.isNoop() ? environmentRepositories
 				: environmentRepositories.stream()
-					.map(e -> ObservationEnvironmentRepositoryWrapper.wrap(observationRegistry, e))
+					.map(e -> ObservationEnvironmentRepositoryWrapper.wrap(observationRegistry, e, convention))
 					.collect(Collectors.toList());
 		this.failOnError = failOnError;
 	}
@@ -66,7 +82,6 @@ public class CompositeEnvironmentRepository implements EnvironmentRepository {
 	 * @param failOnError whether to throw an exception if there is an error.
 	 */
 	public CompositeEnvironmentRepository(List<EnvironmentRepository> environmentRepositories, boolean failOnError) {
-		// Sort the environment repositories by the priority
 		this(environmentRepositories, ObservationRegistry.NOOP, failOnError);
 	}
 
