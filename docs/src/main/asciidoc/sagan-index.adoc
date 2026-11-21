@@ -45,5 +45,5 @@ public class Application {
 
 The value of `config.name` in the sample (or any other values you bind to in the normal Spring Boot way) can come from local configuration or from the remote Config Server. The Config Server will take precedence by default. To see this look at the `/env` endpoint in the application and see the `configServer` property sources.
 
-To run your own server use the `spring-cloud-config-server` dependency and `@EnableConfigServer`. If you set `spring.config.name=configserver` the app will run on port 8888 and serve data from a sample repository. You need a `spring.cloud.config.server.git.uri` to locate the configuration data for your own needs (by default it is the location of a git repository, and can be a local `file:..` URL).
+To run your own server use the `spring-cloud-config-server` dependency and `@EnableConfigServer`. Set `server.port=8888` in your application configuration to use port 8888, and set `spring.cloud.config.server.git.uri` to locate your Git repository (which can be a local `file:..` URL).
 
