@@ -20,9 +20,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.micrometer.observation.ObservationConvention;
 import io.micrometer.observation.ObservationRegistry;
 import tools.jackson.databind.json.JsonMapper;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -33,6 +35,7 @@ import org.springframework.cloud.config.server.encryption.ResourceEncryptor;
 import org.springframework.cloud.config.server.environment.EnvironmentController;
 import org.springframework.cloud.config.server.environment.EnvironmentEncryptorEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
+import org.springframework.cloud.config.server.environment.ObservationEnvironmentRepositoryContext;
 import org.springframework.cloud.config.server.resource.ResourceController;
 import org.springframework.cloud.config.server.resource.ResourceControllerAdvice;
 import org.springframework.cloud.config.server.resource.ResourceRepository;
@@ -75,6 +78,9 @@ public class ConfigServerMvcConfiguration implements WebMvcConfigurer {
 
 		@Autowired(required = false)
 		private ObservationRegistry observationRegistry = ObservationRegistry.NOOP;
+
+		@Autowired
+		private ObjectProvider<ObservationConvention<ObservationEnvironmentRepositoryContext>> observationConvention;
 
 		private boolean validateProfiles = true;
 
@@ -121,7 +127,8 @@ public class ConfigServerMvcConfiguration implements WebMvcConfigurer {
 
 		private EnvironmentRepository encrypted(EnvironmentRepository envRepository, ConfigServerProperties server) {
 			EnvironmentEncryptorEnvironmentRepository encrypted = new EnvironmentEncryptorEnvironmentRepository(
-					envRepository, this.environmentEncryptors, this.observationRegistry);
+					envRepository, this.environmentEncryptors, this.observationRegistry,
+					this.observationConvention.getIfAvailable());
 			encrypted.setOverrides(server.getOverrides());
 			return encrypted;
 		}

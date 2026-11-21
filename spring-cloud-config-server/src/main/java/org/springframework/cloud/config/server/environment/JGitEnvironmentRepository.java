@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+import io.micrometer.observation.ObservationConvention;
 import io.micrometer.observation.ObservationRegistry;
 import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.CloneCommand;
@@ -170,7 +171,13 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 
 	public JGitEnvironmentRepository(ConfigurableEnvironment environment, JGitEnvironmentProperties properties,
 			ObservationRegistry observationRegistry) {
-		super(environment, properties, observationRegistry);
+		this(environment, properties, observationRegistry, null);
+	}
+
+	public JGitEnvironmentRepository(ConfigurableEnvironment environment, JGitEnvironmentProperties properties,
+			ObservationRegistry observationRegistry,
+			ObservationConvention<ObservationEnvironmentRepositoryContext> convention) {
+		super(environment, properties, observationRegistry, convention);
 		this.cloneOnStart = properties.isCloneOnStart();
 		this.defaultLabel = properties.getDefaultLabel();
 		this.forcePull = properties.isForcePull();

@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.config.server.environment;
 
+import io.micrometer.observation.ObservationConvention;
 import io.micrometer.observation.ObservationRegistry;
 
 import org.springframework.cloud.config.environment.Environment;
@@ -34,14 +35,19 @@ public final class ObservationEnvironmentRepositoryWrapper implements Environmen
 
 	private final EnvironmentRepository delegate;
 
+	private final ObservationConvention<ObservationEnvironmentRepositoryContext> convention;
+
 	/**
 	 * Creates an instance of {@link ObservationEnvironmentRepositoryWrapper}.
 	 * @param registry observation registry
 	 * @param delegate environment repository delegate
+	 * @param convention custom observation convention
 	 */
-	private ObservationEnvironmentRepositoryWrapper(ObservationRegistry registry, EnvironmentRepository delegate) {
+	private ObservationEnvironmentRepositoryWrapper(ObservationRegistry registry, EnvironmentRepository delegate,
+			ObservationConvention<ObservationEnvironmentRepositoryContext> convention) {
 		this.registry = registry;
 		this.delegate = delegate;
+		this.convention = convention;
 	}
 
 	/**
@@ -51,10 +57,26 @@ public final class ObservationEnvironmentRepositoryWrapper implements Environmen
 	 * @return wrapped repository
 	 */
 	public static EnvironmentRepository wrap(ObservationRegistry observationRegistry, EnvironmentRepository delegate) {
-		if (delegate instanceof ObservationEnvironmentRepositoryWrapper) {
-			return delegate;
+		return wrap(observationRegistry, delegate, null);
+	}
+
+	/**
+	 * Wraps the {@link EnvironmentRepository} in an observation representation using a
+	 * custom observation convention.
+	 * @param observationRegistry observation registry
+	 * @param delegate repository to wrap
+	 * @param convention custom observation convention
+	 * @return wrapped repository
+	 */
+	public static EnvironmentRepository wrap(ObservationRegistry observationRegistry, EnvironmentRepository delegate,
+			ObservationConvention<ObservationEnvironmentRepositoryContext> convention) {
+		if (delegate instanceof ObservationEnvironmentRepositoryWrapper wrapper) {
+			if (convention == null) {
+				return delegate;
+			}
+			delegate = wrapper.getDelegate();
 		}
-		return new ObservationEnvironmentRepositoryWrapper(observationRegistry, delegate);
+		return new ObservationEnvironmentRepositoryWrapper(observationRegistry, delegate, convention);
 	}
 
 	@Override
@@ -62,7 +84,7 @@ public final class ObservationEnvironmentRepositoryWrapper implements Environmen
 		ObservationEnvironmentRepositoryContext context = new ObservationEnvironmentRepositoryContext(
 				this.delegate.getClass(), application, profile, label);
 		return DocumentedConfigObservation.ENVIRONMENT_REPOSITORY
-			.observation(null, CONVENTION, () -> context, this.registry)
+			.observation(this.convention, CONVENTION, () -> context, this.registry)
 			.observe(() -> this.delegate.findOne(application, profile, label));
 	}
 
@@ -71,7 +93,7 @@ public final class ObservationEnvironmentRepositoryWrapper implements Environmen
 		ObservationEnvironmentRepositoryContext context = new ObservationEnvironmentRepositoryContext(
 				this.delegate.getClass(), application, profile, label);
 		return DocumentedConfigObservation.ENVIRONMENT_REPOSITORY
-			.observation(null, CONVENTION, () -> context, this.registry)
+			.observation(this.convention, CONVENTION, () -> context, this.registry)
 			.observe(() -> this.delegate.findOne(application, profile, label, includeOrigin));
 	}
 

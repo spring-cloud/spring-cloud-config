@@ -22,6 +22,7 @@ import java.util.Optional;
 import com.google.cloud.parametermanager.v1.ParameterManagerClient;
 import com.google.cloud.secretmanager.v1.SecretManagerServiceClient;
 import com.google.cloud.storage.Storage;
+import io.micrometer.observation.ObservationConvention;
 import io.micrometer.observation.ObservationRegistry;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.logging.Log;
@@ -85,6 +86,7 @@ import org.springframework.cloud.config.server.environment.MultipleJGitEnvironme
 import org.springframework.cloud.config.server.environment.NativeEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.NativeEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.NativeEnvironmentRepositoryFactory;
+import org.springframework.cloud.config.server.environment.ObservationEnvironmentRepositoryContext;
 import org.springframework.cloud.config.server.environment.RedisEnvironmentProperties;
 import org.springframework.cloud.config.server.environment.RedisEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.RedisEnvironmentRepositoryFactory;
@@ -203,11 +205,13 @@ public class EnvironmentRepositoryConfiguration {
 				Optional<TransportConfigCallback> customTransportConfigCallback,
 				ObjectProvider<GitTransportConfigCallbackProvider> callbackProviders,
 				GitCredentialsProviderFactory gitCredentialsProviderFactory,
-				List<HttpClient4BuilderCustomizer> customizers) {
+				List<HttpClient4BuilderCustomizer> customizers,
+				ObjectProvider<ObservationConvention<ObservationEnvironmentRepositoryContext>> observationConvention) {
 			final TransportConfigCallbackFactory transportConfigCallbackFactory = new TransportConfigCallbackFactory(
 					customTransportConfigCallback.orElse(null), callbackProviders.orderedStream().toList());
 			return new MultipleJGitEnvironmentRepositoryFactory(environment, server, jgitHttpConnectionFactory,
-					transportConfigCallbackFactory, gitCredentialsProviderFactory, customizers);
+					transportConfigCallbackFactory, gitCredentialsProviderFactory, customizers,
+					observationConvention.getIfAvailable());
 		}
 
 		@Bean
@@ -297,9 +301,11 @@ public class EnvironmentRepositoryConfiguration {
 
 		@Bean
 		public SvnEnvironmentRepositoryFactory svnEnvironmentRepositoryFactory(ConfigurableEnvironment environment,
-				ConfigServerProperties server, ObjectProvider<ObservationRegistry> observationRegistry) {
+				ConfigServerProperties server, ObjectProvider<ObservationRegistry> observationRegistry,
+				ObjectProvider<ObservationConvention<ObservationEnvironmentRepositoryContext>> observationConvention) {
 			return new SvnEnvironmentRepositoryFactory(environment, server,
-					observationRegistry.getIfAvailable(() -> ObservationRegistry.NOOP));
+					observationRegistry.getIfAvailable(() -> ObservationRegistry.NOOP),
+					observationConvention.getIfAvailable());
 		}
 
 	}
@@ -398,9 +404,11 @@ public class EnvironmentRepositoryConfiguration {
 		@Bean
 		public NativeEnvironmentRepositoryFactory nativeEnvironmentRepositoryFactory(
 				ConfigurableEnvironment environment, ConfigServerProperties properties,
-				ObjectProvider<ObservationRegistry> observationRegistry) {
+				ObjectProvider<ObservationRegistry> observationRegistry,
+				ObjectProvider<ObservationConvention<ObservationEnvironmentRepositoryContext>> observationConvention) {
 			return new NativeEnvironmentRepositoryFactory(environment, properties,
-					observationRegistry.getIfAvailable(() -> ObservationRegistry.NOOP));
+					observationRegistry.getIfAvailable(() -> ObservationRegistry.NOOP),
+					observationConvention.getIfAvailable());
 		}
 
 	}
@@ -575,10 +583,11 @@ class CompositeRepositoryConfiguration {
 	@ConditionalOnSearchPathLocator
 	public SearchPathCompositeEnvironmentRepository searchPathCompositeEnvironmentRepository(
 			List<EnvironmentRepository> environmentRepositories, ConfigServerProperties properties,
-			ObjectProvider<ObservationRegistry> observationRegistry) {
+			ObjectProvider<ObservationRegistry> observationRegistry,
+			ObjectProvider<ObservationConvention<ObservationEnvironmentRepositoryContext>> observationConvention) {
 		return new SearchPathCompositeEnvironmentRepository(environmentRepositories,
-				observationRegistry.getIfAvailable(() -> ObservationRegistry.NOOP),
-				properties.isFailOnCompositeError());
+				observationRegistry.getIfAvailable(() -> ObservationRegistry.NOOP), properties.isFailOnCompositeError(),
+				observationConvention.getIfAvailable());
 	}
 
 	@Primary
@@ -586,10 +595,11 @@ class CompositeRepositoryConfiguration {
 	@ConditionalOnMissingSearchPathLocator
 	public CompositeEnvironmentRepository compositeEnvironmentRepository(
 			List<EnvironmentRepository> environmentRepositories, ConfigServerProperties properties,
-			ObjectProvider<ObservationRegistry> observationRegistry) {
+			ObjectProvider<ObservationRegistry> observationRegistry,
+			ObjectProvider<ObservationConvention<ObservationEnvironmentRepositoryContext>> observationConvention) {
 		return new CompositeEnvironmentRepository(environmentRepositories,
-				observationRegistry.getIfAvailable(() -> ObservationRegistry.NOOP),
-				properties.isFailOnCompositeError());
+				observationRegistry.getIfAvailable(() -> ObservationRegistry.NOOP), properties.isFailOnCompositeError(),
+				observationConvention.getIfAvailable());
 	}
 
 }
