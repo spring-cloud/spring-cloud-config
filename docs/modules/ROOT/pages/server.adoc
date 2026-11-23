@@ -17,9 +17,7 @@ public class ConfigServer {
 }
 ----
 
-Like all Spring Boot applications, it runs on port 8080 by default, but you can switch it to the more conventional port 8888 in various ways.
-The easiest, which also sets a default configuration repository, is by launching it with `spring.config.name=configserver` (there is a `configserver.yml` in the Config Server jar).
-Another is to use your own `application.properties`, as shown in the following example:
+Like all Spring Boot applications, it runs on port 8080 by default. To use port 8888 and specify your repository, configure them in your own `application.properties`, as shown in the following example:
 
 .application.properties
 [source,properties]
