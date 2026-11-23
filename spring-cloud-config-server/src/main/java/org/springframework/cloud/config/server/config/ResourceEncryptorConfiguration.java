@@ -24,6 +24,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.cloud.config.server.encryption.CipherResourceJsonEncryptor;
 import org.springframework.cloud.config.server.encryption.CipherResourcePropertiesEncryptor;
+import org.springframework.cloud.config.server.encryption.CipherResourceXmlEncryptor;
 import org.springframework.cloud.config.server.encryption.CipherResourceYamlEncryptor;
 import org.springframework.cloud.config.server.encryption.ResourceEncryptor;
 import org.springframework.cloud.config.server.encryption.TextEncryptorLocator;
@@ -52,6 +53,7 @@ public class ResourceEncryptorConfiguration {
 		Map<String, ResourceEncryptor> resourceEncryptorMap = new HashMap<>();
 		addSupportedExtensionsToMap(resourceEncryptorMap, new CipherResourceJsonEncryptor(encryptor));
 		addSupportedExtensionsToMap(resourceEncryptorMap, new CipherResourcePropertiesEncryptor(encryptor));
+		addSupportedExtensionsToMap(resourceEncryptorMap, new CipherResourceXmlEncryptor(encryptor));
 		addSupportedExtensionsToMap(resourceEncryptorMap, new CipherResourceYamlEncryptor(encryptor));
 		return resourceEncryptorMap;
 	}
