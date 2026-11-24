@@ -44,6 +44,7 @@ import org.springframework.aot.hint.TypeReference;
 import org.springframework.cloud.config.environment.PropertyValueDescriptor;
 import org.springframework.cloud.config.server.ssh.HostKeyAlgoSupportedValidator;
 import org.springframework.cloud.config.server.ssh.HostKeyAndAlgoBothExistValidator;
+import org.springframework.cloud.config.server.ssh.HostKeyOrKnownHostsFileRequiredValidator;
 import org.springframework.cloud.config.server.ssh.KnownHostsFileValidator;
 import org.springframework.cloud.config.server.ssh.PrivateKeyValidator;
 import org.springframework.cloud.config.server.ssh.SshPropertyValidator;
@@ -66,6 +67,7 @@ class ConfigServerRuntimeHints implements RuntimeHintsRegistrar {
 		}
 		hints.reflection()
 			.registerTypes(Set.of(TypeReference.of(HostKeyAndAlgoBothExistValidator.class),
+					TypeReference.of(HostKeyOrKnownHostsFileRequiredValidator.class),
 					TypeReference.of(KnownHostsFileValidator.class),
 					TypeReference.of(HostKeyAlgoSupportedValidator.class), TypeReference.of(PrivateKeyValidator.class),
 					TypeReference.of(SshPropertyValidator.class), TypeReference.of(PropertyValueDescriptor.class)),
