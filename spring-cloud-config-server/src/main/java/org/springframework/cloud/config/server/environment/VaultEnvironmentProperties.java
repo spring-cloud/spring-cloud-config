@@ -18,7 +18,9 @@ package org.springframework.cloud.config.server.environment;
 
 import java.net.URI;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import jakarta.validation.constraints.NotEmpty;
@@ -931,6 +933,17 @@ public class VaultEnvironmentProperties implements HttpEnvironmentRepositoryProp
 		@NotEmpty
 		private String certAuthPath = "cert";
 
+		/**
+		 * List of enabled SSL/TLS protocols. Uses the HTTP client defaults when empty.
+		 */
+		private List<String> enabledProtocols = new ArrayList<>();
+
+		/**
+		 * List of enabled SSL/TLS cipher suites. Uses the HTTP client defaults when
+		 * empty.
+		 */
+		private List<String> enabledCipherSuites = new ArrayList<>();
+
 		public Resource getKeyStore() {
 			return this.keyStore;
 		}
@@ -951,6 +964,14 @@ public class VaultEnvironmentProperties implements HttpEnvironmentRepositoryProp
 			return this.certAuthPath;
 		}
 
+		public List<String> getEnabledProtocols() {
+			return this.enabledProtocols;
+		}
+
+		public List<String> getEnabledCipherSuites() {
+			return this.enabledCipherSuites;
+		}
+
 		public void setKeyStore(Resource keyStore) {
 			this.keyStore = keyStore;
 		}
@@ -969,6 +990,14 @@ public class VaultEnvironmentProperties implements HttpEnvironmentRepositoryProp
 
 		public void setCertAuthPath(String certAuthPath) {
 			this.certAuthPath = certAuthPath;
+		}
+
+		public void setEnabledProtocols(List<String> enabledProtocols) {
+			this.enabledProtocols = enabledProtocols;
+		}
+
+		public void setEnabledCipherSuites(List<String> enabledCipherSuites) {
+			this.enabledCipherSuites = enabledCipherSuites;
 		}
 
 	}
