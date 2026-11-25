@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import io.micrometer.observation.ObservationConvention;
 import io.micrometer.observation.ObservationRegistry;
 
 import org.springframework.cloud.config.environment.Environment;
@@ -45,19 +46,43 @@ public abstract class AbstractScmEnvironmentRepository extends AbstractScmAccess
 
 	private final ObservationRegistry observationRegistry;
 
+	private final ObservationConvention<ObservationEnvironmentRepositoryContext> convention;
+
 	public AbstractScmEnvironmentRepository(ConfigurableEnvironment environment,
 			ObservationRegistry observationRegistry) {
+		this(environment, observationRegistry, null);
+	}
+
+	public AbstractScmEnvironmentRepository(ConfigurableEnvironment environment,
+			ObservationRegistry observationRegistry,
+			ObservationConvention<ObservationEnvironmentRepositoryContext> convention) {
 		super(environment);
 		this.isContinueOnMultipleLabelFailure = false;
 		this.observationRegistry = observationRegistry;
+		this.convention = convention;
 	}
 
 	public AbstractScmEnvironmentRepository(ConfigurableEnvironment environment,
 			AbstractScmAccessorProperties properties, ObservationRegistry observationRegistry) {
+		this(environment, properties, observationRegistry, null);
+	}
+
+	public AbstractScmEnvironmentRepository(ConfigurableEnvironment environment,
+			AbstractScmAccessorProperties properties, ObservationRegistry observationRegistry,
+			ObservationConvention<ObservationEnvironmentRepositoryContext> convention) {
 		super(environment, properties);
 		this.isContinueOnMultipleLabelFailure = properties.isContinueOnMultipleLabelFailure();
 		this.order = properties.getOrder();
 		this.observationRegistry = observationRegistry;
+		this.convention = convention;
+	}
+
+	protected ObservationRegistry getObservationRegistry() {
+		return this.observationRegistry;
+	}
+
+	protected ObservationConvention<ObservationEnvironmentRepositoryContext> getObservationConvention() {
+		return this.convention;
 	}
 
 	@Override
@@ -92,7 +117,7 @@ public abstract class AbstractScmEnvironmentRepository extends AbstractScmAccess
 
 	private Environment findOneInternal(String application, String profile, String label, boolean includeOrigin) {
 		var delegate = new NativeEnvironmentRepository(getEnvironment(), new NativeEnvironmentProperties(),
-				this.observationRegistry);
+				this.observationRegistry, this.convention);
 		var locations = getLocations(application, profile, label);
 		delegate.setSearchLocations(locations.getLocations());
 		var environment = delegate.findOne(application, profile, "", includeOrigin);

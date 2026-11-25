@@ -16,7 +16,17 @@
 
 package org.springframework.cloud.config.server.config;
 
+import java.util.List;
+
 import com.google.cloud.storage.Storage;
+import io.micrometer.common.KeyValue;
+import io.micrometer.common.KeyValues;
+import io.micrometer.core.instrument.observation.DefaultMeterObservationHandler;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationConvention;
+import io.micrometer.observation.ObservationRegistry;
+import io.micrometer.observation.tck.TestObservationRegistry;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -25,11 +35,18 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.cloud.config.server.environment.AwsParameterStoreEnvironmentRepositoryFactory;
+import org.springframework.cloud.config.server.environment.CompositeEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.ConfigTokenProvider;
 import org.springframework.cloud.config.server.environment.EnvironmentConfigTokenProvider;
 import org.springframework.cloud.config.server.environment.EnvironmentRepository;
 import org.springframework.cloud.config.server.environment.GcsEnvironmentRepositoryFactory;
 import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentRepository;
+import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentRepositoryFactory;
+import org.springframework.cloud.config.server.environment.NativeEnvironmentProperties;
+import org.springframework.cloud.config.server.environment.NativeEnvironmentRepository;
+import org.springframework.cloud.config.server.environment.NativeEnvironmentRepositoryFactory;
+import org.springframework.cloud.config.server.environment.ObservationEnvironmentRepositoryContext;
+import org.springframework.cloud.config.server.environment.ObservationEnvironmentRepositoryWrapper;
 import org.springframework.cloud.config.server.support.AzureDevOpsWorkloadIdentitySupport;
 import org.springframework.cloud.config.server.support.GitCredentialsProviderFactory;
 import org.springframework.context.annotation.Bean;
@@ -193,6 +210,23 @@ public class EnvironmentRepositoryConfigurationTests {
 	}
 
 	@Test
+	public void customObservationConventionIsUsedByNativeEnvironmentRepositoryFactory() {
+		new ApplicationContextRunner()
+			.withConfiguration(AutoConfigurations.of(EnvironmentRepositoryConfiguration.class, TestBeans.class,
+					CustomObservationConventionBeans.class))
+			.withPropertyValues("spring.profiles.active=native")
+			.run((context) -> {
+				assertThat(context).hasNotFailed();
+				assertThat(context).hasSingleBean(NativeEnvironmentRepositoryFactory.class);
+
+				NativeEnvironmentRepositoryFactory factory = context.getBean(NativeEnvironmentRepositoryFactory.class);
+
+				assertThat(ReflectionTestUtils.getField(factory, "convention"))
+					.isSameAs(context.getBean(ObservationConvention.class));
+			});
+	}
+
+	@Test
 	public void defaultEnvironmentRepositoryCanBeDisabled() {
 		new ApplicationContextRunner()
 			.withConfiguration(AutoConfigurations.of(EnvironmentRepositoryConfiguration.class, TestBeans.class))
@@ -204,12 +238,128 @@ public class EnvironmentRepositoryConfigurationTests {
 			});
 	}
 
+	@Test
+	public void customObservationConventionIsUsedByGitEnvironmentRepositoryFactory() {
+		new ApplicationContextRunner()
+			.withConfiguration(AutoConfigurations.of(EnvironmentRepositoryConfiguration.class, TestBeans.class,
+					CustomObservationConventionBeans.class))
+			.withPropertyValues("spring.profiles.active=git",
+					"spring.cloud.config.server.git.uri=https://github.com/test/test-repo.git")
+			.run((context) -> {
+				assertThat(context).hasNotFailed();
+				assertThat(context).hasSingleBean(MultipleJGitEnvironmentRepositoryFactory.class);
+
+				MultipleJGitEnvironmentRepositoryFactory factory = context
+					.getBean(MultipleJGitEnvironmentRepositoryFactory.class);
+
+				assertThat(ReflectionTestUtils.getField(factory, "convention"))
+					.isSameAs(context.getBean(ObservationConvention.class));
+			});
+	}
+
+	@Test
+	public void customObservationConventionIsUsedByCompositeEnvironmentRepository() {
+		new ApplicationContextRunner()
+			.withConfiguration(AutoConfigurations.of(EnvironmentRepositoryConfiguration.class, TestBeans.class,
+					CustomObservationConventionBeans.class))
+			.withBean(ObservationRegistry.class, () -> {
+				ObservationRegistry registry = ObservationRegistry.create();
+				registry.observationConfig()
+					.observationHandler(new DefaultMeterObservationHandler(new SimpleMeterRegistry()));
+				return registry;
+			})
+			.withPropertyValues("spring.profiles.active=composite",
+					"spring.cloud.config.server.vault.authentication=TOKEN",
+					"spring.cloud.config.server.vault.token=testTokenValue",
+					"spring.cloud.config.server.composite[0].type=vault",
+					"spring.cloud.config.server.composite[1].type=git",
+					"spring.cloud.config.server.composite[1].uri=https://test.com/Some-Test-Repo.git")
+			.run((context) -> {
+				assertThat(context).hasNotFailed();
+
+				ObservationRegistry registry = context.getBean(ObservationRegistry.class);
+				assertThat(registry.isNoop()).isFalse();
+
+				CompositeEnvironmentRepository repository = context.getBean(CompositeEnvironmentRepository.class);
+
+				List<?> repositories = (List<?>) ReflectionTestUtils.getField(repository, "environmentRepositories");
+
+				assertThat(repositories).isNotEmpty();
+
+				assertThat(repositories).allSatisfy(delegate -> {
+					assertThat(delegate).isInstanceOf(ObservationEnvironmentRepositoryWrapper.class);
+
+					assertThat(ReflectionTestUtils.getField(delegate, "convention"))
+						.isSameAs(context.getBean("customObservationConvention"));
+				});
+			});
+	}
+
+	@Test
+	public void customObservationConventionIsUsedWhenFindingEnvironment() {
+		new ApplicationContextRunner()
+			.withConfiguration(AutoConfigurations.of(EnvironmentRepositoryConfiguration.class, TestBeans.class,
+					CustomObservationConventionBeans.class))
+			.withBean(TestObservationRegistry.class, TestObservationRegistry::create)
+			.withPropertyValues("spring.profiles.active=native")
+			.run((context) -> {
+				assertThat(context).hasNotFailed();
+
+				NativeEnvironmentRepositoryFactory factory = context.getBean(NativeEnvironmentRepositoryFactory.class);
+
+				NativeEnvironmentRepository repository = factory.build(new NativeEnvironmentProperties());
+
+				repository.findOne("application", "default", null);
+
+				TestObservationRegistry registry = context.getBean(TestObservationRegistry.class);
+
+				io.micrometer.observation.tck.TestObservationRegistryAssert.assertThat(registry)
+					.hasSingleObservationThat()
+					.hasNameEqualTo("custom.environment.repository.find")
+					.hasBeenStarted()
+					.hasBeenStopped()
+					.hasLowCardinalityKeyValue("custom.tag", "custom-value");
+			});
+	}
+
 	@TestConfiguration
 	public static class TestBeans {
 
 		@Bean
 		public ConfigServerProperties configServerProperties() {
 			return new ConfigServerProperties();
+		}
+
+	}
+
+	@TestConfiguration
+	public static class CustomObservationConventionBeans {
+
+		@Bean
+		public ObservationConvention<ObservationEnvironmentRepositoryContext> customObservationConvention() {
+			return new ObservationConvention<>() {
+
+				@Override
+				public KeyValues getLowCardinalityKeyValues(ObservationEnvironmentRepositoryContext context) {
+					return KeyValues.of(KeyValue.of("custom.tag", "custom-value"));
+				}
+
+				@Override
+				public boolean supportsContext(Observation.Context context) {
+					return context instanceof ObservationEnvironmentRepositoryContext;
+				}
+
+				@Override
+				public String getName() {
+					return "custom.environment.repository.find";
+				}
+
+				@Override
+				public String getContextualName(ObservationEnvironmentRepositoryContext context) {
+					return "custom environment repository";
+				}
+
+			};
 		}
 
 	}

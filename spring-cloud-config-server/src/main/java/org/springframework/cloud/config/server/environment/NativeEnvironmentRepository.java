@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import io.micrometer.observation.ObservationConvention;
 import io.micrometer.observation.ObservationRegistry;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -100,8 +101,16 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 
 	private final ObservationRegistry observationRegistry;
 
+	private final ObservationConvention<ObservationEnvironmentRepositoryContext> convention;
+
 	public NativeEnvironmentRepository(ConfigurableEnvironment environment, NativeEnvironmentProperties properties,
 			ObservationRegistry observationRegistry) {
+		this(environment, properties, observationRegistry, null);
+	}
+
+	public NativeEnvironmentRepository(ConfigurableEnvironment environment, NativeEnvironmentProperties properties,
+			ObservationRegistry observationRegistry,
+			ObservationConvention<ObservationEnvironmentRepositoryContext> convention) {
 		this.environment = environment;
 		this.addLabelLocations = properties.getAddLabelLocations();
 		this.lastLabelWins = properties.getLastLabelWins();
@@ -109,6 +118,7 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 		this.failOnError = properties.getFailOnError();
 		this.order = properties.getOrder();
 		this.observationRegistry = observationRegistry;
+		this.convention = convention;
 		setSearchLocations(properties.getSearchLocations());
 		this.version = properties.getVersion();
 	}
@@ -218,7 +228,7 @@ public class NativeEnvironmentRepository implements EnvironmentRepository, Searc
 
 			environment.getPropertySources().remove("config-data-setup");
 			return clean(ObservationEnvironmentRepositoryWrapper
-				.wrap(this.observationRegistry, new PassthruEnvironmentRepository(environment))
+				.wrap(this.observationRegistry, new PassthruEnvironmentRepository(environment), this.convention)
 				.findOne(config, profile, label, includeOrigin), propertySourceToConfigData);
 		}
 		catch (Exception e) {

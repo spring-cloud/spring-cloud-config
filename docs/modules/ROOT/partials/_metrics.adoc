@@ -24,6 +24,58 @@ IMPORTANT: Micrometer internally uses `nanoseconds` for the baseunit. However, e
 
 Fully qualified name of the enclosing class `org.springframework.cloud.config.server.environment.DocumentedConfigObservation`.
 
+.Customizing the Environment Repository Observation Convention
+
+Applications can customize the observation metadata for environment repository operations by providing a custom `ObservationConvention<ObservationEnvironmentRepositoryContext>` bean.
+
+For example:
+
+[source,java]
+----
+import io.micrometer.common.KeyValue;
+import io.micrometer.common.KeyValues;
+import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationConvention;
+
+import org.springframework.cloud.config.server.environment.ObservationEnvironmentRepositoryContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class ObservationConfiguration {
+
+    @Bean
+    ObservationConvention<ObservationEnvironmentRepositoryContext> environmentRepositoryObservationConvention() {
+        return new ObservationConvention<>() {
+
+            @Override
+            public KeyValues getLowCardinalityKeyValues(ObservationEnvironmentRepositoryContext context) {
+                return KeyValues.of(
+                        KeyValue.of("spring.cloud.config.environment.repository.type", "custom")
+                );
+            }
+
+            @Override
+            public boolean supportsContext(Observation.Context context) {
+                return context instanceof ObservationEnvironmentRepositoryContext;
+            }
+
+            @Override
+            public String getName() {
+                return "spring.cloud.config.environment.find";
+            }
+        };
+    }
+
+}
+----
+
+NOTE: A custom convention replaces the default one, rather than adding to it. The example above therefore reports only the tags explicitly defined by the custom convention.
+
+When a custom convention bean is provided, it is used instead of the default convention. This allows applications to customize observation tags and avoid high-cardinality values.
+
+When no custom convention bean is provided, the default `ObservationEnvironmentRepositoryObservationConvention` is used. A custom convention replaces the default, so its `supportsContext` must return true for `ObservationEnvironmentRepositoryContext`.
+
 IMPORTANT: All tags must be prefixed with `spring.cloud.config.environment` prefix!
 
 .Low cardinality Keys

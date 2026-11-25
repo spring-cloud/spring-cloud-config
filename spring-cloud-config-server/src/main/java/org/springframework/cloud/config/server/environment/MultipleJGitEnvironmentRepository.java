@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import io.micrometer.observation.ObservationConvention;
 import io.micrometer.observation.ObservationRegistry;
 
 import org.springframework.beans.BeanUtils;
@@ -57,15 +58,18 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 
 	private Map<String, JGitEnvironmentRepository> placeholders = new ConcurrentHashMap<>();
 
-	private final ObservationRegistry observationRegistry;
-
 	public MultipleJGitEnvironmentRepository(ConfigurableEnvironment environment,
 			MultipleJGitEnvironmentProperties properties, ObservationRegistry observationRegistry) {
-		super(environment, properties, observationRegistry);
-		this.observationRegistry = observationRegistry;
+		this(environment, properties, observationRegistry, null);
+	}
+
+	public MultipleJGitEnvironmentRepository(ConfigurableEnvironment environment,
+			MultipleJGitEnvironmentProperties properties, ObservationRegistry observationRegistry,
+			ObservationConvention<ObservationEnvironmentRepositoryContext> convention) {
+		super(environment, properties, observationRegistry, convention);
 		properties.getRepos()
-			.forEach((name, props) -> this.repos.put(name,
-					new PatternMatchingJGitEnvironmentRepository(environment, props, this.observationRegistry)));
+			.forEach((name, props) -> this.repos.put(name, new PatternMatchingJGitEnvironmentRepository(environment,
+					props, getObservationRegistry(), getObservationConvention())));
 	}
 
 	@Override
@@ -248,7 +252,7 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 
 	private JGitEnvironmentRepository getRepository(JGitEnvironmentRepository source, String uri) {
 		JGitEnvironmentRepository repository = new JGitEnvironmentRepository(null, new JGitEnvironmentProperties(),
-				observationRegistry);
+				getObservationRegistry(), getObservationConvention());
 		File basedir = repository.getBasedir();
 		BeanUtils.copyProperties(source, repository);
 		repository.setUri(uri);
@@ -276,18 +280,26 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 		 */
 		private String name;
 
-		private final ObservationRegistry observationRegistry;
-
 		public PatternMatchingJGitEnvironmentRepository(ObservationRegistry observationRegistry) {
-			super(null, new JGitEnvironmentProperties(), observationRegistry);
-			this.observationRegistry = observationRegistry;
+			this(observationRegistry, null);
+		}
+
+		public PatternMatchingJGitEnvironmentRepository(ObservationRegistry observationRegistry,
+				ObservationConvention<ObservationEnvironmentRepositoryContext> convention) {
+			super(null, new JGitEnvironmentProperties(), observationRegistry, convention);
 		}
 
 		public PatternMatchingJGitEnvironmentRepository(ConfigurableEnvironment environment,
 				MultipleJGitEnvironmentProperties.PatternMatchingJGitEnvironmentProperties properties,
 				ObservationRegistry observationRegistry) {
-			super(environment, properties, observationRegistry);
-			this.observationRegistry = observationRegistry;
+			this(environment, properties, observationRegistry, null);
+		}
+
+		public PatternMatchingJGitEnvironmentRepository(ConfigurableEnvironment environment,
+				MultipleJGitEnvironmentProperties.PatternMatchingJGitEnvironmentProperties properties,
+				ObservationRegistry observationRegistry,
+				ObservationConvention<ObservationEnvironmentRepositoryContext> convention) {
+			super(environment, properties, observationRegistry, convention);
 			this.setPattern(properties.getPattern());
 			this.name = properties.getName();
 		}

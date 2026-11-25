@@ -24,6 +24,7 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.util.Locale;
 
+import io.micrometer.observation.ObservationConvention;
 import io.micrometer.observation.ObservationRegistry;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -65,7 +66,13 @@ public class SvnKitEnvironmentRepository extends AbstractScmEnvironmentRepositor
 
 	public SvnKitEnvironmentRepository(ConfigurableEnvironment environment, SvnKitEnvironmentProperties properties,
 			ObservationRegistry observationRegistry) {
-		super(environment, properties, observationRegistry);
+		this(environment, properties, observationRegistry, null);
+	}
+
+	public SvnKitEnvironmentRepository(ConfigurableEnvironment environment, SvnKitEnvironmentProperties properties,
+			ObservationRegistry observationRegistry,
+			ObservationConvention<ObservationEnvironmentRepositoryContext> convention) {
+		super(environment, properties, observationRegistry, convention);
 		this.defaultLabel = properties.getDefaultLabel();
 	}
 

@@ -21,6 +21,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.micrometer.observation.ObservationConvention;
 import io.micrometer.observation.ObservationRegistry;
 
 import org.springframework.cloud.config.environment.Environment;
@@ -45,12 +46,18 @@ public class EnvironmentEncryptorEnvironmentRepository implements EnvironmentRep
 
 	public EnvironmentEncryptorEnvironmentRepository(EnvironmentRepository delegate,
 			ObservationRegistry observationRegistry) {
-		this(delegate, null, observationRegistry);
+		this(delegate, null, observationRegistry, null);
 	}
 
 	public EnvironmentEncryptorEnvironmentRepository(EnvironmentRepository delegate,
 			List<EnvironmentEncryptor> environmentEncryptors, ObservationRegistry observationRegistry) {
-		this.delegate = ObservationEnvironmentRepositoryWrapper.wrap(observationRegistry, delegate);
+		this(delegate, environmentEncryptors, observationRegistry, null);
+	}
+
+	public EnvironmentEncryptorEnvironmentRepository(EnvironmentRepository delegate,
+			List<EnvironmentEncryptor> environmentEncryptors, ObservationRegistry observationRegistry,
+			ObservationConvention<ObservationEnvironmentRepositoryContext> convention) {
+		this.delegate = ObservationEnvironmentRepositoryWrapper.wrap(observationRegistry, delegate, convention);
 		this.environmentEncryptors = environmentEncryptors;
 	}
 
