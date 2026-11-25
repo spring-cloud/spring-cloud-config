@@ -99,7 +99,7 @@ public class PropertyBasedSshSessionFactory extends SshdSessionFactory {
 
 				hostEntry.setValue(SshConstants.CONNECT_TIMEOUT, String.valueOf(sshProperties.getTimeout()));
 
-				if (sshProperties.getHostKey() == null || !sshProperties.isStrictHostKeyChecking()) {
+				if (!sshProperties.isStrictHostKeyChecking()) {
 					hostEntry.setValue(SshConstants.STRICT_HOST_KEY_CHECKING, SshConstants.NO);
 				}
 				else {

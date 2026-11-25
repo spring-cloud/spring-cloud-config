@@ -363,14 +363,16 @@ The following table describes the SSH configuration properties.
 |One of `ssh-dss, ssh-rsa, ssh-ed25519, ecdsa-sha2-nistp256, ecdsa-sha2-nistp384, or ecdsa-sha2-nistp521`. Must be set if `hostKey` is also set.
 
 |*strictHostKeyChecking*
-|`true` or `false`. If false, ignore errors with host key.
+|`true` or `false` (default `true`). If false, the server's SSH host key is not verified against a known key and any host key presented during the SSH handshake is accepted. If `true` and `ignoreLocalSshSettings` is also `true`, either `hostKey` or `knownHostsFile` must be set so that the presented host key has something to be verified against. Setting this to `false` disables host key verification entirely for the connection -- it is not limited to skipping a hostname/address match -- so `hostKey` and `knownHostsFile` remain optional in that case and are not enforced by validation.
 
 |*knownHostsFile*
-|Location of custom `.known_hosts` file.
+|Location of custom `.known_hosts` file. When `ignoreLocalSshSettings` is `true` and `strictHostKeyChecking` is `true` (the default), either this or `hostKey` must be set.
 
 |*preferredAuthentications*
 |Override server authentication method order. This should allow for evading login prompts if server has keyboard-interactive authentication before the `publickey` method.
 |===
+
+WARNING: If `ignoreLocalSshSettings` is `true` and `strictHostKeyChecking` is `true` (the default), the config server must have a known key to check the Git server's host key against. If neither `hostKey` nor `knownHostsFile` is set, there is nothing to verify the presented host key against, so the connection would be vulnerable to on-path or DNS-spoofing attacks impersonating the Git server. The config server detects this at startup and fails with a validation error rather than allowing the server to start in this state.
 
 [[placeholders-in-git-search-paths]]
 == Placeholders in Git Search Paths

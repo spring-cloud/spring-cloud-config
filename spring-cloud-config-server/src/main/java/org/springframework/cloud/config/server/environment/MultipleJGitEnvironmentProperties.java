@@ -22,6 +22,7 @@ import java.util.Map;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.config.server.ssh.HostKeyAlgoSupported;
 import org.springframework.cloud.config.server.ssh.HostKeyAndAlgoBothExist;
+import org.springframework.cloud.config.server.ssh.HostKeyOrKnownHostsFileRequired;
 import org.springframework.cloud.config.server.ssh.KnownHostsFileIsValid;
 import org.springframework.cloud.config.server.ssh.PrivateKeyIsValid;
 import org.springframework.validation.annotation.Validated;
@@ -35,6 +36,7 @@ import org.springframework.validation.annotation.Validated;
 @HostKeyAndAlgoBothExist
 @HostKeyAlgoSupported
 @KnownHostsFileIsValid
+@HostKeyOrKnownHostsFileRequired
 public class MultipleJGitEnvironmentProperties extends JGitEnvironmentProperties {
 
 	/**

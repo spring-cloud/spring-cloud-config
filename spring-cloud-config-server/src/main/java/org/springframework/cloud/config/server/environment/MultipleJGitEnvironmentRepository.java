@@ -149,7 +149,7 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 					}
 					catch (Exception e) {
 						if (this.logger.isDebugEnabled()) {
-							this.logger.debug("Cannot retrieve resource locations from " + candidate.getUri()
+							this.logger.debug("Cannot retrieve resource locations from " + candidate.getMaskedUri()
 									+ ", cause: (" + e.getClass().getSimpleName() + ") " + e.getMessage(), e);
 						}
 						continue;
@@ -180,8 +180,8 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 					}
 					catch (Exception e) {
 						if (this.logger.isDebugEnabled()) {
-							this.logger.debug("Cannot load configuration from " + candidate.getUri() + ", cause: ("
-									+ e.getClass().getSimpleName() + ") " + e.getMessage(), e);
+							this.logger.debug("Cannot load configuration from " + candidate.getMaskedUri()
+									+ ", cause: (" + e.getClass().getSimpleName() + ") " + e.getMessage(), e);
 						}
 						continue;
 					}

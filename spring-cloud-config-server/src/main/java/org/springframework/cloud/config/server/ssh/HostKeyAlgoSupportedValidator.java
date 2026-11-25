@@ -66,7 +66,7 @@ public class HostKeyAlgoSupportedValidator
 			.extractRepoProperties(sshUriProperties);
 
 		for (JGitEnvironmentProperties extractedProperty : extractedProperties) {
-			if (sshUriProperties.isIgnoreLocalSshSettings() && isSshUri(extractedProperty.getUri())) {
+			if (extractedProperty.isIgnoreLocalSshSettings() && isSshUri(extractedProperty.getUri())) {
 				validationResults.add(isHostKeySpecifiedWhenAlgorithmSet(extractedProperty, context));
 			}
 		}

@@ -78,6 +78,7 @@ import static org.springframework.cloud.config.server.support.ScmFileUtils.asser
 import static org.springframework.cloud.config.server.support.ScmFileUtils.assertNoSymlinkInPath;
 import static org.springframework.cloud.config.server.support.ScmFileUtils.deleteDirectoryContents;
 import static org.springframework.cloud.config.server.support.ScmFileUtils.recreateSecureDirectory;
+import static org.springframework.cloud.config.server.support.ScmUriUtils.maskUserInfo;
 
 /**
  * An {@link EnvironmentRepository} backed by a single git repository.
@@ -344,10 +345,10 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 			throw new NoSuchLabelException("No such label: " + label, e);
 		}
 		catch (NoRemoteRepositoryException e) {
-			throw new NoSuchRepositoryException("No such repository: " + getUri(), e);
+			throw new NoSuchRepositoryException("No such repository: " + getMaskedUri(), e);
 		}
 		catch (GitAPIException e) {
-			throw new NoSuchRepositoryException("Cannot clone or checkout repository: " + getUri(), e);
+			throw new NoSuchRepositoryException("Cannot clone or checkout repository: " + getMaskedUri(), e);
 		}
 		catch (Exception e) {
 			throw new IllegalStateException("Cannot load environment", e);
@@ -377,7 +378,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 			}
 		}
 		catch (GitAPIException e) {
-			throw new NoSuchRepositoryException("Cannot clone or checkout repository: " + getUri(), e);
+			throw new NoSuchRepositoryException("Cannot clone or checkout repository: " + getMaskedUri(), e);
 		}
 	}
 
@@ -526,7 +527,7 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 			shouldPull = isWorkingTreeClean && originUrl != null;
 		}
 		if (!isWorkingTreeClean && !this.forcePull) {
-			this.logger.info("Cannot pull from remote " + originUrl + ", the working tree is not clean.");
+			this.logger.info("Cannot pull from remote " + maskUserInfo(originUrl) + ", the working tree is not clean.");
 		}
 		return shouldPull;
 	}
