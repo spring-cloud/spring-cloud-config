@@ -70,7 +70,9 @@ public class ObservationConfiguration {
 }
 ----
 
-When a custom convention bean is provided and supports the environment repository observation context, it is used instead of the default convention. This allows applications to customize observation tags and avoid high-cardinality values.
+NOTE: A custom convention replaces the default one, rather than adding to it. The example above therefore reports only the tags explicitly defined by the custom convention.
+
+When a custom convention bean is provided, it is used instead of the default convention. This allows applications to customize observation tags and avoid high-cardinality values.
 
 When no custom convention bean is provided, the default `ObservationEnvironmentRepositoryObservationConvention` is used. A custom convention replaces the default, so its `supportsContext` must return true for `ObservationEnvironmentRepositoryContext`.
 
