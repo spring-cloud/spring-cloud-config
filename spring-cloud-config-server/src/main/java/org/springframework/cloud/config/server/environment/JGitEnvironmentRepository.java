@@ -159,8 +159,6 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 
 	private boolean tryMasterBranch;
 
-	private final ObservationRegistry observationRegistry;
-
 	/**
 	 * This lock is used to ensure thread safety between accessing the local git repo from
 	 * both the ResourceController and the EnvironmentController. See <a href=
@@ -186,7 +184,6 @@ public class JGitEnvironmentRepository extends AbstractScmEnvironmentRepository
 		this.skipSslValidation = properties.isSkipSslValidation();
 		this.gitFactory = new JGitFactory(properties.isCloneSubmodules());
 		this.tryMasterBranch = properties.isTryMasterBranch();
-		this.observationRegistry = observationRegistry;
 	}
 
 	public boolean isTryMasterBranch() {

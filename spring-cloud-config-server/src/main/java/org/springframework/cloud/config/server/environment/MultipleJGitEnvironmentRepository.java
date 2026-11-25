@@ -58,10 +58,6 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 
 	private Map<String, JGitEnvironmentRepository> placeholders = new ConcurrentHashMap<>();
 
-	private final ObservationRegistry observationRegistry;
-
-	private final ObservationConvention<ObservationEnvironmentRepositoryContext> convention;
-
 	public MultipleJGitEnvironmentRepository(ConfigurableEnvironment environment,
 			MultipleJGitEnvironmentProperties properties, ObservationRegistry observationRegistry) {
 		this(environment, properties, observationRegistry, null);
@@ -71,11 +67,9 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 			MultipleJGitEnvironmentProperties properties, ObservationRegistry observationRegistry,
 			ObservationConvention<ObservationEnvironmentRepositoryContext> convention) {
 		super(environment, properties, observationRegistry, convention);
-		this.observationRegistry = observationRegistry;
-		this.convention = convention;
 		properties.getRepos()
 			.forEach((name, props) -> this.repos.put(name, new PatternMatchingJGitEnvironmentRepository(environment,
-					props, this.observationRegistry, this.convention)));
+					props, getObservationRegistry(), getObservationConvention())));
 	}
 
 	@Override
@@ -258,7 +252,7 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 
 	private JGitEnvironmentRepository getRepository(JGitEnvironmentRepository source, String uri) {
 		JGitEnvironmentRepository repository = new JGitEnvironmentRepository(null, new JGitEnvironmentProperties(),
-				observationRegistry, convention);
+				getObservationRegistry(), getObservationConvention());
 		File basedir = repository.getBasedir();
 		BeanUtils.copyProperties(source, repository);
 		repository.setUri(uri);
@@ -286,8 +280,6 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 		 */
 		private String name;
 
-		private final ObservationRegistry observationRegistry;
-
 		public PatternMatchingJGitEnvironmentRepository(ObservationRegistry observationRegistry) {
 			this(observationRegistry, null);
 		}
@@ -295,7 +287,6 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 		public PatternMatchingJGitEnvironmentRepository(ObservationRegistry observationRegistry,
 				ObservationConvention<ObservationEnvironmentRepositoryContext> convention) {
 			super(null, new JGitEnvironmentProperties(), observationRegistry, convention);
-			this.observationRegistry = observationRegistry;
 		}
 
 		public PatternMatchingJGitEnvironmentRepository(ConfigurableEnvironment environment,
@@ -309,7 +300,6 @@ public class MultipleJGitEnvironmentRepository extends JGitEnvironmentRepository
 				ObservationRegistry observationRegistry,
 				ObservationConvention<ObservationEnvironmentRepositoryContext> convention) {
 			super(environment, properties, observationRegistry, convention);
-			this.observationRegistry = observationRegistry;
 			this.setPattern(properties.getPattern());
 			this.name = properties.getName();
 		}

@@ -77,6 +77,14 @@ public abstract class AbstractScmEnvironmentRepository extends AbstractScmAccess
 		this.convention = convention;
 	}
 
+	protected ObservationRegistry getObservationRegistry() {
+		return this.observationRegistry;
+	}
+
+	protected ObservationConvention<ObservationEnvironmentRepositoryContext> getObservationConvention() {
+		return this.convention;
+	}
+
 	@Override
 	public synchronized Environment findOne(String application, String profile, String label) {
 		return findOne(application, profile, label, false);

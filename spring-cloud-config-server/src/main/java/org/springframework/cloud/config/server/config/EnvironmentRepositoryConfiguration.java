@@ -211,7 +211,7 @@ public class EnvironmentRepositoryConfiguration {
 					customTransportConfigCallback.orElse(null), callbackProviders.orderedStream().toList());
 			return new MultipleJGitEnvironmentRepositoryFactory(environment, server, jgitHttpConnectionFactory,
 					transportConfigCallbackFactory, gitCredentialsProviderFactory, customizers,
-					observationConvention.getIfAvailable());
+					observationConvention.getIfUnique());
 		}
 
 		@Bean
@@ -305,7 +305,7 @@ public class EnvironmentRepositoryConfiguration {
 				ObjectProvider<ObservationConvention<ObservationEnvironmentRepositoryContext>> observationConvention) {
 			return new SvnEnvironmentRepositoryFactory(environment, server,
 					observationRegistry.getIfAvailable(() -> ObservationRegistry.NOOP),
-					observationConvention.getIfAvailable());
+					observationConvention.getIfUnique());
 		}
 
 	}
@@ -408,7 +408,7 @@ public class EnvironmentRepositoryConfiguration {
 				ObjectProvider<ObservationConvention<ObservationEnvironmentRepositoryContext>> observationConvention) {
 			return new NativeEnvironmentRepositoryFactory(environment, properties,
 					observationRegistry.getIfAvailable(() -> ObservationRegistry.NOOP),
-					observationConvention.getIfAvailable());
+					observationConvention.getIfUnique());
 		}
 
 	}
@@ -587,7 +587,7 @@ class CompositeRepositoryConfiguration {
 			ObjectProvider<ObservationConvention<ObservationEnvironmentRepositoryContext>> observationConvention) {
 		return new SearchPathCompositeEnvironmentRepository(environmentRepositories,
 				observationRegistry.getIfAvailable(() -> ObservationRegistry.NOOP), properties.isFailOnCompositeError(),
-				observationConvention.getIfAvailable());
+				observationConvention.getIfUnique());
 	}
 
 	@Primary
@@ -599,7 +599,7 @@ class CompositeRepositoryConfiguration {
 			ObjectProvider<ObservationConvention<ObservationEnvironmentRepositoryContext>> observationConvention) {
 		return new CompositeEnvironmentRepository(environmentRepositories,
 				observationRegistry.getIfAvailable(() -> ObservationRegistry.NOOP), properties.isFailOnCompositeError(),
-				observationConvention.getIfAvailable());
+				observationConvention.getIfUnique());
 	}
 
 }

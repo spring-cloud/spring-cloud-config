@@ -19,10 +19,14 @@ package org.springframework.cloud.config.server.config;
 import java.util.List;
 
 import com.google.cloud.storage.Storage;
+import io.micrometer.common.KeyValue;
+import io.micrometer.common.KeyValues;
 import io.micrometer.core.instrument.observation.DefaultMeterObservationHandler;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationConvention;
 import io.micrometer.observation.ObservationRegistry;
+import io.micrometer.observation.tck.TestObservationRegistry;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -38,6 +42,8 @@ import org.springframework.cloud.config.server.environment.EnvironmentRepository
 import org.springframework.cloud.config.server.environment.GcsEnvironmentRepositoryFactory;
 import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.MultipleJGitEnvironmentRepositoryFactory;
+import org.springframework.cloud.config.server.environment.NativeEnvironmentProperties;
+import org.springframework.cloud.config.server.environment.NativeEnvironmentRepository;
 import org.springframework.cloud.config.server.environment.NativeEnvironmentRepositoryFactory;
 import org.springframework.cloud.config.server.environment.ObservationEnvironmentRepositoryContext;
 import org.springframework.cloud.config.server.environment.ObservationEnvironmentRepositoryWrapper;
@@ -289,6 +295,33 @@ public class EnvironmentRepositoryConfigurationTests {
 			});
 	}
 
+	@Test
+	public void customObservationConventionIsUsedWhenFindingEnvironment() {
+		new ApplicationContextRunner()
+			.withConfiguration(AutoConfigurations.of(EnvironmentRepositoryConfiguration.class, TestBeans.class,
+					CustomObservationConventionBeans.class))
+			.withBean(TestObservationRegistry.class, TestObservationRegistry::create)
+			.withPropertyValues("spring.profiles.active=native")
+			.run((context) -> {
+				assertThat(context).hasNotFailed();
+
+				NativeEnvironmentRepositoryFactory factory = context.getBean(NativeEnvironmentRepositoryFactory.class);
+
+				NativeEnvironmentRepository repository = factory.build(new NativeEnvironmentProperties());
+
+				repository.findOne("application", "default", null);
+
+				TestObservationRegistry registry = context.getBean(TestObservationRegistry.class);
+
+				io.micrometer.observation.tck.TestObservationRegistryAssert.assertThat(registry)
+					.hasSingleObservationThat()
+					.hasNameEqualTo("custom.environment.repository.find")
+					.hasBeenStarted()
+					.hasBeenStopped()
+					.hasLowCardinalityKeyValue("custom.tag", "custom-value");
+			});
+	}
+
 	@TestConfiguration
 	public static class TestBeans {
 
@@ -303,9 +336,30 @@ public class EnvironmentRepositoryConfigurationTests {
 	public static class CustomObservationConventionBeans {
 
 		@Bean
-		@SuppressWarnings("unchecked")
 		public ObservationConvention<ObservationEnvironmentRepositoryContext> customObservationConvention() {
-			return mock(ObservationConvention.class);
+			return new ObservationConvention<>() {
+
+				@Override
+				public KeyValues getLowCardinalityKeyValues(ObservationEnvironmentRepositoryContext context) {
+					return KeyValues.of(KeyValue.of("custom.tag", "custom-value"));
+				}
+
+				@Override
+				public boolean supportsContext(Observation.Context context) {
+					return context instanceof ObservationEnvironmentRepositoryContext;
+				}
+
+				@Override
+				public String getName() {
+					return "custom.environment.repository.find";
+				}
+
+				@Override
+				public String getContextualName(ObservationEnvironmentRepositoryContext context) {
+					return "custom environment repository";
+				}
+
+			};
 		}
 
 	}
