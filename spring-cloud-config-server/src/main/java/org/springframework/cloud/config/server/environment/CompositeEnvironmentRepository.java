@@ -82,7 +82,6 @@ public class CompositeEnvironmentRepository implements EnvironmentRepository {
 	 * @param failOnError whether to throw an exception if there is an error.
 	 */
 	public CompositeEnvironmentRepository(List<EnvironmentRepository> environmentRepositories, boolean failOnError) {
-		// Sort the environment repositories by the priority
 		this(environmentRepositories, ObservationRegistry.NOOP, failOnError);
 	}
 

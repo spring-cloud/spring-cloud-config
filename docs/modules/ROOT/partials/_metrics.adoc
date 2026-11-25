@@ -72,7 +72,7 @@ public class ObservationConfiguration {
 
 When a custom convention bean is provided and supports the environment repository observation context, it is used instead of the default convention. This allows applications to customize observation tags and avoid high-cardinality values.
 
-When no custom convention bean is provided, or the custom convention does not support the observation context, the default `ObservationEnvironmentRepositoryObservationConvention` is used.
+When no custom convention bean is provided, the default `ObservationEnvironmentRepositoryObservationConvention` is used. A custom convention replaces the default, so its `supportsContext` must return true for `ObservationEnvironmentRepositoryContext`.
 
 IMPORTANT: All tags must be prefixed with `spring.cloud.config.environment` prefix!
 
