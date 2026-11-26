@@ -104,19 +104,19 @@ public class JdbcEnvironmentRepository implements EnvironmentRepository, Ordered
 		if (configIncomplete && !profile.startsWith("default")) {
 			profile = "default," + profile;
 		}
-		String[] profiles = StringUtils.commaDelimitedListToStringArray(profile);
+		String[] profiles = StringUtils.trimArrayElements(StringUtils.commaDelimitedListToStringArray(profile));
 		Environment environment = new Environment(application, profiles, label, null, null);
 		if (!config.startsWith("application")) {
 			config = "application," + config;
 		}
-		List<String> applications = new ArrayList<>(
-				new LinkedHashSet<>(Arrays.asList(StringUtils.commaDelimitedListToStringArray(config))));
+		List<String> applications = new ArrayList<>(new LinkedHashSet<>(
+				Arrays.asList(StringUtils.trimArrayElements(StringUtils.commaDelimitedListToStringArray(config)))));
 		List<String> envs = new ArrayList<>(new LinkedHashSet<>(Arrays.asList(profiles)));
 		Collections.reverse(applications);
 		Collections.reverse(envs);
 		List<String> labels;
 		if (label.contains(",")) {
-			labels = Arrays.asList(StringUtils.commaDelimitedListToStringArray(label));
+			labels = Arrays.asList(StringUtils.trimArrayElements(StringUtils.commaDelimitedListToStringArray(label)));
 			Collections.reverse(labels);
 		}
 		else {

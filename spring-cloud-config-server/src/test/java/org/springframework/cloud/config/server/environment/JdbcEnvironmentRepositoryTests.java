@@ -245,6 +245,16 @@ public class JdbcEnvironmentRepositoryTests {
 		assertThat(env.getPropertySources().get(2).getSource().get("e.f.g")).isEqualTo("application-default");
 	}
 
+	@Test
+	public void testWhitespaceInApplicationsAndProfilesIsTrimmed() {
+		JdbcEnvironmentProperties properties = new JdbcEnvironmentProperties();
+		Environment env = new JdbcEnvironmentRepository(new JdbcTemplate(this.dataSource), properties,
+				new JdbcEnvironmentRepository.PropertiesResultSetExtractor())
+			.findOne("foo, not_exist", "default, bar", "");
+		assertThat(env.getProfiles()).isEqualTo(new String[] { "default", "bar" });
+		assertThat(env.getPropertySources()).extracting(ps -> ps.getName()).contains("foo-bar", "application-bar");
+	}
+
 	@ImportAutoConfiguration(DataSourceInitializationAutoConfiguration.class)
 	@Configuration(proxyBeanMethods = false)
 	protected static class ApplicationConfiguration {
